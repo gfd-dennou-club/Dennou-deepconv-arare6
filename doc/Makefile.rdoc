@@ -1,0 +1,104 @@
+#---------------------------------------------------------------------
+#     Copyright (C) GFD Dennou Club, 2006. All rights reserved.
+#---------------------------------------------------------------------
+#= Makefile for RDoc documentation
+#
+# Authors::   Masatsugu Odaka
+# Version::   $Id: Makefile.rdoc,v 1.3 2014/02/20 16:26:12 sugiyama Exp $
+# Tag Name::  $Name:  $
+# Copyright:: Copyright (C) GFD Dennou Club, 2004-2006. All rights reserved.
+# License::   See COPYRIGHT[link:../COPYRIGHT]
+#
+#== History
+#
+# * 2006/09/12 (Masatsugu ODAKA  ) Downloaded from http://www.gfd-dennou.org/library/gt4f90io/gt4f90io_current/doc/Makefile.rdoc
+#
+######################################################################
+#
+#== Settings
+
+#INCLUDEFILE = ../Config.mk
+#include $(INCLUDEFILE) # Include file              (optional)
+                       # [JA] インクルードファイル (任意)
+
+#CURRENTDIR	= $(DOCDIR)
+CURRENTDIR	= ./
+                       # Current Directory         (necessary)
+                       # [JA] カレントディレクトリ (必須)
+OUTPUTDIR	= code_reference
+                       # Document directory        (necessary)
+                       # [JA] 出力先ディレクトリ   (必須)
+#SRCDIR		= $(SRCDIR)
+#SRCDIR		= ../src/
+#                       # Source code directory               (necessary)
+#                       # [JA] ソースコード置き場ディレクトリ (必須)
+#SRCFILES	= *.f90
+#SRCFILES	= $(SRCDIR)
+SRCFILES	= ../src/*/*.f90 ../src/*/*.F90
+                       # Source code files    (optional)
+                       # [JA] ソースファイル  (任意)
+MAINPAGE	= --main deepconv
+                       # Main pages         (optional)
+                       # [JA] メインページ  (任意)
+TITLE		= --title "deepconv Reference Manual"
+                       # Title          (optional)
+                       # [JA] タイトル  (任意)
+RDOCOPTS	= --charset euc-jp --inline-source --line-numbers \
+		  --ignore-case #--all
+                       # Options of RDoc                 (optional)
+                       # [JA] RDoc コマンドのオプション  (任意)
+RDOCCSS		= rdoc-style-arare.css
+                       # Cascade Style Sheet  (optional)
+                       # [JA] スタイルシート  (任意)
+RDOC            = rdoc
+RM              = rm
+# End Settings
+######################################################################
+
+######################################################################
+#== Set variables
+#
+SRCDIRSUFFIX = $(patsubst %/,%,$(strip $(SRCDIR)))/
+SRCPATH = $(SRCFILES:%=$(SRCDIRSUFFIX)%)
+CURRENTDIRSUFFIX = $(patsubst %/,%,$(strip $(CURRENTDIR)))/
+OUTPUTPATH = $(OUTPUTDIR:%=$(CURRENTDIRSUFFIX)%)
+
+######################################################################
+#== Rules
+#
+
+all: rdoc
+
+rdoc:
+	$(RDOC) --op $(OUTPUTPATH) $(TITLE) \
+	$(RDOCOPTS) \
+	$(MAINPAGE) \
+	$(SRCFILES)
+	@if [ -f "$(RDOCCSS)" ]; then \
+		echo $(CP) $(RDOCCSS) $(OUTPUTDIR)/rdoc-style.css ;\
+		$(CP) $(RDOCCSS) $(OUTPUTDIR)/rdoc-style.css ;\
+	else \
+		echo "$(RDOCCSS) is not found" ;\
+	fi
+
+clean:
+	test -d $(OUTPUTPATH) || $(INSTALLDIR) $(OUTPUTPATH)
+	-cd $(OUTPUTPATH) ; \
+	$(RM) created.rid fr_class_index.html fr_file_index.html \
+		fr_method_index.html index.html rdoc-style.css ;\
+	$(RM) -r classes/ files/
+	$(RM) -r $(OUTPUTPATH)
+
+clean.all: clean
+
+install:
+	test -d $(DEST_DOC) || $(INSTALLDIR) $(DEST_DOC)
+	$(INSTALLDIR) $(DEST_DOC)/$(OUTPUTDIR)
+	cp -r $(OUTPUTDIR)/* $(DEST_DOC)/$(OUTPUTDIR)/
+
+######################################################################
+#== Mode setting for Emacs
+#Local Variables:
+#mode: makefile
+#End:
+#

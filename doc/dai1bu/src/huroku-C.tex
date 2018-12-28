@@ -1,0 +1,182 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%表題   2 次元非静力学モデル -- 付録 C 雲微物理過程
+%
+%履歴   2007-06-05 小高正嗣      乱流運動エネルギー方程式の導出を追加
+%       2007-06-22 小高正嗣
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{雲微物理過程}
+
+本モデルで用いている雲微物理パラメタリゼーション(Kessler, 1969)の, 雲
+水の衝突併合による雨水混合比の変化率 $CL_{cr}$ と, 蒸発による雨水混合
+比の変化率 $EV_{rv}$ について解説する
+\footnote{本章の内容は浅井 (1983) の解説を参考にした.}.
+
+\section{雲水の衝突併合}
+
+雲水の衝突併合による雨水混合比の変化率 $CL_{cr}$ は, 直径 $D$ の単一の
+雨粒の衝突併合による質量変化率 $(dm(D)/dt)_{cr}$ と $D$ から $D+dD$ の
+範囲の直径を持つ雨粒の数 $N_{D}$ を用いて
+\begin{equation}
+  CL_{cr} = \frac{1}{\rho_{d}}\int _{0}^{\infty}\left(\DD{m}{t}\right)_{cr}
+   N_{D}\Dd D
+  \Deqlab{衝突併合による雨水混合比の変化率}
+\end{equation}
+と表される. $(dm(D)/dt)_{cr}$ は,
+\begin{equation}
+  \left(\DD{m}{t}\right)_{cr} = \frac{\pi}{4}D^{2}VE\rho _{d}q_{c}
+  \Deqlab{衝突併合による雨粒の成長方程式}
+\end{equation}
+と表される. ここで $V$ は雨粒の落下速度, $E$ は雨粒と衝突した雲粒
+のうち雨粒に併合される割合を表す係数(捕捉係数)である.
+
+Kessler (1969) では, 雨粒のサイズ分布関数と雨粒の落下速度 $V$ を以下の
+ように仮定する.
+\begin{eqnarray}
+  N_{D} &=& N_{0}\exp (-\lambda D), \\
+  V &=& 130D^{0.5} \Deqlab{マーシャル・パルマー型分布関数}.
+\end{eqnarray}
+ここで $N_{0}, \lambda $ はパラメータである.  式\Deqref{マーシャル・パ
+ルマー型分布関数}の分布は一般にマーシャル・パルマー型分布 (Marshall
+and Palmer, 1948) と呼ばれる.  Kessler (1969) では $N_{0}=10^{7}$ とする. 
+これを式\Deqref{衝突併合による雨水混合比の変化率}に代入すると,
+\begin{eqnarray}
+  CL_{cr} &=& \frac{130\pi}{4}E N_{0} q_{c} 
+            \int_{0}^{\infty}D^{2.5}\exp(-\lambda D)\Dd D \\ 
+          &=& 32.5 \pi E N_{0} q_{c} \frac{3.75}{\lambda ^{3}}\frac{1}{2}
+             \sqrt{\frac{\pi}{\lambda}}
+              \nonumber \\
+          &=& 60.9375 \pi^{3/2} E N_{0} q_{c} \lambda ^{-3.5}
+  \Deqlab{CL_cr 項} 
+\end{eqnarray}
+を得る. ここで $E$ は $D$ によらないと仮定した. 
+Kessler (1969) では $E=1$ とする. 
+
+雨粒のサイズ分布曲線の傾きを表すパラメータ $\lambda$ は, 以下の式を用
+いて雨水混合比 $q_{r}$ で置き換える.
+\begin{eqnarray}
+  q_{r} &=& \frac{1}{\rho_{d}}\int _{0}^{\infty} \rho_{w}
+            \frac{\pi}{6} D^{3} 
+            N_{D}\Dd D
+        \nonumber \\
+        &=& \frac{\pi N_{0}\rho_{w}}{6\rho_{d}}\int _{0}^{\infty}
+            D^{3}\exp(-\lambda D)\Dd D 
+       \nonumber \\
+        &=& \frac{\pi N_{0}\rho_{w}}{6\rho_{d}}\frac{6}{\lambda ^{4}}
+       \nonumber \\
+        &=& \frac{\pi N_{0}\rho_{w}}{\rho_{d}}\lambda ^{-4}.
+   \Deqlab{λの式}
+\end{eqnarray}
+ここで $\rho_{w}$ は水の密度 ($10^{3}$ kg/m${}^{3}$) である. 
+これを $\lambda$ について解き, 式\Deqref{CL_cr 項}に代入すると,
+\begin{eqnarray}
+  CL_{cr} &=& 60.9375 \pi ^{\frac{5}{8}}\rho_{w}^{-\frac{7}{8}}
+              EN_{0}^{\frac{1}{8}}q_{c}(\rho _{d}q_{r})^{\frac{7}{8}}
+              \nonumber \\
+          &=& 0.295 \times 10^{-4}E N_{0}^{0.125}
+              q_{c}(\rho _{d}q_{r})^{0.875} \nonumber \\
+          &=&
+              2.2 q_{c}(\rho _{d}q_{r})^{0.875}
+\end{eqnarray}
+となる. 最後の式変形では, $N_{0}=10^{7}, E=1$ を代入した.
+
+  
+\section{雨水の蒸発}
+
+蒸発による雨水混合比の変化率 $EV_{rv}$ は, 式\Deqref{衝突併合による雨
+水混合比の変化率} と同様に
+\begin{equation}
+  EV_{rv} = \frac{1}{\rho_{d}}\int _{0}^{\infty}\left(\DD{m}{t}\right)_{ev}
+  N_{D}\Dd D
+  \Deqlab{蒸発による雨水混合比の増加率}
+\end{equation}
+と表される. ここで $(dm(D)/dt)_{ev}$ は直径 $D$ の単一の雨粒の蒸発によ
+る質量変化率である.
+
+雨水の蒸発は雨粒の表面からの水蒸気の拡散によって律速されると仮定する. 
+雨粒周囲の水蒸気フラックスを $F$ とすると, 雨粒の質量の変化率は
+\begin{equation}
+  \left(\DD{m}{t}\right)_{ev} = - 4\pi r_{d}^{2}F(r_{d})
+\end{equation}
+と表される. ここで $r$ は雨粒中心からの距離, $r_{d}$ は雨粒の半径で, 
+$F$ は
+\[
+   F = - K_{d}\DD{\rho_{v}}{r}
+\]
+と表される. $\rho_{v}$ は水蒸気の密度, $K_{d}$ は水蒸気の拡散係数であ
+る.  雨粒の周囲では水蒸気フラックスの収束発散はないと仮定すると,
+\[
+  \frac{1}{r^{2}}\DP{}{r}\left(r^{2}F\right) = 0
+\]
+が成り立つ. これを積分し 
+\[
+   \rho _{v} = -\frac{C_{1}}{r} + C_{2}
+\]
+境界条件 $r=r_{d}$ で $\rho_{v} = \rho_{v,s}$, $r=\infty$ で 
+$\rho_{v}=\rho_{v,\infty}$ を適用すると, 
+\[
+  C_{1} = (\rho _{v,\infty}-\rho_{v,s})r_{d}, 
+  \quad C_{2} = \rho _{v,\infty}
+\]
+これより, 雨粒表面での拡散による水蒸気フラックスは
+\begin{eqnarray}
+  F(r_{d}) &=& - K_{d}\left.\DD{\rho_{v}}{r}\right|_{r=r_{d}} \nonumber \\
+    &=& K_{d}\frac{\rho_{v,s} - \rho _{v,\infty}}{r_{d}}
+\end{eqnarray}
+よって,
+\begin{equation}
+  \left(\DD{m}{t}\right)_{ev} = - 4\pi r_{d}K_{d}(\rho_{v,s}-\rho_{v,\infty})
+\end{equation}
+と表される. 雨粒が落下しながら蒸発する場合には, $K_{d}$ に補正項のついた
+\begin{equation}
+  \left(\DD{m}{t}\right)_{ev} = - 4\pi r_{d}\left(1+\frac{Fr}{s}\right)
+                K_{d}(\rho_{v,s}-\rho_{v,\infty})
+  \Deqlab{蒸発による雨粒の成長方程式}
+\end{equation}
+が用いられる. ここで $F$ は換気因子, $s$ は雨粒表面でのクヌーセン層の
+厚さである\footnote{この式の導出は要確認.}.
+
+Kessler (1969) では, \Deqref{蒸発による雨粒の成長方程式}の右辺の項を
+以下のように近似する.
+\begin{eqnarray*}
+  4\pi r_{d}\left(1+\frac{Fr}{s}\right) &\sim& 2.24\times 10^{3}D^{1.6}, \\
+  K_{d}(\rho _{v,s} - \rho_{v,\infty}) &\sim& 10^{-5}(\rho_{v,s}-\rho_{v,\infty}).
+\end{eqnarray*}
+このとき\Deqref{蒸発による雨粒の成長方程式}は
+\begin{equation}
+  \left(\DD{m}{t}\right)_{ev} \sim 
+     - 2.24\times 10^{-2}(\rho_{v,s}-\rho_{v,\infty})D^{1.6}
+  \Deqlab{近似された蒸発による雨粒の成長方程式}
+\end{equation}
+となる. これを式\Deqref{蒸発による雨水混合比の増加率}に代入し, 
+雨粒のサイズ分布として\Deqref{マーシャル・パルマー型分布関数}を
+仮定すると, 
+\begin{eqnarray}
+  EV_{rv} &=& - \frac{1}{\rho_{d}}2.24\times 10^{-2}(q_{v,s} -q_{v,\infty})\int _{0}^{\infty}
+              D^{1.6}N_{D}\Dd D, \nonumber \\
+          &=& - 2.24\times 10^{-2}(q_{v,s} -q_{v,\infty})\int _{0}^{\infty}
+              D^{1.6}N_{0}\exp(-\lambda D)\Dd D \nonumber \\
+          &=& - 2.24\times 10^{-2}(q_{v,s} -q_{v,\infty})
+              N_{0}\frac{\Gamma(2.6)}{\lambda ^{13/5}}  \nonumber \\
+          &=& - 2.24\times 10^{-2}
+              \Gamma(2.6) (\pi \rho_{w})^{-0.65}
+	      N_{0}^{0.35}
+	      (q_{v,s} -q_{v,\infty})
+	      (\rho_{d}q_{r})^{0.65}
+              \nonumber \\
+          &=& - 1.7\times 10^{-4}N_{0}^{0.35}(q_{v,s} -q_{v,\infty})
+                (\rho_{d}q_{r})^{0.65} \nonumber \\
+          &=& - 4.81\times 10^{-2}(q_{v,s} -q_{v,\infty})
+                (\rho_{d}q_{r})^{0.65} 
+\end{eqnarray}
+最後の式変形を行う際には\Deqref{λの式}式の関係を用いて $\lambda$ を消去し,
+$\Gamma(2.6)=1.4296245$, $N_{0}=10^{7}$ とした
+\footnote{Kessler (1969) では最終的には
+\[
+  EV_{rv} = 4.85\times 10^{-2}(q_{v,s} -q_{v,\infty})(\rho_{d}q_{r})^{0.65}
+\]
+としている. }.  
+
+

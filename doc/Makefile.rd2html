@@ -1,0 +1,610 @@
+#---------------------------------------------------------------------
+#     Copyright (C) GFD Dennou Club, 2005. All rights reserved.
+#---------------------------------------------------------------------
+#= Generate HTML from RD
+#
+# Authors::   Yasuhiro MORIKAWA, Masaki ISHIWATARI, Masatsugu Odaka
+# Version::   $Id: Makefile.rd2html,v 1.1 2011/06/21 15:42:00 sugiyama Exp $
+# Tag Name::  $Name:  $
+# Copyright:: Copyright (C) GFD Dennou Club, 2004-2007. All rights reserved.
+# License::   See COPYRIGHT[link:COPYRIGHT]
+#
+#== History
+#
+# * 2007/10/19 (Masataugu ODAKA  ) Downloaded from http://www.gfd-dennou.org/library/dcmodel/doc/sample_Makefile/Makefile.rd2html  
+#
+######################################################################
+#
+#== History of Original file
+#
+#  Please see http://www.gfd-dennou.org/library/dcmodel/doc/TEBIKI.dcmodel-rd-guide.htm
+#
+# * Yasuhiro MORIKAWA, Masaki ISHIWATARI
+#   * 2007/01/16 (Yasuhiro MORIKAWA) $KCODE is specified by $OUTCODE.
+#   * 2007/01/01 (Yasuhiro MORIKAWA) RDOPTSJA and RDOPTSEN are added.
+#   * 2006/11/08 (Yasuhiro MORIKAWA) RUBYLIB become valid.
+#   * 2006/08/04 (Yasuhiro MORIKAWA) "RDHindexParser" is modified.
+#   * 2006/06/22 (Yasuhiro MORIKAWA) "DEFAULTMSGJA", "DEFAULTMSGEN" are added.
+#   * 2006/06/21 (Yasuhiro MORIKAWA) "HtmFileJA", "HtmFileEN" are added.
+#   * 2006/06/20 (Yasuhiro MORIKAWA) "H1ToTitle" is modified
+#   * 2006/06/04 (Yasuhiro MORIKAWA) Modified for XHTML 1.0 Transitional
+#   * 2006/06/03 (Yasuhiro MORIKAWA) Modified for XHTML 1.0 Transitional
+#   * 2006/03/19 (Yasuhiro MORIKAWA) Method of insert header, footer is modified
+#   * 2006/03/19 (Yasuhiro MORIKAWA) "HEADERJA" and "HEADEREN" are added
+#   * 2006/03/09 (Yasuhiro MORIKAWA) sample of "FOOTERJA" and "FOOTEREN" are modified
+#   * 2006/03/08 (Yasuhiro MORIKAWA) "rd2html-ext-lib" can be used
+#   * 2006/02/07 (Yasuhiro MORIKAWA) User parser is added
+#   * 2006/01/04 (Yasuhiro MORIKAWA) Target "clean" and "clean.all" are modified
+#   * 2006/01/02 (Yasuhiro MORIKAWA) Target "clean" and "clean.all" are modified
+#   * 2005/11/06 (Yasuhiro MORIKAWA) Default CSS is modified to local site
+#   * 2005/11/06 (Yasuhiro MORIKAWA) URL of reference of rdtool is updated
+#   * 2005/10/12 (Yasuhiro MORIKAWA) JAPart and ENPart is modified
+#   * 2005/10/12 (Yasuhiro MORIKAWA) FOOTEREN is modified
+#   * 2005/10/10 (Yasuhiro MORIKAWA) default FOOTERs are modified
+#   * 2005/08/14 (Yasuhiro MORIKAWA) Link to rd-hindex.rb page is added
+#   * 2005/08/10 (Yasuhiro MORIKAWA) Ruby and RD Path checker is added
+#   * 2005/08/10 (Yasuhiro MORIKAWA) RD Header Index inserter is added
+#   * 2005/08/10 (Yasuhiro MORIKAWA) Date parser is response to multi-language
+#   * 2005/08/10 (Yasuhiro MORIKAWA) Date parser is added
+#   * 2005/07/07 (Yasuhiro MORIKAWA) "SUBDIRS" is deleted
+#   * 2005/07/07 (Yasuhiro MORIKAWA) "chmod" and "chgrp" are added
+#   * 2005/06/23 (Yasuhiro MORIKAWA) Suffix of JA file is change from "htm.ja" to "htm"
+#   * 2005/06/23 (Yasuhiro MORIKAWA) Japanese commends are added
+#   * 2005/06/12 (Yasuhiro MORIKAWA) Create
+#
+######################################################################
+#
+#== Settings
+#
+# [JAPANESE] 各種設定項目
+
+INCLUDEFILE = 
+include $(INCLUDEFILE) # Include file              (optional)
+                       # [JA] インクルードファイル (任意)
+
+JA      = 1        # 1: Create "htm",    0: Not Create     (selective)
+EN      = 1        # 1: Create "htm.en", 0: Not Create     (selective)
+                   # [JA] 1 ならば作成, 0 ならば作成しない (選択必須)
+
+RDHINDEX = 0       # Index of Headers (selective)
+		   #   0:None, 1-3:Header Level
+		   #   Note: CSS item is "ol.rd2html_hindex [ul ..]"
+		   #
+		   # [JA] ヘッダの目次 (選択必須)
+		   #   0:作成しない, 1-3:ヘッダレベルに対応
+		   #   備考: CSS 設定は "ol.rd2html_hindex [ul ..]" で
+
+HEADERJA  = "<small> \
+	     [ <a href=\"$(HtmFileEN)\">English</a> | Japanese ] \
+             [ <a href=\"http://www.gfd-dennou.org\">地球流体電脳倶楽部</a> /\
+               <a href=\"http://www.gfd-dennou.org/library/deepconv\">deepconv</a> /\
+               <a href=\"index.htm\">deepconv リファレンスマニュアル</a> ]\
+             </small>"
+		   # [JA] JA 用 HTML ヘッダー (任意)
+		   #   $(HtmFileJA) は RD から生成される日本語 HTML ファイル名
+		   #   $(HtmFileEN) は RD から生成される英語 HTML ファイル名
+
+HEADEREN  = "<small> \
+	     [ English | <a href=\"$(HtmFileJA)\">Japanese</a> ] \
+             [ <a href=\"http://www.gfd-dennou.org\">GFD Dennou Club</a> /\
+               <a href=\"http://www.gfd-dennou.org/library/deepconv\">deepconv</a> /\
+               <a href=\"index.htm.en\">deepconv Reference Manual</a> ]\
+             </small>"
+		   # HTML Header  (optional)
+		   #   $(HtmFileJA) is Japanese HTML file generated from RD
+		   #   $(HtmFileEN) is English HTML file generated from RD
+
+FOOTERJA  = "<hr /> <small> \
+             Deepconv Development Group / GFD Dennou Staff  \
+             <img src=\"/library/dcmodel/htmltools/dcstaff_email.png\" \
+                  alt=\"dcstaff&\#64;&\#103;&\#102;&\#100;-dennou.org\" \
+                  align=\"middle\" /> <br /> \
+             Last Updated: $(UpdateDateJA), Since: $(CreateDateJA) </small>"
+#             Last Updated: $(UpdateDateJA) ($(UpdateUserJA)), Since: $(CreateDateJA) ($(CreateUserJA))</small>"
+		   # [JA] JA 用 HTML フッター (任意)
+		   #   $(UpdateDateJA) は電脳 RD 書式で書かれた最上部の日時
+		   #   (JA part 部分内)
+		   #   $(CreateDateJA) は電脳 RD 書式で書かれた最下部の日時
+		   #   (JA part 部分内)
+
+FOOTEREN  = "<hr /> <small> \
+             Deepconv Development Group / GFD Dennou Staff  \
+             <img src=\"/library/dcmodel/htmltools/dcstaff_email.png\" \
+                  alt=\"dcstaff&\#64;&\#103;&\#102;&\#100;-dennou.org\" \
+                  align=\"middle\" /> <br /> \
+             Last Updated: $(UpdateDateEN), Since: $(CreateDateEN) </small>"
+#             Last Updated: $(UpdateDateEN) ($(UpdateUserEN)), Since: $(CreateDateEN) ($(CreateUserEN))</small>"
+		   # HTML Footer  (optional)
+		   #   $(UpdateDateEN) is date in Dennou RD on top (EN part)
+		   #   $(CreateDateEN) is date in Dennou RD at bottom (EN part)
+
+CSS     = ../css/arare.css
+		   # Cascade Style Sheet           (necessary)
+		   # [JA] カスケードスタイルシート (必須)
+
+CHMOD   = 664      # Set mode          (optional)
+		   # [JA] chmod する値 (任意)
+
+CHGRP   =          # Set group         (optional)
+		   # [JA] chgrp する値 (任意)
+
+RUBY    = ruby1.8  # Path to Ruby       (necessary)
+		   # [JA] Ruby へのパス (必須)
+
+RD      = rd2      # Path to rdtool       (necessary)
+		   # [JA] rdtool へのパス (必須)
+
+RD2LIB  = rd/rd2html-lib        # 標準ライブラリ
+#RD2LIB  = rd/rd2html-ext-lib    # 拡張ライブラリ
+		   # Library of rd2html      (selective)
+		   # [JA] rd2html ライブラリ (選択)
+
+RUBYLIB =
+		   # Set "RUBYLIB"         (optional)
+		   # [JA] "RUBYLIB" の設定 (任意)
+
+RDOPTS  =
+#RDOPTS  = --ref-extension
+		   # Additional rd2 options          (optional)
+		   # [JA] rd2 コマンドへのオプション (任意)
+
+RDOPTSJA  = --with-part=HTMLJA:html
+		   # Additional rd2 options for JA         (optional)
+		   # [JA] JA 用 rd2 コマンドへのオプション (任意)
+
+RDOPTSEN  = --with-part=HTMLEN:html
+		   # Additional rd2 options for EN         (optional)
+		   # [JA] EN 用 rd2 コマンドへのオプション (任意)
+
+
+OUTCODE = euc      # character encoding of output [jis|euc|sjis] (necessary)
+		   # [JA] rd 出力時の文字コード  [jis|euc|sjis]  (必須)
+
+JACODE  = EUC-JP   # indicate CHARSET as charset [char encoding] (necessary)
+		   # [JA] rd2 コマンドの CHARSET                 (必須)
+
+DEFAULTMSGJA = "No Document"
+		   # [JA] JA 用 デフォルトメッセージ (任意)
+		   #   RD 内に内容が無い場合に書き出されるメッセージ.
+
+DEFAULTMSGEN = "No Document"
+		   # Default Messages  (optional)
+		   #   Messages that are output when no content
+                   #   is included in RD file.
+
+
+# End Settings  [JA] 設定項目ここまで
+######################################################################
+#== Commands
+# General command
+RD2HTM = rd2 -r $(RD2LIB) --with-css=$(CSS) --with-part=HTML:html \
+		--out-code=$(OUTCODE) $(RDOPTS)
+# For Japanese
+RD2JA  = $(RD2HTM) --html-charset=$(JACODE) --with-part=JA:rd $(RDOPTSJA)
+# For English
+RD2EN  = $(RD2HTM) --html-charset=US-ASCII --with-part=EN:rd $(RDOPTSEN)
+
+######################################################################
+#== Filenames to which it is assumed to be used in HEADER**, FOOTER**
+#
+HtmFileJA = $(<:.rd=.htm)
+HtmFileEN = $(<:.rd=.htm.en)
+
+
+######################################################################
+#== Ruby liner script for replacing title in HTML
+#
+# [JA] 引数 (1 つのみ) にとった HTML ファイルの一番上の <h1> の内容を
+#      読み取り, その内容を <title> タグに代入する.
+#
+#      さらに, <title>〜</title> (非アスキー文字を含む可能性あり) が
+#      <meta http-equiv="content-type" content="〜"> 指定よりも
+#      前に含まれる場合, この 2 つを入れ替える.
+#
+H1ToTitle  = $(RUBY) -e 'body = open(ARGV[0]){|io| io.read}; \
+			 if /\<h1.*?\>(.*?)\<\/h1.*?\>/ =~ body then      ;\
+			   h1 = $$1 ;\
+			   $$KCODE = "$(OUTCODE)".upcase ;\
+			   h1 = h1.chomp.gsub!(/\<.*?\>/){|s| s = ""} ;\
+			   mod = body.gsub(/\<title\>.*<\/title\>/,         \
+			         "\<title\>" + h1 + "<\/title\>") ;\
+			 else ;\
+			   mod = body ;\
+			 end ;\
+			 \
+			 if /(\<title\>.*?\<\/title\>)/im =~ mod then ;\
+			   title = $$1 ;\
+			   title_reg = Regexp.new(title.gsub(/\(/, "\\(").gsub(/\)/, "\\)"), 5) ;\
+			   if /(\<meta\s+http-equiv=\"content-type\"\s+content=\".*?\"\s+\/\>)/im =~ mod then ;\
+			     meta = $$1 ;\
+			     meta_reg = Regexp.new(meta.gsub(/\(/, "\\(").gsub(/\)/, "\\)"), 5) ;\
+			     mod.sub!(meta_reg, title) ;\
+			     mod.sub!(title_reg, meta) ;\
+			   end ;\
+			 end ;\
+			 \
+			 out = open(ARGV[0], "w"); out.puts(mod)         ;\
+			 out.close'
+
+######################################################################
+#== Ruby liner script for add header to existing HTML
+#
+# [JA] 1 つ目の引数にとった文字列を既存の HTML ファイル (2 つめの引数)
+#      の <body> タグ直下に挿入する.
+#
+InsHeader  = $(RUBY) -e 'body = open(ARGV[1]){|io| io.read}; \
+			 $$KCODE = "$(OUTCODE)".upcase ;\
+			 mod = body.sub(/\<body\>/, \
+			       "\<body\>\n\n" + ARGV[0].to_s) ;\
+			 out = open(ARGV[1], "w"); out.puts(mod)         ;\
+			 out.close'
+
+######################################################################
+#== Ruby liner script for add footer to existing HTML
+#
+# [JA] 1 つ目の引数にとった文字列を既存の HTML ファイル (2 つめの引数)
+#      の <body> タグ直下に挿入する.
+#
+InsFooter  = $(RUBY) -e 'body = open(ARGV[1]){|io| io.read}; \
+			 $$KCODE = "$(OUTCODE)".upcase ;\
+			 mod = body.sub(/\<\/body\>/, \
+			       ARGV[0].to_s + "\n\n\</body\>") ;\
+			 out = open(ARGV[1], "w"); out.puts(mod)         ;\
+			 out.close'
+
+######################################################################
+#== Ruby liner script for getting JA part
+#
+# [JA] 引数 (複数可) または引数が無い場合標準入力から得られた文字列
+#      のうち, =begin, =end でくくられた部分と =begin JA, =end JA
+#      でくくられた部分を標準出力に出力する.
+#
+JAPart = $(RUBY) -e 'inbody = false ;\
+		     puts "=begin" ;\
+		     lines = readlines ;\
+		     lines.each {|line| ;\
+		       inbody = true  if /^=begin\s*$$/ =~ line ;\
+		       inbody = true  if /^=begin\s+JA\s*$$/ =~ line ;\
+		       inbody = false if /^=end\s*$$/ =~ line ;\
+		       inbody = false if /^=end\s+JA\s*$$/ =~ line ;\
+		       next if line =~ /^=(begin|end)\s*$$/ ;\
+		       next if line =~ /^=(begin\s+|end\s+)\w+\s*$$/ ;\
+		       if inbody  ;\
+			 puts line ;\
+		       end ;\
+		     } ;\
+		     puts "=end"'
+
+######################################################################
+#== Ruby liner script for getting EN part
+#
+# [JA] 引数 (複数可) または引数が無い場合標準入力から得られた文字列
+#      のうち, =begin, =end でくくられた部分と =begin EN, =end EN
+#      でくくられた部分を標準出力に出力する.
+#
+ENPart = $(RUBY) -e 'inbody = false ;\
+		     puts "=begin" ;\
+		     lines = readlines ;\
+		     lines.each {|line| ;\
+		       inbody = true  if /^=begin\s*$$/ =~ line ;\
+		       inbody = true  if /^=begin\s+EN\s*$$/ =~ line ;\
+		       inbody = false if /^=end\s*$$/ =~ line ;\
+		       inbody = false if /^=end\s+EN\s*$$/ =~ line ;\
+		       next if line =~ /^=(begin|end)\s*$$/ ;\
+		       next if line =~ /^=(begin\s+|end\s+)\w+\s*$$/ ;\
+		       if inbody  ;\
+			 puts line ;\
+		       end ;\
+		     } ;\
+		     puts "=end"'
+
+
+######################################################################
+#== Ruby liner script for getting creation date in Dennou RD format
+#
+# [JA] 引数 (複数可) または引数が無い場合標準入力から得られた文字列
+#      のうち, "* 2005/08/10 (氏名) ..." のように記述される一連の
+#      文字列から一番下の日付を標準出力に出力する.
+#
+CDateParser = $(RUBY) -e 'lines = readlines  ;\
+			 start = false  ;\
+			 date = "" ;\
+			 lines.each{ |line|  ;\
+			   if /^\s*\#*\s*\*\s+(\d{2,4}[\/\-]\d{1,2}[\/\-]\d{1,2})\s+\(.+\)/ =~ line then  ;\
+			     start = true ;\
+			     date = $$1 ;\
+			   else ;\
+			     if start then ;\
+			       $$stdout.print date ;\
+			       exit ;\
+			     end ;\
+			   end  ;\
+			 }  ;\
+			 $$stdout.print "unknown"  ;\
+			 exit'
+
+CreateDateJA = `$(JAPart) $< | $(CDateParser)`
+CreateDateEN = `$(ENPart) $< | $(CDateParser)`
+
+######################################################################
+#== Ruby liner script for getting update date in Dennou RD format
+#
+# [JA] 引数 (複数可) または引数が無い場合標準入力から得られた文字列
+#      のうち, "* 2005/08/10 (氏名) ..." のように記述される一連の
+#      文字列から一番上の日付を標準出力に出力する.
+
+UDateParser = $(RUBY) -e 'lines = readlines ;\
+			 lines.each{ |line|  ;\
+			   if /^\s*\#*\s*\*\s+(\d{2,4}[\/\-]\d{1,2}[\/\-]\d{1,2})\s+\(.+\)/ =~ line then  ;\
+			     $$stdout.print $$1  ;\
+			     exit  ;\
+			   end  ;\
+			 }  ;\
+			 $$stdout.print "unknown"  ;\
+			 exit'
+
+UpdateDateJA = `$(JAPart) $< | $(UDateParser)`
+UpdateDateEN = `$(ENPart) $< | $(UDateParser)`
+
+
+######################################################################
+#== Ruby liner script for getting creator in Dennou RD format
+#
+# [JA] 引数 (複数可) または引数が無い場合標準入力から得られた文字列
+#      のうち, "* 2005/08/10 (氏名) ..." のように記述される一連の
+#      文字列から一番下の氏名を標準出力に出力する.
+#
+CUserParser = $(RUBY) -e 'lines = readlines  ;\
+			 start = false  ;\
+			 user = "" ;\
+			 lines.each{ |line|  ;\
+			   if /^\s*\#*\s*\*\s+(\d{2,4}[\/\-]\d{1,2}[\/\-]\d{1,2})\s+\((.+?)\)/ =~ line then  ;\
+			     start = true ;\
+			     user = $$2 ;\
+			   else ;\
+			     if start then ;\
+			       $$stdout.print user ;\
+			       exit ;\
+			     end ;\
+			   end  ;\
+			 }  ;\
+			 $$stdout.print "unknown"  ;\
+			 exit'
+
+CreateUserJA = `$(JAPart) $< | $(CUserParser)`
+CreateUserEN = `$(ENPart) $< | $(CUserParser)`
+
+
+######################################################################
+#== Ruby liner script for getting updater in Dennou RD format
+#
+# [JA] 引数 (複数可) または引数が無い場合標準入力から得られた文字列
+#      のうち, "* 2005/08/10 (氏名) ..." のように記述される一連の
+#      文字列から一番上の氏名を標準出力に出力する.
+
+UUserParser = $(RUBY) -e 'lines = readlines ;\
+			 lines.each{ |line|  ;\
+			   if /^\s*\#*\s*\*\s+(\d{2,4}[\/\-]\d{1,2}[\/\-]\d{1,2})\s+\((.+?)\)/ =~ line then  ;\
+			     $$stdout.print $$2  ;\
+			     exit  ;\
+			   end  ;\
+			 }  ;\
+			 $$stdout.print "unknown"  ;\
+			 exit'
+
+UpdateUserJA = `$(JAPart) $< | $(UUserParser)`
+UpdateUserEN = `$(ENPart) $< | $(UUserParser)`
+
+
+######################################################################
+#== Ruby liner script for getting RD Header index
+#
+# Reference: http://www.rubyist.net/~rubikitch/computer/rd-hindex/
+#
+# [JA] 標準入力内から目次を取得し, 1 つ目の引数をファイル名として
+#      受け取り, そのファイル内の == より前に目次を組み込んだ内容を
+#      標準出力に出力する.
+#      2 つ目の引数は目次として取り込むヘッダのレベルの指定である.
+#      1 〜 3 までが有効で, 0 や文字列などが代入された場合,
+#      目次は組み込まれない.
+#      3 つ目の引数は part の指定で, もしも本文が JA part 内にある場合は
+#      JA などと指定する.
+#      なお, 目次の ol には =begin HTML <ol class="rd2html_hindex">
+#      =end HTMLというタグが入る.
+#
+#      参考: http://www.rubyist.net/~rubikitch/computer/rd-hindex/
+#
+
+RDHindexParser = $(RUBY) -e \
+		'rdlevel = ARGV[1].to_i ;\
+		rdhindex = "=begin HTML\n<hr />\n<ol class=\"rd2html_hindex\">\n=end HTML\n" ;\
+		rdhindex << "=begin\n" ;\
+		while line = $$stdin.gets ;\
+		  next if line =~ /^=(begin|end)$$/ ;\
+		  if line =~ /^(=+)\s*(.+)$$/ ;\
+		    level = $$1.length ; content = $$2 ;\
+		    next if level == 1 || level > rdlevel + 1 ;\
+		    rdhindex << "  " * (level - 2) + "* ((<\"\#{content}\">))\n" ;\
+		  end ;\
+		end ;\
+		rdhindex << "=end\n" ;\
+		rdhindex << "=begin HTML\n</ol>\n<hr />\n=end HTML\n" ;\
+		rdhindex = "" if rdlevel == 0 ;\
+		 ;\
+		body = open(ARGV[0]){|io| io.read} ;\
+		lines = body.split(/\n/) ;\
+		finished = false ; inbody = false ;\
+		results = "" ; rdbegin = "" ; rdend = "" ;\
+		lines.each{ |line| ;\
+		  if line =~ /^=begin\s*$$/ ;\
+		    rdbegin = "=begin" ; rdend   = "=end" ;\
+		  elsif line =~ /^=begin\s+(.*)/ ;\
+		    rdbegin = "=begin " + $$1 ; rdend = "=end " + $$1 ;\
+		  end ;\
+		  if line =~ /^=end$$/ || line =~ /^=end\s+(.*)/ ;\
+		    rdbegin = "" ; rdend   = "" ;\
+		  end ;\
+		  inbody = true if line =~ /^=begin\s*$$/ || line =~ /^=begin\s+\#{ARGV[2]}$$/ ;\
+		  inbody = false if line =~ /^=end(\s+\w+)*$$/ ;\
+		  if /^==\s+/ =~ line && !(finished) && inbody then ;\
+		    results << rdend + "\n" + rdhindex + "\n" + rdbegin + "\n" ;\
+		    results << line + "\n" ;\
+		    finished = true ;\
+		  else ;\
+		    results << line + "\n" ;\
+		  end ;\
+		  } ;\
+		puts results'
+
+
+######################################################################
+#== Postprocessor for RDHindexParser
+#
+# [JA] RDHindexParser で XHTML 1.0 Transitional 違反となってしまう部分を
+#      修正する後処理スクリプト.
+#      標準入力から HTML を受け取り, 違反項目を置換した後,
+#      その結果を標準出力へ返す.
+
+RDHindexPostProcessor = $(RUBY) -e \
+		'lines = readlines ;\
+		$$KCODE = "$(OUTCODE)".upcase ;\
+		exit! if lines.empty? ;\
+		body = lines.join ;\
+		body.gsub!(/(\<ol class=\"rd2html_hindex\"\>)\s*\<ul\>/im, "\\1" ) ;\
+		body.gsub!(/\<\/ul\>\s*\<\/ol\>/im, "\</ol\>") ;\
+		puts body'
+
+######################################################################
+#== Search "rd" files
+__AllRDFiles__ = $(wildcard *.rd)
+RDFiles = $(__AllRDFiles__:%.v.rd=)
+GenerateFiles = $(HtmByJA) $(HtmByEN)
+HtmByJA = $(RDFiles:.rd=.htm)
+HtmByEN = $(RDFiles:.rd=.htm.en)
+
+##########################################################################
+#== Rules
+#
+all: pathcheck $(GenerateFiles)
+
+help:
+	@echo ""
+	@echo "  This Makefile needs following programs."
+	@echo ""
+	@echo "      Ruby   <URL:http://www.ruby-lang.org>"
+	@echo "      rdtool <URL:http://raa.ruby-lang.org/project/rdtool/>"
+	@echo ""
+	@echo ""
+	@echo "  make [all] :"
+	@echo "             Create HTML files from RD "
+	@echo ""
+
+
+%.htm: %.rd
+	@if [ $(JA) != "0" ] ; then \
+	    echo -n "Insert RD Header Index Level:$(RDHINDEX) Part:JA .." ;\
+	    $(JAPart) $< | $(RDHindexParser) $< "$(RDHINDEX)" JA > $<.rdhindex.tmp ;\
+	    echo ' done' ;\
+	    echo "$(RD2JA) $< > $@ || rm -f $@" ;\
+	    RUBYLIB=$(RUBYLIB) $(RD2JA) $<.rdhindex.tmp | $(RDHindexPostProcessor) > $@ || rm -f $@ ;\
+	    rm -f $<.rdhindex.tmp ;\
+	    if [ ! -f $@ ] && [ ! X$(DEFAULTMSGJA) = X"" ]; then \
+		echo -e "=begin JA\n$(DEFAULTMSGJA)\n=end" | $(RD2JA) > $@ || rm -f $@ ;\
+	    fi ;\
+	    if [ -f $@ ]; then \
+		echo -n 'Copy <h1> to <title> ..' ; $(H1ToTitle) $@  ; echo 'done' ;\
+		if [ ! X$(HEADERJA) = X"" ] ; then \
+		    echo -n 'Add header ..' ;\
+		    $(InsHeader) $(HEADERJA) $@ ;\
+		    echo ' done' ;\
+		fi ;\
+		if [ ! X$(FOOTERJA) = X"" ] ; then \
+		    echo -n 'Add footer ..' ;\
+		    $(InsFooter) $(FOOTERJA) $@ ;\
+		    echo ' done' ;\
+		fi ;\
+	    fi ;\
+	    if [ -f $@ ] && [ ! X$(CHMOD) = X"" ]; then \
+		echo -n chmod $(CHMOD) $@ .. ; chmod $(CHMOD) $@  ; echo ' done' ;\
+	    fi ;\
+	    if [ -f $@ ] && [ ! X$(CHGRP) = X"" ]; then \
+		echo -n chgrp $(CHGRP) $@ .. ; chgrp $(CHGRP) $@  ; echo ' done' ;\
+	    fi ;\
+	fi
+
+
+%.htm.en: %.rd
+	@if [ $(EN) != "0" ] ; then \
+	    echo -n "Insert RD Header Index Level:$(RDHINDEX) Part:EN .." ;\
+	    $(ENPart) $< | $(RDHindexParser) $< "$(RDHINDEX)" EN > $<.rdhindex.tmp ;\
+	    echo ' done' ;\
+	    echo "$(RD2EN) $< > $@ || rm -f $@" ;\
+	    RUBYLIB=$(RUBYLIB) $(RD2EN) $<.rdhindex.tmp | $(RDHindexPostProcessor) > $@ || rm -f $@ ;\
+	    rm -f $<.rdhindex.tmp ;\
+	    if [ ! -f $@ ] && [ ! X$(DEFAULTMSGEN) = X"" ]; then \
+		echo -e "=begin EN\n$(DEFAULTMSGEN)\n=end" | $(RD2EN) > $@ || rm -f $@ ;\
+	    fi ;\
+	    if [ -f $@ ]; then \
+		echo -n 'Copy <h1> to <title> ..' ; $(H1ToTitle) $@  ; echo ' done' ;\
+		if [ ! X$(HEADEREN) = X"" ] ; then \
+		    echo -n 'Add header ..' ;\
+		    $(InsHeader) $(HEADEREN) $@ ;\
+		    echo ' done' ;\
+		fi ;\
+		if [ ! X$(FOOTEREN) = X"" ] ; then \
+		    echo -n 'Add footer ..' ;\
+		    $(InsFooter) $(FOOTEREN) $@ ;\
+		    echo ' done' ;\
+		fi ;\
+	    fi ;\
+	    if [ -f $@ ] && [ ! X$(CHMOD) = X"" ]; then \
+		echo -n chmod $(CHMOD) $@ .. ; chmod $(CHMOD) $@  ; echo ' done' ;\
+	    fi ;\
+	    if [ -f $@ ] && [ ! X$(CHGRP) = X"" ]; then \
+		echo -n chgrp $(CHGRP) $@ .. ; chgrp $(CHGRP) $@  ; echo ' done' ;\
+	    fi ;\
+	fi
+
+clean:
+	@if [ ! X"$(wildcard *~ *.bak)" = X"" ]; then \
+		echo rm $(wildcard *~ *.bak) ;\
+		rm $(wildcard *~ *.bak) ;\
+	fi
+
+clean.all: clean
+	@if [ ! X"$(wildcard $(GenerateFiles))" = X"" ]; then \
+		echo rm $(wildcard $(GenerateFiles)) ;\
+		rm $(wildcard $(GenerateFiles)) ;\
+	fi
+
+pathcheck:
+	@echo -n "Ruby path check .. "
+	@if ! which $(RUBY) > /dev/null 2>&1 ; then \
+	    echo "" ;\
+	    echo "   Error: RUBY=\"$(RUBY)\" is invalid path." ;\
+	    echo "" ;\
+	    echo "   Please install Ruby (see http://www.ruby-lang.org), " ;\
+	    echo "   or set valid path." ;\
+	    echo "" ;\
+	    exit 1 ;\
+	fi
+	@echo " done"
+
+	@echo -n "RD path check .. "
+	@if ! which $(RD) > /dev/null 2>&1 ; then \
+	    echo "" ;\
+	    echo "   Error: RD=\"$(RD)\" is invalid path." ;\
+	    echo "" ;\
+	    echo "   Please install RDtool (see http://raa.ruby-lang.org/project/rdtool/), " ;\
+	    echo "   or set valid path." ;\
+	    echo "" ;\
+	    exit 1 ;\
+	fi
+	@echo " done"
+
+######################################################################
+#== Mode setting for Emacs
+#Local Variables:
+#mode: makefile
+#End:
+#

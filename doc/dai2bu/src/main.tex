@@ -1,0 +1,142 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv -- 離散モデル
+%
+% 履歴  2004/08/14  杉山耕一朗: 作成開始
+%       2004/09/03  小高正嗣, 北守太一
+%       2005/04/13  小高正嗣
+%       2012/04/20  小高正嗣  : 3D 化
+%       2012/12/05  小高正嗣  : 圧力方程式に熱膨張項を追加
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[a4j,12pt]{jreport}
+\usepackage{Dennou6}
+\usepackage{ascmac}
+\usepackage{html}	% latex2html パッケージ
+
+%リンク作成用
+%
+\usepackage[dvipdfmx,hidelinks]{hyperref}
+\AtBeginDvi{\special{pdf:tounicode EUC-UCS2}}
+
+
+\Dtitle[deepconv の離散化]
+       {非静力学モデル deepconv の離散化}
+
+\Dauthor{地球流体電脳倶楽部}
+\Ddate{2012 年 12 月 5 日}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\maketitle
+
+%\begin{abstract}
+% 理想気体を仮定した乾燥大気に対する 2 次元準圧縮性方程式系の離散化を行
+% う. 変数の格子配置は Lorenz グリッドにしたがう.  空間方向の離散化は 
+% 2 次精度中心差分を用いて行う. 時間方向の離散化は時間分割法を用いて行
+% う. 運動方程式と圧力方程式は短い時間刻み $\Delta \tau$ で時間積分を行
+% う. 音波に関する項の離散化には HE-VI 法を採用し, $u$ の式は前進差分,
+% $w, \pi$ の式は後退差分で評価する. 音波にかかわらない項についてはリー
+% プフロッグ法を用いて積分する. 熱力学の式とその他のトレーサの式は, リー
+% プフロッグ法を用いて長い時間刻み $\Delta t$ で時間積分を行う.
+%\end{abstract}
+
+\begin{latexonly}	% 目次は latex でのみ表示
+  \tableofcontents
+\end{latexonly}
+
+\setlength{\parindent}{0mm}
+%\setlength{\parskip}{10pt}
+\setlength{\parskip}{1em}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%文章開始
+
+% 第 1 章  数値計算法の概要
+\input{koushi.tex}
+
+% 第 2 章 空間離散化
+% 第 2.1 節, 第 2.2 節 
+\input{operater.tex}
+%
+% 第 2.3 節 空間離散化した基礎方程式
+\newpage
+\input{risan.tex}
+
+% 第 2.4 節 境界条件
+\newpage
+\input{kyoukai.tex}
+
+% 第 3 章 時間方向の離散化
+% 第 3.1 節 運動方程式と圧力方程式
+\input{uwpi.tex}
+% 第 3.2 節 熱力学の式
+\input{theta.tex}
+% 第 3.4 節 乱流運動エネルギーの式
+\input{turb.tex}
+% 第 3.5 節 時間フィルター
+\input{long.tex}
+% 第 3.6 節 スポンジ層
+\input{sponge.tex}
+
+% 参考文献
+\input{reference.tex}
+
+% 付録 
+\appendix
+% 圧力方程式の左辺の空間微分の書き下し
+\input{appendix-a.tex}
+
+% 音波減衰項について
+\input{appendix-b.tex}
+
+% 差分式の導出と誤差
+\input{appendix-c.tex}
+
+% 湿潤飽和調節法の定式化
+%\input{appendix-d.tex}
+
+% 化学物性値の計算方法
+\input{appendix-e.tex}
+
+% 単位の換算等の計算
+\input{appendix-f.tex}
+
+%======================================================================
+\newpage
+
+\chapter*{謝辞}
+\markright{謝辞}				% ヘッダ出力
+\addtocontents{toc}{\protect\vspace{1em}}	% 空行を目次へ出力
+\addtocontents{toc}{謝辞}			% 目次へ出力
+
+ 本資源は, 地球流体電脳倶楽部のインターネット上での学術知識の集積と活用
+ の実験の一環として
+ \begin{center}
+	\htmladdnormallink{
+	http://www.gfd-dennou.org/library/deepconv/}  
+	{http://www.gfd-dennou.org/library/deepconv/}  
+ \end{center}
+ において公開されているものである.
+ (\copyright deepconv 開発グループ, 2012).
+ 本資源は, 著作者の諸権利に抵触しない(迷惑をかけない)限りにおいて自由に
+ 利用していただいて構わない. なお, 利用する際には今一度自ら内容を確かめ
+ ることをお願いする(無保証無責任原則).
+
+ 本資源に含まれる元資源提供者(図等の版元等を含む)からは, 直接的な形での
+ WEB 上での著作権または使用許諾を得ていない場合があるが, 勝手ながら,
+ 「未来の教育」のための実験という学術目的であることをご理解いただけるも
+ のと信じ, 学術標準の引用手順を守ることで諸手続きを略させていただいてい
+ る. 本資源の利用者には, この点を理解の上, 注意して扱っていただけるよう
+ お願いする. 万一, 不都合のある場合には
+ \[
+  \mbox{dcstaff@gfd-dennou.org}
+ \]
+ まで連絡していただければ幸いである. 
+
+%======================================================================
+\end{document}
+

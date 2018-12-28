@@ -1,0 +1,547 @@
+#= INSTALL guide of deepconv/arare
+#
+# Authors:: SUGIYAMA Ko-ichiro, ODAKA Masatsugu
+# Version:: $Id: INSTALL,v 1.15 2015/02/19 08:39:56 odakker Exp $
+# Tag Name: $Name:  $
+# Copyright:: Copyright (C) GFD Dennou Club, 2006. All rights reserved.
+# License:: See COPYRIGHT[link:COPYRIGHT]
+#
+########################################################################
+#
+=begin JA
+
+= deepconv/arare インストール手引
+
+#* 杉山 耕一朗, 小高 正嗣, 山下 達也
+#  * 2011/12/06  (小高正嗣) 最終更新
+#  * 2011/08/09  (小高正嗣) 最終更新
+#  * 2011/06/14  (杉山耕一朗) 最終更新
+#  * 2011/03/02  (山下 達也) 最終更新
+#  * 2009/03/06  (山下 達也) 最終更新
+#  * 2008/01/17  (小高 正嗣) 最終更新
+#  * 2007/10/19  (小高 正嗣) 最終更新
+#  * 2006/10/30  (小高 正嗣) 最終更新
+#  * 2006/09/29  (小高 正嗣) 最終更新
+#  * 2006/09/20  (小高 正嗣) 最終更新
+#  * 2006/09/12  (小高 正嗣) 最終更新
+#  * 2006/03/16  (杉山 耕一朗) 最終更新
+#  * 2005/04/26  (小高 正嗣) 最終更新
+#  * 2005/04/22  (杉山 耕一朗) 最終更新
+#  * 2005/04/19  (杉山 耕一朗) 更新
+#  * 2005/01/31  (小高 正嗣) 新規作成
+
+(1) ((<動作環境>))
+(2) ((<コンパイルに必要なソフトウェア>))
+(3) ((<ビルドの手順>))
+(4) ((<ソースツリー以下の主要なファイルとディレクトリ>))
+
+=end JA
+
+=begin EN
+
+= Deepconv/arare installation guide
+
+#* Ko-ichiro Sugiyama, Masatsugu Odaka, Tatsuya Yamashita
+#  * 2011/12/06  (Masatsugu Odaka) Update
+#  * 2011/08/09  (Masatsugu Odaka) Update
+#  * 2011/06/14  (Ko-ichiro Sugiyama) Update
+#  * 2011/03/02  (Tatsuya Yamashita) Update
+#  * 2009/03/06  (Tatsuya Yamashita) Update
+#  * 2007/10/19  (Masatsugu Odaka) Update
+#  * 2006/10/30  (Masatsugu Odaka) Update
+#  * 2006/09/29  (Masatsugu Odaka) Update
+#  * 2006/09/20  (Masatsugu Odaka) Update
+#  * 2006/09/12  (Masatsugu Odaka) Update
+#  * 2006/03/16  (Ko-ichiro Sugiyama) Update
+#  * 2005/04/26  (Masatsugu Odaka) Update
+#  * 2005/04/22  (Ko-ichiro Sugiyama) Update
+#  * 2005/04/19  (Ko-ichiro Sugiyama) Update
+#  * 2005/01/31  (Masatsugu Odaka) Initial release
+
+(1) ((<Operation Environment>))
+(2) ((<Required Softwares>))
+(3) ((<How to Build>))
+(4) ((<Major files and directories in source tree>))
+
+
+=end EN
+
+=begin JA
+
+== 動作環境
+
+2014 年 02 月 17 日現在, 以下の環境での動作が確認されています.
+
+ * Debian GNU/Linux 7.0 (squuze) + gfortran + LAPACK 
+ * Debian GNU/Linux 7.0 (squuze) + intel fortran + LAPACK 
+ * Debian GNU/Linux 7.0 (squuze) + PGI fortran + LAPACK 
+ * CRAY XC30 + CRAY fortran 
+
+((<いくつかのコンパイラに関する注意書き|URL:./doc/tutorial/compiler_note.htm>)) も参照下さい. 他のコンパイラについても当てはまる場合があるかもしれませんので, 下記の動作チェックがうまく行かない場合にはご一読ください.
+
+=end JA
+
+=begin EN
+
+== Operation Environment
+
+This program is operated by following compilers.
+
+ * Debian GNU/Linux 7.0 (squuze) + gfortran + LAPACK 
+ * Debian GNU/Linux 7.0 (squuze) + intel fortran + LAPACK 
+ * Debian GNU/Linux 7.0 (squuze) + PGI fortran + LAPACK 
+ * CRAY XC30 + CRAY fortran 
+
+((<Notes about some compilers|URL:./doc/tutorial/compiler_note.htm.en>)) that are done the operation check or have done are as follows. Read it through if the following operation check doesn't go well, because it is likely to apply about other compilers.
+
+
+
+=end EN
+
+=begin JA
+== コンパイルに必要なソフトウェア
+
+deepconv/arare をビルドと実行には以下のソフトウェアを事前にインストール
+しておく必要があります. 
+
+: ((<netCDF|URL:http://www.unidata.ucar.edu/software/netcdf/>)) (バージョン 3.6.x)
+
+* Debian GNU/Linux (use binary packages)  
+  * Debian GNU/Linux を使用しており, バイナリパッケージを利用する場合は, ((<地球流体電脳倶楽部謹製品Debianパッケージ集|URL:http://www.gfd-dennou.org/library/cc-env/debian-dennou/>)) を参照してインストールしてください. 
+
+* ソースからビルドする場合
+  * ((<3.6.3 版 ソースのTGZ|URL:http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-3.6.3.tar.gz>))
+  
+: ((<gtool5 ライブラリ|URL:http://www.gfd-dennou.org/library/gtool/>))
+
+* Debian GNU/Linux (use binary packages)  
+  * Debian GNU/Linux を使用しており, バイナリパッケージを利用する場合は, ((<地球流体電脳倶楽部謹製品Debianパッケージ集|URL:http://www.gfd-dennou.org/library/cc-env/debian-dennou/>)) を参照してインストールしてください. 
+
+* ソースからコンパイルする場合
+  * ((<gtool5 ソースのTGZ|URL:http://www.gfd-dennou.org/library/gtool/gtool5/gtool5_current.tgz>))
+    [((<インストールガイド|URL:http://www.gfd-dennou.org/library/gtool/gtool5/gtool5_current/INSTALL.htm>))]
+
+: LAPACK/BLAS
+
+* Debian GNU/Linux (use binary packages)  
+  * Debian GNU/Linux を使用しており, バイナリパッケージを利用する場合は, libblas-dev, liblapack-dev パッケージをインストールして下さい. 
+
+* ソースからコンパイルする場合
+  * ((<LAPACK ソースの TGZ|URL:http://www.netlib.org/lapack/>)) 
+  * ((<BLAS ソースの TGZ|URL:http://www.netlib.org/blas/>)) 
+
+: MPI ライブラリ
+
+* MPI を用いた並列計算を行う場合には, MPI ライブラリをインストールしてください.
+
+=== 開発者にとって必要なソフトウェア
+
+ソースコードを編集したり, 
+ドキュメントを生成するためには以下の
+ソフトウェアを事前にインストールしておく必要があります. 
+(tar.gz パッケージには既にドキュメントが同梱しています)
+
+* ソースコードの編集
+  * ((<Ruby|URL:http://www.ruby-lang.org/>))
+  * ((<Rsed.rb (Recursive Sed with Ruby)|URL:http://www.ep.sci.hokudai.ac.jp/~michi/pc/ruby/script-02.html>))
+    (tar.gz パッケージに同梱済み)
+
+* ドキュメント生成
+  * 個別の HTML ページ
+    (例: 本ページ, ((<dcpam5 ドキュメント|URL:doc/index.htm>)),
+    ((<ごくらく dcpam5|URL:doc/gokuraku/index.htm>)),
+    ((<らくらく dcpam5|URL:doc/rakuraku/rakuraku.pdf>)))
+    * ((<rdtool|URL:http://raa.ruby-lang.org/project/rdtool/>))
+    * ((<rd2latex|URL:http://shugo.net/archive/rd2latex/>))
+      (tar.gz パッケージに同梱済み)
+  * 各モジュールのリファレンスマニュアル
+    * ((<"RDoc Fortran90/95 ソースコード解析機能強化版"|URL:http://www.gfd-dennou.org/library/dcmodel>))
+  * 支配方程式系とその離散化, 導出に関する参考資料 
+    * ((<LaTeX|URL:http://www.latex-project.org/>))
+      * スタイルファイル: ((<Dennou6 style|URL:http://www.gfd-dennou.org/library/cc-env/TeXmacro/dennou/SIGEN.htm>))
+    * ((<latex2html に日本語パッチ, Dennou6 style パッチをあてたもの|URL:http://www.gfd-dennou.org/library/cc-env/latex2html/SIGEN.htm>))
+
+=end JA
+
+=begin EN
+
+== Required Softwares
+
+: ((<netCDF|URL:http://www.unidata.ucar.edu/software/netcdf/>)) (version 3.6.x)
+
+* Debian GNU/Linux (use binary packages)
+  * If you use Debian GNU/Linux and use binary package of netCDF, see ((<here|URL:http://www.gfd-dennou.org/library/cc-env/debian-dennou/index.htm.en>)) and install it. 
+
+* Building from source codes
+  * ((<Version 3.6.3 TGZ|URL:http://www.gfd-dennou.org/library/netcdf/unidata-mirror/netcdf-3.6.3.tar.gz>)),
+ 
+: ((<gtool5|URL:http://www.gfd-dennou.org/library/gtool/>))
+
+* Debian GNU/Linux (use binary packages)
+  * If you use Debian GNU/Linux and use binary package of netCDF, see ((<here|URL:http://www.gfd-dennou.org/library/spmodel/debian/needed.htm.en>)) and install it. 
+
+* Building from source codes
+  * ((<TGZ file|URL:http://www.gfd-dennou.org/library/gtool/gtool5/gtool5_current.tgz>))
+    [((<Installation Guide|URL:http://www.gfd-dennou.org/library/gtool/gtool5/gtool5_current/INSTALL.htm.en>))]
+
+: LAPACK/BLAS
+
+* Debian GNU/Linux (use binary packages)
+  * Please install "libblas-dev" and "liblapack-dev" packages
+
+* Building from source codes
+  * ((<TGZ file of LAPACK|URL:http://www.netlib.org/lapack/>)) 
+  * ((<TGZ file of BLAS |URL:http://www.netlib.org/blas/>)) 
+
+: MPI library
+
+* If you perform parallel computing by using the MPI, install MPI library.
+
+=== Software Requirements for developers
+
+Following softwares should be installed
+for modification of source code and generation of documents.
+(But if you get tar.gz package, documentations are already generated).
+
+* Modification of source code
+  * ((<Ruby|URL:http://www.ruby-lang.org/>))
+  * ((<Rsed.rb: Recursive Sed with Ruby (in Japanese)|URL:http://www.ep.sci.hokudai.ac.jp/~michi/pc/ruby/script-02.html>))
+    (This is bundled in the tar.gz package)
+
+* generation of documents
+  * Individual HTML pages
+    (Examples: This page, ((<dcpam5 Documents|URL:doc/index.htm.en>)),
+    ((<GOKURAKU dcpam5|URL:doc/gokuraku/index.htm.en>)),
+    ((<RAKURAKU dcpam5|URL:doc/rakuraku/rakuraku.pdf>)))
+    * ((<rdtool|URL:http://raa.ruby-lang.org/project/rdtool/>))
+    * ((<rd2latex|URL:http://shugo.net/archive/rd2latex/>))
+      (This is bundled in the tar.gz package)
+  * Reference Manual of modules
+    * ((<"Enhanced version of RDoc Fortran90/95 parser"|URL:http://www.gfd-dennou.org/library/dcmodel>))
+  * The governing equations and basic_equations, References for derivation
+    * ((<LaTeX|URL:http://www.latex-project.org/>))
+      * Style file: ((<Dennou6 style (Japanese only)|URL:http://www.gfd-dennou.org/library/cc-env/TeXmacro/dennou/SIGEN.htm>))
+    * ((<latex2html_jp+dennou (Japanese only)|URL:http://www.gfd-dennou.org/library/cc-env/latex2html/SIGEN.htm>))
+
+=end EN
+
+=begin JA
+
+== ビルドの手順
+
+=== ソースの入手
+
+wget などでソースを入手
+
+  $ wget http://www.gfd-dennou.org/library/deepconv/arare/arare5_current.tgz
+
+=== tgz ファイルの展開, ソースディレクトリへの移動
+
+  $ tar -xzvf arare5_current.tgz
+  $ cd arare5-YYYYMMDD
+
+
+=== 環境変数の設定
+
+コンパイラを指定する. 
+
+  $ export FC=(コンパイラ名)
+
+
+=== Config.mk の作成
+
+展開されたディレクトリに移動し, (({ ./configure }))を実行します.
+((<コンパイルに必要なライブラリ>))でインストールした各ライブラリを
+以下のオプションに指定する必要があります.
+
+:(({--with-netcdf=}))((|ARG|))
+  netcdf ライブラリ (*.a) のファイル名.
+
+:(({--with-gtool5=}))((|ARG|))
+  gtool5 ライブラリ (*.a) のファイル名.
+
+:(({--with-lapack=}))((|ARG|))
+  lapack ライブラリ (*.a) のファイル名.
+
+:(({--with-blas=}))((|ARG|))
+  blas ライブラリ (*.a) のファイル名.
+
+:(({--with-mpi}))
+  MPI を用いた並列化を行う場合
+
+例えば以下のように指定します.
+このコマンドによって (({ Config.mk })) ファイルが生成されます.
+
+  $ ./configure \
+    --with-netcdf=(netCDF ライブラリファイルの絶対パス) \	
+    --with-gtool5=(gtool5 ライブラリファイルの絶対パス) \
+    --with-lapack=(LAPACK ライブラリファイルの絶対パス) \
+    --with-blas=(BLAS ライブラリファイルの絶対パス) 
+
+並列化を行う場合, 
+
+  $ ./configure \
+    --with-netcdf=(netCDF ライブラリファイルの絶対パス) \	
+    --with-gtool5=(gtool5 ライブラリファイルの絶対パス) \
+    --with-lapack=(LAPACK ライブラリファイルの絶対パス) \
+    --with-blas=(BLAS ライブラリファイルの絶対パス) \
+    --with-mpi
+
+ビルドには GNU make が必要となるため, configure は PATH 内から
+自動で GNU make を探査しようとしますが, もし見つからない場合,
+エラーを返します. その場合には環境変数 ((* MAKE *)) に
+GNU make コマンドを指定して再度 configure を実行してください.
+
+
+: Debian package を利用している場合
+
+gfortran, netcdf, gtool5 の Debian package を使用する場合には, 以下のように configure を実行すれば良いです.
+
+    $ export FC=gt5frt 
+    $ ./configure
+
+
+=== Config.mk の編集
+
+上記の configure によって, 基本的な設定が記述された
+(({ Config.mk })) ファイルが作成されます. 
+しかし, 環境によっては configure のみでは不十分な場合もあるため,
+必要に応じて Config.mk を手動で編集して下さい. 
+
+#(({ MPI を用いた並列計算を行う場合には, CPPFLAGS = -DLIB_MPI と編集して下さい }))
+
+以下に主要な設定項目を挙げます. 
+
+:FC
+  Fortran コンパイラ
+
+:CPPFLAGS
+  プリプロセスのためのフラグ. MPI を利用する場合は, CPPFLAGS = -DLIB_MPI とする. 
+
+:SYSFFLAGS
+  コンパイル時・リンク時に必要なフラグ
+  (Fortran コンパイラ実行時に必要なオプション)
+  浮動小数点演算の精度を保証するためのオプションを必ず付けて下さい
+  (pgfortran => -Kieee, ifort => -fp-model strict -prec-div). 
+
+:SYSLDFLAGS
+  リンク時に必要なフラグ
+
+:SYSLDLIBS
+  リンク時に必要なライブラリ
+
+:prefix
+  deepconv のライブラリ, モジュール, 実行ファイル,
+  ドキュメントのインストールディレクトリ
+
+:MAKE
+  GNU make コマンド
+
+:AR
+  アーカイブコマンド
+
+:ARFLAGS
+  アーカイブ時に必要なフラグ
+
+:RANLIB
+  アーカイブのインデックスを作成するコマンド
+
+=== ソースのコンパイル
+
+コンパイルは GNU make を用いて行う. ソースツリー直下で
+
+        $ make
+
+を実行するとソース直下の以下のディレクトリに実行ファイルとライブラリ,
+モジュールファイルが展開される.
+
+	./lib		ライブラリ libarare.a が格納される
+	./main		実行ファイルが格納される
+	./include	各種 *.mod ファイルが格納される
+
+main 以下には次の実行ファイルが格納される.
+
+	arare           雲対流モデル
+	arare_init-data 初期値ファイル作成用実行ファイル
+
+ドキュメントをコンパイルする場合には以下のコマンドを実行して下さい. 
+
+	$ make doc  
+
+
+=end JA
+=begin EN
+
+== How to Build
+
+=== Download source code.
+
+Download source code by using wget command, and so on.
+
+  $ wget http://www.gfd-dennou.org/library/deepconv/arare/arare5_current.tgz
+
+=== Unpack tgz file and go to source tree directory.
+
+  $ tar -xzvf arare5_current.tgz
+  $ cd arare5-YYYYMMDD
+
+=== Setting of environment variable
+
+Set an environment variable of a compiler.
+
+  $ export FC=(compiler name)
+
+=== Create Config.mk 
+
+Move created directroy, and excute `(({ ./configure }))'.
+
+Specify library files in ((<Libraries needed for compile>)) to
+following options.
+
+:(({--with-netcdf=}))((|ARG|))
+  netcdf library filename (*.a)
+
+:(({--with-gtool5=}))((|ARG|))
+  gtool5 library filename (*.a)
+
+:(({--with-lapack=}))((|ARG|))
+  lapack library filename (*.a)
+
+:(({--with-blas=}))((|ARG|))
+  blas library filename (*.a)
+
+:(({--with-mpi}))
+  using MPI
+
+
+For exapmle, specify as follow. This command will generate
+(({ Config.mk })). 
+
+   $ ./configure \
+      --with-netcdf=(netCDF library file) \	
+      --with-gtool5=(gtool5 library file) \
+      --with-lapack=(LAPACK library file) \
+      --with-blas=(BLAS library file) 
+
+If you use MPI, then, 
+
+   $ ./configure \
+      --with-netcdf=(netCDF library file) \	
+      --with-gtool5=(gtool5 library file) \
+      --with-lapack=(LAPACK library file) \
+      --with-blas=(BLAS library file)  \
+      --with-mpi
+
+GNU make is needed to build, so configure automatically inquires
+into GNU make in PATH. However, it returns error when GNU make is
+not found. In that case, please set the GNU make command for
+environment variable ((* MAKE *)). And rerun execute `(({ ./configure }))'
+
+
+:Debian packages
+
+If using Debian package, please specify as follow. 
+
+   $ export FC=gfortran
+   $ ./configure
+
+
+=== Edit `Config.mk'
+
+A file '(({ Config.mk }))' in which elemental settings are written
+is created by above "configure". 
+However, the settings may be insufficient by "configure" in some environments.
+In that case, edit '(({ Config.mk }))' manually according to need. 
+
+#(({ If you use MPI, please edit Config.mk as CPPFLAGS = LIB_MPI }))
+
+Followings are main items.
+
+:FC
+  Fortran compiler
+
+:CPPFLAGS
+  Flags needed for PreProcessor. 
+  If using MPI, CPPFLAGS = LIB_MPI.
+
+:SYSFFLAGS
+  Flags needed when compiled and linked
+  (we recommend following option; pgfortran => -Kieee, ifort => -fp-model strict -prec-div). 
+
+:SYSLDFLAGS
+  Flags needed when linked
+
+:SYSLDLIBS
+  Libraries needed when linked
+
+:prefix
+  Directory where deepconv library, modules, executable files, 
+  and documentations are installed
+
+:MAKE
+  GNU make command
+
+:AR
+  Archive command
+
+:ARFLAGS
+  Flag of Archive command
+
+:RANLIB
+  Generate index to archive command
+
+
+=== Compile
+
+Execute "make" command at the top directory of source tree.
+
+	$ make 
+  
+
+Execute "make doc" at the top directory of source tree to build
+installation guide, code reference and tutorial.
+
+	$ make doc  
+
+=end EN
+
+=begin JA
+== アンインストールの手順
+
+src ディレクトリ以下のオブジェクトファイル, 実行ファイルの消去は
+
+	$ make clean
+
+とする.
+
+数理モデル解説と離散モデル解説, インストールの手引, 
+利用の手引とコードリファレンスの消去は
+
+	$ make clean.doc
+
+とする. 
+
+	$ make clean.all
+
+とすると, 上記のすべてと Config.mk ファイルが消去される.
+
+=end JA
+=begin EN
+== Uninstall
+
+Execute "make clean" to remove binary files.
+
+	$ make clean
+
+Execute "make doc" at the top directory of source tree to remove
+installation guide, code reference and tutorial.
+
+	$ make clean.doc
+
+All of them and Config.mk are removed by "make clean.all". 
+
+	$ make clean.all
+
+=end EN
+
+

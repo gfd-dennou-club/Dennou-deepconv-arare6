@@ -1,0 +1,185 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv -- 離散モデル
+%       付録 C
+%
+% 履歴  2005/03/15 小高正嗣 作成開始
+%       2005/04/13 小高正嗣
+%       2006/08/24 小高正嗣
+%       2012/04/24 小高正嗣  : 3D 化
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{差分式の導出と誤差}
+\Dchaplab{appendix-c}
+
+ここでは交互格子を用いた場合の空間微分の差分式の導出と, その誤差につい
+てまとめる.  具体例としてフラックス格子点の変数 $u$ の, $(i,j,k)$ 格子
+点上における $x$ 方向一階微分
+\[
+  \left[\DP{u}{x}\right]_{i,j,k}
+\]
+の差分式と, その誤差を考える. 
+
+\section{2 次精度中心差分}
+
+フラックス格子点 $(i(u),j,k)$ 上の $u$ $(u_{i(u),j,k})$ を $x$ 方向に
+$-\Delta x/2$ だけずれたスカラー格子点 $(i,j,k)$ 上の $u$
+$(u_{i,j,k})$ のテーラー展開として表すと, 以下のようになる.
+\begin{eqnarray}
+u _{i(u),j,k} &=& u_{i,j,k} 
+  + \left[\DP{u}{x} \right]_{i,j,k}\frac{\Delta x}{2}
+  + \frac{1}{2!}\left[\DP[2]{u}{x} \right]_{i,j,k}
+       \left(\frac{\Delta x}{2}\right)^{2}
+  + \frac{1}{3!}\left[\DP[3]{u}{x} \right]_{i,j,k}
+       \left(\frac{\Delta x}{2}\right)^{3} \nonumber \\
+&&  + \frac{1}{4!}\left[\DP[4]{u}{x} \right]_{i,j,k}
+       \left(\frac{\Delta x}{2}\right)^{4}
+  + \frac{1}{5!}\left[\DP[5]{u}{x} \right]_{i,j,k}
+       \left(\frac{\Delta x}{2}\right)^{5}
+  + \cdots .
+\Deqlab{u_{i(u),j} のテーラー展開}
+\end{eqnarray}
+
+同様に, フラックス格子点 $(i-1(u),j,k)$ 上の $u$ $(u_{i-1(u),j,k})$ を 
+$u_{i,j,k}$ のテーラー展開として表すと, 以下のようになる.
+\begin{eqnarray}
+u_{i-1(u),j,k} &=& u_{i,j,k} 
+  - \left[\DP{u}{x} \right]_{i,j,k}\frac{\Delta x}{2}
+  + \frac{1}{2!}\left[\DP[2]{u}{x} \right]_{i,j,k}
+       \left(\frac{\Delta x}{2}\right)^{2}
+  - \frac{1}{3!}\left[\DP[3]{u}{x} \right]_{i,j,k}
+       \left(\frac{\Delta x}{2}\right)^{3} \nonumber \\
+&&+ \frac{1}{4!}\left[\DP[4]{u}{x} \right]_{i,j,k}
+       \left(\frac{\Delta x}{2}\right)^{4}
+  - \frac{1}{5!}\left[\DP[5]{u}{x} \right]_{i,j,k}
+       \left(\frac{\Delta x}{2}\right)^{5}
+  + \cdots .
+\Deqlab{u_{i-1(u),j} のテーラー展開}
+\end{eqnarray}
+
+\Deqref{u_{i(u),j} のテーラー展開} $-$ \Deqref{u_{i-1(u),j} のテーラー展開}
+より, 
+\begin{eqnarray}
+u _{i(u),j,k} - u_{i-1(u),j,k} &=&
+   \left[\DP{u}{x} \right]_{i,j,k}\Delta x
+  + \frac{1}{3}\left[\DP[3]{u}{x} \right]_{i,j,k}
+       \left(\frac{\Delta x}{2}\right)^{3}
+  + \frac{1}{60}\left[\DP[5]{u}{x} \right]_{i,j,k} 
+       \left(\frac{\Delta x}{2}\right)^{5} \nonumber \\
+&&  + O[(\Delta x)^{7}]
+\Deqlab{u_{i,j} の差分式1}
+\end{eqnarray}
+これを変形すると $(i,j,k)$ 格子点上における $u$ の $x$ 方向一階微分の式
+が得られる.
+\begin{eqnarray}
+\left[\DP{u}{x} \right]_{i(u),j,k} &=& 
+  \frac{u_{i+1,j,k}  - u _{i,j,k}}{\Delta x} 
+  - \frac{1}{24}\left[\DP[3]{u}{x} \right]_{i,j,k}
+       \left(\Delta x\right)^{2} \nonumber \\
+&&  - \frac{1}{1920}\left[\DP[5]{u}{x} \right]_{i,j,k} 
+       \left(\Delta x\right)^{4}
+  + O[(\Delta x)^{6}]
+\end{eqnarray}
+
+上式の $\left(\Delta x\right)^{2}$ 以上の高次項を無視することで, 
+交互格子を用いた場合の 2 次精度中心差分の式
+\begin{equation}
+\left[\DP{u}{x} \right]_{i(u),j,k} = 
+  \frac{u_{i+1,j,k} - u_{i,j,k}}{\Delta x}
+\end{equation}
+が得られる. このときの誤差の大きさは
+\begin{equation}
+   \left|\frac{1}{24}\left[\DP[3]{u}{x} \right]_{i,j,k}
+       \left(\Delta x\right)^{2}\right|
+\end{equation}
+となる. 
+
+
+\section{4 次精度中心差分}
+
+2 次精度中心差分の式を求める際に用いた\Deqref{u_{i(u),j} のテーラー展
+  開}, \Deqref{u_{i-1(u),j} のテーラー展開}に加え, $(i,j,k)$ から $x$
+方向に $\pm \Delta 3x/2$ だけずれたフラックス格子点での $u$ $(u
+_{i+1(u),j,k}, u _{i-2(u),j,k})$ の値を$u_{i,j,k}$ のテーラー展開として
+求める.
+\begin{eqnarray}
+u _{i+1(u),j,k} &=& u_{i,j,k} 
+  + \left[\DP{u}{x} \right]_{i,j,k}\frac{3\Delta x}{2}
+  + \frac{1}{2!}\left[\DP[2]{u}{x} \right]_{i,j,k}
+       \left(\frac{3\Delta x}{2}\right)^{2}
+  + \frac{1}{3!}\left[\DP[3]{u}{x} \right]_{i,j,k}
+       \left(\frac{3\Delta x}{2}\right)^{3} \nonumber \\
+&&  + \frac{1}{4!}\left[\DP[4]{u}{x} \right]_{i,j,k}
+       \left(\frac{3\Delta x}{2}\right)^{4}
+  + \frac{1}{5!}\left[\DP[5]{u}{x} \right]_{i,j,k}
+       \left(\frac{3\Delta x}{2}\right)^{5}
+  + \cdots . \Deqlab{u_{i+1(u),j} のテーラー展開} \\
+%%
+u _{i-2(u),j,k} &=& u_{i,j.k} 
+  - \left[\DP{u}{x} \right]_{i,j,k}\frac{3\Delta x}{2}
+  + \frac{1}{2!}\left[\DP[2]{u}{x} \right]_{i,j,k}
+       \left(\frac{3\Delta x}{2}\right)^{2}
+  - \frac{1}{3!}\left[\DP[3]{u}{x} \right]_{i,j,k}
+       \left(\frac{3\Delta x}{2}\right)^{3} \nonumber \\
+&&  + \frac{1}{4!}\left[\DP[4]{u}{x} \right]_{i,j,k}
+       \left(\frac{3\Delta x}{2}\right)^{4}
+  - \frac{1}{5!}\left[\DP[5]{u}{x} \right]_{i,j,k}
+       \left(\frac{3\Delta x}{2}\right)^{5}
+  + \cdots . \Deqlab{u_{i-2(u),j} のテーラー展開} 
+\end{eqnarray}
+
+\Deqref{u_{i+1(u),j} のテーラー展開} $-$ \Deqref{u_{i-2(u),j} のテーラー展開}
+より, 
+\begin{eqnarray}
+u _{i+1(u),j,k} - u_{i-2(u),j,k} &=&
+   \left[\DP{u}{x} \right]_{i,j,k}3\Delta x
+  + \frac{1}{3}\left[\DP[3]{u}{x} \right]_{i,j,k}
+       \left(\frac{3\Delta x}{2}\right)^{3}
+\nonumber \\
+&&
+  + \frac{1}{60}\left[\DP[5]{u}{x} \right]_{i,j,k} 
+       \left(\frac{3\Delta x}{2}\right)^{5} 
+    + O[(\Delta x)^{7}]
+\Deqlab{u_{i,j} の差分式2}
+\end{eqnarray}
+
+\Deqref{u_{i,j} の差分式1}$\times 27 -$\Deqref{u_{i,j} の差分式2}を行い
+$(\Delta x)^{3}$ の項を消去すると,
+\begin{eqnarray}
+&&
+27(u _{i(u),j,k} - u_{i-1(u),j,k}) - (u _{i+1(u),j,k} - u_{i-2(u),j,k})
+ = \nonumber \\
+&& \hspace{1em}
+   \left[\DP{u}{x} \right]_{i,j,k}24\Delta x
+  - \frac{216}{60}\left[\DP[5]{u}{x} \right]_{i,j,k} 
+       \left(\frac{\Delta x}{2}\right)^{5} 
+    + O[(\Delta x)^{7}]
+\Deqlab{u_{i,j} の差分式3}
+\end{eqnarray}
+
+これを変形して $(i,j,k)$ 格子点上における $u$ の $x$ 方向一階
+微分の式が得られる.
+\begin{eqnarray}
+\left[\DP{u}{x}\right]_{i,j,k} &=& 
+  \frac{9}{8}\left(\frac{u_{i,j,k}  - u _{i-1,j,k}}{\Delta x}\right) 
+  - \frac{1}{24}\left(\frac{u_{i+1,j,k}  - u _{i-2,j,k}}{\Delta x}\right)
+  \nonumber \\
+&&  + \frac{3}{640}\left[\DP[5]{u}{x} \right]_{i,j,k} 
+       \left(\Delta x\right)^{4} 
+  + O[(\Delta x)^{6}]
+\end{eqnarray}
+
+上式の $\left(\Delta x\right)^{4}$ 以上の高次項を無視することで, 
+交互格子を用いた場合の 4 次精度中心差分式
+\begin{equation}
+\left[\DP{u}{x}\right]_{i,j,k} = 
+  \frac{9}{8}\left(\frac{u_{i,j,k}  - u _{i-1,j,k}}{\Delta x}\right) 
+  - \frac{1}{24}\left(\frac{u_{i+1,j,k}  - u _{i-2,j,k}}{\Delta x}\right)
+\end{equation}
+が得られる. このときの誤差の大きさは
+\begin{equation}
+   \left|\frac{3}{640}\left[\DP[5]{u}{x} \right]_{i,j,k}
+       \left(\Delta x\right)^{4}\right|
+\end{equation}
+となる. 

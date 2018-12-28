@@ -1,0 +1,467 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%表題   2 次元非静力学モデル -- 付録 A 基礎方程式の導出
+%
+%履歴   2003-07-25 高橋 こう子   新規作成
+%       2003-09-03 高橋 こう子   骨子完成
+%       2003-09-08 高橋 こう子   参考文献追加
+%       2003-09-09 高橋 こう子   Appendix 追加
+%       2003-11-17 高橋 こう子   修正
+%       2003-11-22 高橋 こう子   運動エネルギーの式修正
+%       2004-07-25 小高正嗣      2 次元乾燥大気版へ再構成
+%       2005-11-15 杉山耕一朗    
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{乾燥対流に対する基礎方程式系の導出}
+
+
+\section{基本場と偏差の分離}
+
+ 変数を基本場とそこからの偏差に分ける. 基本場の変数は上付きバー 
+ $(\bar{~})$ で表し, 偏差を上付きプライム $( ^{\prime})$ で表す.  ある変
+ 数 $\phi$ は以下のように分離される.
+ \begin{eqnarray}
+  \phi = \overline{\phi} + \phi^{\prime}.
+ \end{eqnarray}
+ 分離される変数は $u, w$, 温位 $\theta$, 圧力 $p$ または $\Pi$,
+ 密度 $\rho$である.
+
+ 基本場は水平一様 ($\overline{\phi} = \overline{\phi}(z)$) で, 擾乱のな
+ い静止状態 ($\overline{u} = \overline{v} = \overline{w} = 0$) であると
+ する. 基本場の無次元圧力関数と温位は, それぞれ,
+ \begin{eqnarray}
+  \overline{\Pi} &=& \left(\frac{\overline{p}}{p_{0}}\right)^{R/c_{p}}
+  , \\
+  \overline{\theta} &=& \frac{\overline{T}}{\overline\Pi}
+   \Deqlab{huroku-A:theta_def}
+ \end{eqnarray}
+ である. 基本場の密度 $\overline{\rho}$ は状態方程式から
+ \begin{equation}
+   \overline{\rho} = \frac{p_{0}}{R}
+                    \frac{\overline{\Pi}^{c_{v}/R}}{\overline{\theta}}
+ \end{equation}
+ と与えられる. ここで $c_{v}$ は定積比熱である.
+
+ 以下では $\Pi^{\prime} = \pi$ とし,
+ 記述を簡便にするためその他の変数の偏差量に付く上付きプライム $(
+ ^{\prime})$ は省略する.
+ 
+%--------------------------------------------------------------------
+\pagebreak
+
+\section{熱の式の導出}
+
+ここでは \Deqref{huroku-A:theta_def} 式で与えた温位 $\theta$ の導出と, 
+$\theta$ を用いた熱の式の導出を行う. 
+
+まず始めに温位の導出を行う. 
+温位は乾燥断熱状態における保存量である. 
+乾燥断熱状態を表す熱力学の式は
+%
+\begin{eqnarray}
+ c_{p}dT - \Dinv{\rho} dp = 0
+\Deqlab{theta1}
+\end{eqnarray}
+% 
+である. ここで $T$ は温度, $p$ は圧力, 
+$c_{p}$ は単位質量当たりの比熱, 
+$\rho$ は密度である. 
+\Deqref{theta1} 式の $\rho$ は, 
+理想気体の状態方程式を用いると, 
+%
+\begin{eqnarray}
+ \rho = \frac{p}{RT}
+ \Deqlab{theta2}
+\end{eqnarray}
+%
+と書ける. ここで $R$ は単位質量当たりの気体定数である. 
+\Deqref{theta1} 式に \Deqref{theta2} 式を代入し整理すると, 
+%
+\begin{eqnarray}
+ \frac{c_{p}}{T}dT - \frac{R}{p} dp = 0
+\Deqlab{theta3}
+\end{eqnarray}
+% 
+となる. 凝縮を生じない場合には気塊の組成は変化しないので
+$c_{p}$ と $R$ は共に $p$ に依存しない. 
+一般に $c_{p}$ は $T$ の関数であるが, 
+{\bf \boldmath $c_{p}$ を定数とみなすと}, 
+%
+\begin{eqnarray}
+\int^{T_{0}}_{T} \Dinv{T}dT 
+ &=& \frac{R}{c_{p}} \int^{p_{0}}_{p} \Dinv{p} dp \nonumber \\
+\ln{(T_{0}/T)}
+ &=& \frac{R}{c_{p}} \ln{(p_{0}/p)} \nonumber \\
+ \theta 
+ &=& T \left(\frac{p_{0}}{p}\right)^\frac{R}{c_{p}} 
+\Deqlab{theta4}
+\end{eqnarray}
+% 
+となり, 温位が得られる. 
+なお, $c_{p} = c_{p}(T)$ として \Deqref{theta3} 式を積分すると, 
+%
+\begin{eqnarray}
+\int^{T_{0}}_{T} \frac{c_{p}}{T}dT 
+ &=& R \int^{p_{0}}_{p} \Dinv{p} dp \nonumber \\
+ &=& R \ln{(p_{0}/p)}
+\Deqlab{theta4}
+\end{eqnarray}
+% 
+となる. ここでエントロピー $s$ の定義式, 
+%
+\begin{eqnarray}
+ s(T,p) = 
+    s^{\circ}(T_{0},p_{0}) 
+  + \int^{T_{0}}_{T} \frac{c_{p}}{T}dT 
+  + R \ln{(p/p_{0})}
+\end{eqnarray}
+%
+を用いると, \Deqref{theta4} 式は, 
+%
+\begin{eqnarray}
+ s(T,p) - s(T_{0},p_{0}) = 0
+\end{eqnarray}
+%
+と書くことができ, 乾燥断熱状態における
+エントロピー保存の式そのものが得られる. 
+
+
+
+気塊が乾燥成分と湿潤成分の 2 成分から成るものと仮定し, 
+乾燥断熱減率の式を変形する. 
+この時, 熱力学の第 1 法則は以下のように書ける. 
+%
+\begin{eqnarray}
+ \bar{c_{p}} dT  - \bar{\rho} dp = 0
+\end{eqnarray}
+%
+$dp$ を $\theta_{v}$ の関数として表現するという目的から, 
+仮温位の式の全微分を求める. 
+%
+\begin{eqnarray}
+ d \theta_{v} &=& 
+  d \left[
+     T \left(\frac{p_{0}}{p}\right)^{\frac{C_{p}}{R}}
+     \left\{
+      1 + \left( \frac{R_{v}}{R_{d}} - 1 \right) q_{v}  
+	  \right\}
+	   \right]
+  \nonumber \\
+ &=& 
+  d \left[
+     T \left(\frac{p_{0}}{p}\right)^{\frac{C_{p}}{R}}
+     + T \left(\frac{p_{0}}{p}\right)^{\frac{C_{p}}{R}}
+      \left( \frac{R_{v}}{R_{d}} - 1 \right) q_{v}  
+	   \right]
+  \nonumber \\
+ &=& 
+  \frac{1 + \left( \frac{R_{v}}{R_{d}} - 1 \right) q_{v}}{\pi}
+  \left(
+   \frac{R T}{\bar{c_{p}} p} dp  +  dT
+  \right)
+  + T \left(\frac{p_{0}}{p}\right)^{\frac{C_{p}}{R}}
+     \left\{
+      1 + \left( \frac{R_{v}}{R_{d}} - 1 \right)
+	  \right\} d q_{v}  
+     \nonumber \\
+c_{p} \pi d\theta_{v} &=& 
+ \left\{
+  1 + \left( \frac{R_{v}}{R_{d}} - 1 \right) q_{v}
+ \right\}
+  \left(
+   \rho dp  + c_{p} dT
+  \right)
+  + T \left(\frac{p_{0}}{p}\right)^{\frac{C_{p}}{R}}
+     \left\{
+      1 + \left( \frac{R_{v}}{R_{d}} - 1 \right)
+	  \right\} d q_{v}  
+     \nonumber \\
+\end{eqnarray}
+%
+
+
+
+
+
+
+
+
+
+
+%--------------------------------------------------------------------
+\pagebreak
+
+\section{運動方程式の導出}
+
+ ここではエクスナー関数を用いた運動方程式の導出と, 水平一様静止基本場と
+ そこから偏差との分離を行う. 
+
+\subsection{エクスナー関数の導入}
+
+ 運動方程式は
+ \begin{eqnarray}
+  \DD{u_{i}}{t} = - \frac{1}{\rho} \DP{p}{x_{i}}
+                  - \delta_{i3} g
+		  + D_{u_{i}}
+ \end{eqnarray}
+ である.
+ 圧力勾配項を エクスナー関数を用いて書き直すと, 
+ \begin{eqnarray}
+  \DD{u_{i}}{t} = - \frac{c_{p} p}{\rho R_{d} \Pi}
+                    \DP{\Pi}{x_{i}}
+                  - \delta_{i3} g
+		  + D_{u_{i}}
+ \end{eqnarray}
+ ここで, 状態方程式
+ \begin{eqnarray}
+  p &=& \rho R_{d} \Pi \theta
+ \end{eqnarray}
+ を用いてさらに書き直すと, 
+ \begin{eqnarray}
+  \DD{u_{i}}{t} = - c_{p} \theta \DP{\Pi}{x_{i}}
+                  - \delta_{i3} g
+		  + D_{u_{i}}
+ \end{eqnarray}
+ を得る.
+
+\subsection{基本場と偏差の分離}
+
+ 運動方程式を水平一様静止基本場の式とそこからの偏差の式(擾乱場の式)
+ に分離する. 基本場の方程式は静水圧の式
+ \begin{equation}
+  \DP{\overline{\Pi}}{z} = - \frac{g}{c_{p} \overline{\theta}}
+ \end{equation}
+ である.
+
+ 擾乱場の水平方向の運動方程式 $(i = 1)$ は
+ \begin{eqnarray}
+  \DD{u}{t} &=& - c_{p}
+                  \left(\overline{\theta}
+	        + \theta^{\prime}
+	          \right)
+		  \DP{\left(\overline{\Pi} + \pi\right)}{x}
+		+ D_{u}
+  \nonumber \\
+             &\simeq& - c_{p}
+		     \left(\overline{\theta}_{v}
+		           \DP{\overline{\Pi}}{x}
+			   + \overline{\theta}_{v}
+		             \DP{\pi}{x}
+			   + \theta_{v}^{\prime}
+		             \DP{\overline{\Pi}}{x}
+		     \right)
+		    + D_{u}
+ \end{eqnarray}
+ となる. 擾乱場の鉛直方向の運動方程式 $(i = 3)$は
+ \begin{eqnarray}
+  \DD{w}{t} &=& - c_{p}
+                  \left(\overline{\theta}
+		        + \theta^{\prime}
+		  \right)
+		  \DP{\left(\overline{\Pi} + \pi\right)}{z}
+                -  g 
+		+ D_{w}
+  \nonumber \\
+             &\simeq& - c_{p}
+		     \left(\overline{\theta}_{v}
+		           \DP{\overline{\Pi}}{z}
+			   + \overline{\theta}_{v}
+		             \DP{\pi}{z}
+			   + \theta_{v}^{\prime}
+		             \DP{\overline{\Pi}}{z}
+		     \right)
+                    - g
+		    + D_{u}
+  \Deqlab{基本場含む運動方程式}
+ \end{eqnarray}
+ となる. それぞれの式で圧力勾配項における 2 次量は小さいと仮定し無視する.
+
+ 基本場は水平一様であることと, 鉛直方向の運動方程式から静水圧の式を差し
+ 引くことにより, 以下の擾乱場の運動方程式を得る.
+ \begin{eqnarray}
+  \DD{u}{t} &=&  - c_{p}\overline{\theta}_{v}
+		         \DP{\pi}{x}
+		+ D_{u}
+  , \\
+  \DD{w}{t} &=&  - c_{p}
+                  \overline{\theta}_{v} \DP{\pi}{z}
+		+ g\frac{\theta}{\overline{\theta}}
+		+ D_{w}
+  .
+ \end{eqnarray}
+
+ まとめて表すと, 
+ \begin{eqnarray}
+  \DD{u_{i}}{t} = - c_{p} \overline{\theta}_{v} \DP{\pi}{x_{i}}
+      + \delta_{i3} g\frac{\theta}{\overline{\theta}}
+      + D_{u_{i}}
+ \end{eqnarray}
+ となる.
+
+%--------------------------------------------------------------------
+
+\clearpage
+\section{圧力方程式の導出}
+
+\subsection{圧力方程式}
+
+ 圧力方程式は, 連続の式
+ \begin{eqnarray}
+  \DD{\rho}{t}
+   + \rho \DP{u_{j}}{x_{j}}
+   = 0
+  \Deqlab{連続の式}
+ \end{eqnarray}
+ とエクスナー関数で表した状態方程式
+ \begin{eqnarray}
+  \Pi = \left(\frac{R_{d}}{p_{0}}
+              \rho \theta_{v}\right)^{R_{d}/c_{v}}
+  \Deqlab{エクスナー関数を用いた状態方程式}
+ \end{eqnarray}
+ から導出する.
+
+ 状態方程式\Deqref{エクスナー関数を用いた状態方程式}を $t$ で微分する:
+ \begin{eqnarray}
+  \DD{\Pi}{t} &=& \left(\frac{R_{d}}{p_{0}}\right)^{R_{d}/c_{v}}
+                  \left\{\frac{R_{d}}{c_{v}}
+		         \theta^{R_{d}/c_{v}}
+		         \rho^{R_{d}/c_{v} - 1}
+		         \DD{\rho}{t}
+			 + \frac{R_{d}}{c_{v}}
+		           \rho^{R_{d}/c_{v}}
+		           \theta^{R_{d}/c_{v} - 1}
+			   \DD{\theta}{t}
+                  \right\}
+  \nonumber \\
+	      &=& \frac{R_{d}}{c_{v}}
+	          \left(\frac{R_{d}}{p_{0}}
+		        \rho \theta
+		  \right)^{R_{d}/c_{v}}
+                  \left\{\frac{1}{\rho}
+		         \DD{\rho}{t}
+			 + \frac{1}{\theta}
+			   \DD{\theta}{t}
+                  \right\}
+  \nonumber \\
+              &=& \frac{R_{d}}{c_{v}} \Pi
+                  \left\{\frac{1}{\rho}
+		         \DD{\rho}{t}
+			 + \frac{1}{\theta}
+			   \DD{\theta}{t}
+                  \right\}
+  .
+ \end{eqnarray}
+ 連続の式\Deqref{連続の式}を右辺に代入すると,
+ \begin{eqnarray}
+  \DD{\Pi}{t}  &=& \frac{R_{d}}{c_{v}} \Pi
+                  \left\{- \DP{u_{j}}{x_{j}}
+			 + \frac{1}{\theta}
+			   \DD{\theta}{t}
+                  \right\}
+ \end{eqnarray}
+ を得る.
+
+\subsection{圧力偏差の方程式}
+
+ エクスナー関数を水平一様基本場 $\overline{\Pi}$ とそこからの偏差 $\pi$ 
+ に分離し, $\pi$ の方程式を求める. 
+ \begin{eqnarray}
+  \DP{\pi}{t} + u_{j} \DP{\pi}{x_{j}}
+              + w \DP{\overline{\Pi}}{z}
+	      = - \frac{R_{d}}{c_{v}}
+	            \overline{\Pi} \DP{u_{j}}{x_{j}}
+		  - \frac{R_{d}}{c_{v}}
+		    \pi \DP{u_{j}}{x_{j}}
+		  + \frac{R_{d}}{c_{v}}
+		    \frac{\Pi}{\overline{\theta} +\theta}
+		    \DD{(\overline{\theta}+\theta)}{t}
+ .
+ \end{eqnarray}
+ 音速
+ \begin{eqnarray}
+  c^{2} &=& \frac{c_{p} R_{d}}{c_{v}} \Pi (\overline{\theta}+\theta)
+  , \\
+  \overline{c^{2}} &=& \frac{c_{p} R_{d}}{c_{v}}
+                  \overline{\Pi} \overline{\theta}
+ \end{eqnarray}
+ を用いて書き直すと,
+ \begin{eqnarray}
+  \DP{\pi}{t} + \frac{\overline{c}^{2}}{c_{p} \overline{\theta}}
+	        \DP{u_{j}}{x_{j}}
+              + w \DP{\overline{\Pi}}{z}
+	      &=& - u_{j} \DP{\pi}{x_{j}}
+		  + \frac{R_{d}}{c_{v}}\pi
+		    \DP{u_{j}}{x_{j}}
+		  + \frac{c^{2}}{c_{p} (\overline{\theta} +\theta)^{2}}
+		    \DD{(\overline{\theta}+\theta)}{t}
+ .
+ \end{eqnarray}
+ ここで状態方程式\Deqref{エクスナー関数を用いた状態方程式}を用いて
+ 左辺第 3 項を変形する.
+ \begin{eqnarray*}
+  w \DP{\overline{\Pi}}{z}
+      &=& w \left(\frac{R_{d}}{p_{0}}\right)^{R_{d}/c_{v}}
+          \DP{\left(\overline{\rho}
+	            \overline{\theta}
+	      \right)^{R_{d}/c_{v}}}
+	     {z}
+  \nonumber \\
+      &=& w \left(\frac{R_{d}}{p_{0}}\right)^{R_{d}/c_{v}}
+          \frac{R_{d}}{c_{v}}
+	  \left(\overline{\rho}
+	            \overline{\theta}
+	      \right)^{R_{d}/c_{v} - 1}
+          \DP{\overline{\rho} \overline{\theta}}{z}
+  \nonumber \\
+      &=& w \frac{R_{d}}{c_{v}}
+          \overline{\Pi}
+	  \frac{1}{\overline{\rho} \overline{\theta}}
+          \DP{\left(\overline{\rho} \overline{\theta}_{v}\right)}{z}
+  \nonumber \\
+      &=& \frac{\overline{c}^{2}}
+               {c_{p} \overline{\rho} \overline{\theta}_{v}^{2}}
+	  w
+          \DP{\left(\overline{\rho} \overline{\theta}_{v}\right)}{z}
+  \nonumber \\
+      &=& \frac{\overline{c}^{2}}
+               {c_{p} \overline{\rho} \overline{\theta}^{2}}
+	  u_{j}
+          \DP{\left(\overline{\rho} \overline{\theta}\right)}{x_{j}}
+  .
+ \end{eqnarray*}
+ また, 左辺第 2 項は
+ \begin{eqnarray*}
+   \frac{\overline{c}^{2}}{c_{p} \overline{\theta}}
+    \DP{u_{j}}{x_{j}}
+      = \frac{\overline{c}^{2}}
+             {c_{p} \overline{\rho} \overline{\theta}^{2}}
+	 \overline{\rho} \overline{\theta}
+	\DP{u_{j}}{x_{j}}
+ \end{eqnarray*}
+ と書き換えることができる.
+ 左辺第 2, 3 項をまとめると圧力方程式は以下のように表される.
+ \begin{equation}
+  \DP{\pi}{t}
+     + \frac{\overline{c}^{2}}{c_{p}
+         \overline{\rho} \overline{\theta}^{2}}
+         \DP{}{x_{j}}
+	 \left(\overline{\rho} \overline{\theta} u_{j}\right)
+     = f_{\pi}
+ \end{equation}
+ \begin{equation}
+  f_{\pi} = - u_{j} \DP{\pi}{x_{j}}
+            + \frac{R_{d} \pi}{c_{v}} \DP{u_{j}}{x_{j}}
+  	    + \frac{c^{2}}{c_{p} (\overline{\theta} +\theta)^{2}}
+	   \DD{(\overline{\theta}+\theta)}{t}
+  .
+ \Deqlab{圧力方程式の強制項}
+ \end{equation}
+% この圧力方程式は Tapp and White (1976) が非静力メソモデルに
+% 用いたのと同じ方程式である.
+
+ Klemp and Wilhelmson (1978) にしたがい, 本モデルでは $f_{\pi} = 0$ とす
+ る. これは線形化を行い, 非断熱項(\Deqref{圧力方程式の強制項}
+ 右辺第 3 項)を無視することを意味する.
+
+

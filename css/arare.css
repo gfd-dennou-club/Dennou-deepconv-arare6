@@ -1,0 +1,259 @@
+/* ---------------------------------------------------------------- */
+/*     Copyright (C) GFD Dennou Club, 2005. All rights reserved.    */
+/* ---------------------------------------------------------------- */
+/*
+=begin
+= Cascade Style Sheet for gt4f90io Reference Manuals
+
+   * Developers: Masatsugu Odaka
+   * Version: $Id: arare.css,v 1.1 2011/06/14 05:17:04 sugiyama Exp $
+   * Tag Name: $Name:  $
+   * Change History: 
+
+=end
+*/
+
+
+a:link {
+  color: #000080;
+}
+
+a:visited {
+  color: #800080;
+}
+
+a:active {
+  color: #FF0000;
+}
+
+/*
+a:hover {
+  color: #99CCCC;
+}
+*/
+
+body {
+  font-family: verdana, arial, helvetica, Sans-Serif;
+  /*background: url(doc/images/wall_d.gif)*/
+  color: #000000;
+  margin-left: 5%;
+  margin-right: 5%;
+  line-height: 110%;
+}
+
+
+/*
+table {
+  table-border-color-light: rgb(153,204,153);
+  table-border-color-dark:  rgb(153,204,153);
+  margin-left: 4ex;
+  margin-right: 1ex;
+  margin-top:0.5ex;
+  margin-bottom:0.5ex;
+}
+*/
+
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: Arial;
+}
+
+h1 {
+  font-family: "times roman", verdana, sans-serif;
+  text-align: center;
+  color: #FFFFFF;
+  background: #9999FF;
+  border-top: #9999FF 4px solid;
+  border-bottom: #9999FF 4px solid;
+  line-height: 120%;
+}
+
+
+h2 {
+  border-left:  #9999ff 0.6em solid;
+  border-bottom: #0099ff 5px solid;
+  margin-right: 30%;
+  line-height: 120%;
+}
+
+h3 {
+  color: #003366;
+  border-bottom: #000066 1px solid;
+  /* margin-left: 25px; */
+  margin-right: 15%;
+  margin-top:2ex;
+  margin-bottom:0ex;
+}
+
+h4 {
+  color: #000000;
+  /* padding-top: 0.2em;
+     padding-left: 0.5em;
+     border-top: #000066 1px solid; 
+     border-left: #006600 5px solid;
+     margin-left: 35px;
+     margin-right: 50%; */
+}
+
+h5 {
+  /*color: rgb(204,153,51);*/
+  /* margin-left: 4ex; */
+  margin-right: 1ex;
+}
+
+h6 {
+  /*color: rgb(153,153,51);*/
+  /* margin-left: 5ex; */
+  margin-right: 1ex;
+}
+
+pre {
+  border-right: #646464 1px solid;
+  padding-right: 0.5em;
+  border-top: #646464 1px solid;
+  padding-top: 0.5em;
+  border-left: #646464 1px solid;
+  padding-left: 0.5em;
+  border-bottom: #646464 1px solid;
+  padding-bottom: 0.5em;
+  margin-left: 8%;
+  margin-right: 8%;
+  white-space: pre;
+  background-color: #E6E6E6;
+  color: black;
+}
+
+
+p {
+  text-indent: 0;
+  /* margin-left: 7ex; */
+  margin-right: 1ex;
+  /* margin-top:3ex; */
+  /* margin-bottom:3ex; */
+  line-height:150%;
+}
+
+ul p {
+  margin-left: 0em;
+}
+
+ol p {
+  margin-left: 0em;
+}
+
+dd p {
+  margin-left: 0em;
+}
+
+ul {
+  margin-left: 6%;
+  margin-top:1.0ex;
+  margin-bottom:0.5ex;
+  line-height:100%;
+}
+
+ul ul {
+  margin-top:0.0ex;
+}
+
+ul li {
+  margin-top:0.0ex;
+  margin-bottom:0.0ex;
+  line-height:150%;
+}
+
+ol {
+  margin-left: 6%;
+}
+
+ol li {
+  line-height: 150%;
+}
+
+ol.contents {
+  font-size: 80%;
+  margin-left: 0ex;
+  margin-right: 0ex;
+  margin-top: 0ex;
+  margin-bottom: 0ex;
+  line-height: 100%;
+}
+
+ol.rd2html_hindex {
+  font-size: 80%;
+  list-style-type: decimal;
+  margin-left: 5ex;
+  margin-right: 0ex;
+  margin-top: 0ex;
+  margin-bottom: 0ex;
+  line-height: 100%;
+}
+
+ol.rd2html_hindex ul {
+  font-size: 100%;
+  list-style-type: decimal;
+  margin-left: 3ex;
+  margin-right: 0ex;
+  margin-top: 0ex;
+  margin-bottom: 0ex;
+  line-height: 100%;
+}
+
+dt {
+  font-family: Arial;
+  font-style: normal;
+  font-weight: bold;
+  margin-left: 0.5em;
+  margin-top: 1em;
+  margin-bottom: 0.2em;
+}
+
+em {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 100%;
+}
+
+
+.update {
+  font-size:80%;
+  font-weight: bold;
+  text-align: left;
+  margin-top:0ex;
+  margin-bottom:0ex;
+}
+
+.left {
+  margin-left:0ex;
+}
+
+.large {
+  font-size:120%;
+}
+
+.script {
+  font-family: Courier New;
+}
+
+.small {
+  font-size:80%;
+}
+
+.source {
+  padding:2ex;
+  background-color: #DBD7BE;
+}
+
+.results {
+  margin-left: 8ex;
+  padding:2ex;
+}
+
+p.source {
+  width:100%;
+  background-color: #FF0000;
+}
+
+textarea.source {
+  margin-left: 8ex;
+}

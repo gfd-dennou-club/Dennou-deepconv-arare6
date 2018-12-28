@@ -1,0 +1,511 @@
+!---------------------------------------------------------------------
+!     Copyright (C) GFD Dennou Club, 2004, 2006. All rights reserved.
+!---------------------------------------------------------------------
+!= Subroutine DynImpFunc_3D
+!
+! Developer:: SUGIYAMA Ko-ichiro, ODAKA Masatsugu
+! Version::   $Id: dynimpfunc_3d.f90.matrix,v 1.1 2007-10-14 07:11:36 odakker Exp $ 
+! Tag Name::  $Name:  $
+! Copyright:: Copyright (C) GFD Dennou Club, 2007. All rights reserved.
+! License::   See COPYRIGHT[link:../../COPYRIGHT]
+!
+!== Overview 
+!
+!陰解法を用いた力学過程の各項の計算モジュール.
+!エクスナー関数を陰解法で解く際に必要となる, 係数行列の要素の決定, 
+!
+!== Error Handling
+!
+!== Known Bugs
+!
+!== Note
+!
+!  * 離散化する際, 上下境界条件として鉛直速度が零を与えている. 
+!  * 空間方向に 2 次精度の離散化を陽に利用しているため, differentiate_center4 モジュールを指定することはできない.
+!
+!== Future Plans
+!
+
+module DynImpFunc_3d
+  !
+  !陰解法を用いた力学過程の各項の計算モジュール.
+  !エクスナー関数を陰解法で解く際に必要となる, 係数行列の要素の決定, 
+  !
+  !本モジュールでは科学計算ライブラリとして, 以下をサポートする. 
+  !  * MATRIX/MPP (HITACH 最適化 Fortran)
+  !  * LAPACK     
+  !
+  
+
+  !モジュール読み込み
+  use dc_types, only: DP
+  use dc_iounit, only: FileOpen
+  use dc_message, only: MessageNotify     !メッセージ出力
+  
+  use gridset_3d, only: &
+    &                DimXMin,            &! x 方向の配列の下限
+    &                DimXMax,            &! x 方向の配列の上限
+    &                DimYMin,            &! y 方向の配列の下限
+    &                DimYMax,            &! y 方向の配列の上限
+    &                DimZMin,            &! z 方向の配列の下限
+    &                DimZMax,            &! z 方向の配列の上限
+    &                RegXMin,            &! x 方向の物理領域の下限
+    &                RegXMax,            &! x 方向の物理領域の上限
+    &                RegYMin,            &! y 方向の物理領域の下限
+    &                RegYMax,            &! y 方向の物理領域の上限
+    &                RegZMin,            &! z 方向の物理領域の下限
+    &                RegZMax,            &! z 方向の物理領域の上限
+    &                z_dz, r_dz, xyz_dx   ! 格子間隔
+  use timeset,  only: DelTimeShort        !短い時間ステップ
+  use damping_3d,only: DampSound           !音波の減衰係数
+  use basicset_3d, only: CpDry,             &!乾燥成分の比熱
+    &                 xyz_VelSoundBasicZ, &!基本場の音速 
+    &                 xyz_DensBasicZ,     &!基本場の密度
+    &                 xyz_PotTempBasicZ    !基本場の温位
+  use xyz_module, only: xyr_avr_xyz
+  use xyz_deriv_module, only: xyr_dz_xyz, xyz_dz_xyr, xyz_dx_pyz, xyz_dy_xqz
+
+  !暗黙の型宣言禁止
+  implicit none
+
+  !属性の指定
+  private
+
+  !関数を public に設定
+  public xyz_Exner_init     !初期化ルーチン
+  public xyz_Exner          !エクスナー関数の計算
+  public xyr_GradPi         !陰解法を用いた圧力傾度
+  
+  real(DP)               :: beta  = 5.0d-1    !クランクニコルソン法なら 0.5
+                                             !完全陰解法なら 1
+  real(DP), allocatable  :: xyz_F1BasicZ(:,:,:)  !係数行列の計算に用いる配列
+  real(DP), allocatable  :: xyr_F2BasicZ(:,:,:)  !係数行列の計算に用いる配列
+  real(DP), allocatable  :: xyz_VPotTempBasicZ(:,:,:) 
+                                             !基本場の仮温位
+
+  integer               :: N = 10            !係数行列/改行列の次数, 整合寸法
+  integer               :: M = 10            !方程式の組数
+  integer               :: NUD = 1           !係数行列の上三角部分の帯幅
+  integer               :: NLD = 1           !係数行列の下三角部分の帯幅
+  integer               :: NAL = 1           !LU 分解の結果 L の整合寸法
+  integer               :: NA = 3            !NUD + NLD + 1
+  integer               :: unit              !装置番号 
+  integer               :: ix, jy, kz        !ループ変数
+
+  real(DP), allocatable :: A(:)              !係数行列の対角成分
+  real(DP), allocatable :: B(:)              !係数行列の上三角部分
+  real(DP), allocatable :: C(:)              !係数行列の下三角部分
+  real(DP), allocatable :: AU2(:,:)          !LU 分解の結果 U (2 次元配列)
+  real(DP), allocatable :: AL1(:)            !LU 分解の結果 L (1 次元配列)
+  real(DP), allocatable :: AL2(:,:)          !LU 分解の結果 L (2 次元配列)
+  integer, allocatable  :: IP(:)             !部分ピボット交換の情報を格納
+
+  !値の保存
+  save beta, xyz_F1BasicZ, xyr_F2BasicZ, xyz_VPotTempBasicZ
+  save N, M, NUD, NLD, NAL, NA
+  save A, B, C, AU2, AL1, AL2, IP
+
+contains
+
+!!!--------------------------------------------------------------------!!!
+  subroutine xyz_Exner_init()
+    !
+    !エクスナー関数を陰解法で解く際に必要となる, 係数行列の要素を決め, 
+    !LU 分解を行う. 
+    !
+
+    !暗黙の型宣言禁止
+    implicit none
+
+    real(DP)  :: DTS ! 短い時間格子
+
+    DTS = DelTimeShort
+
+
+    !配列の割り付け
+    allocate(  &
+      & A(RegZMin:RegZMax),                                  &
+      & B(RegZMin+1:RegZMax),                                &   
+      & C(RegZMin:RegZMax-1),                                &  
+      & xyz_F1BasicZ(DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax), &
+      & xyr_F2BasicZ(DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax),&
+      & xyz_VPotTempBasicZ(DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax) )
+
+    !----------------------------------------------------------------
+    ! 係数行列と共通して利用される配列の値を決める
+    !----------------------------------------------------------------
+    !仮温位の定義
+    xyz_VPotTempBasicZ = xyz_PotTempBasicZ 
+
+    !係数行列の計算
+    !  A, B, C を求める際, F1BasicZ と F2BasicZ は X 方向に一様なので. 
+    !  RegXMax, RegYMax の値で代表させることとした. 
+
+    xyz_F1BasicZ =                                                &
+      &  ( xyz_VelSoundBasicZ ** 2.0d0 )                          &
+      &   / (CpDry * xyz_DensBasicZ * (xyz_VPotTempBasicZ ** 2.0d0))
+
+    xyr_F2BasicZ =                                                 &
+      &  xyr_avr_xyz(                                               &
+      &    CpDry * xyz_DensBasicZ * ( xyz_VPotTempBasicZ ** 2.0d0 ) &
+      &   )
+    
+    A(RegZMin+1: RegZMax-1) =                                &
+      & (beta ** 2.0d0)                                    &
+      &    * xyz_F1BasicZ(RegXMax,RegYMax,RegZMin+1: RegZMax-1)      &  
+      &    * (                                               &
+      &          xyr_F2BasicZ(RegXMax,RegYMax,RegZMin+1: RegZMax-1)  &
+      &            / r_dz(RegZMin+1: RegZMax-1)              &
+      &        + xyr_F2BasicZ(RegXMax,RegYMax,RegZMin  : RegZMax-2)  &
+      &            / r_dz(RegZMin: RegZMax-2)                &
+      &       )                                              &
+      &    * (DTS ** 2.0d0)                                  &
+      &    / z_dz(RegZMin+1: RegZMax-1)                      &
+      & + 1.0d0
+
+    A(RegZMin) =                                        &
+      & (beta ** 2.0d0)                               &
+      &   * xyz_F1BasicZ(RegXMax,RegYMax,RegZMin)       &
+      &   * xyr_F2BasicZ(RegXMax,RegYMax,RegZMin)       &
+      &     / r_dz(RegZMin)                             &
+      &   * (DTS ** 2.0d0)                              &
+      &   / z_dz(RegZMin)                               &
+      & + 1.0d0                                         
+
+    A(RegZMax) =                                        &
+      & (beta ** 2.0d0)                               &
+      &   * xyz_F1BasicZ(RegXMax,RegYMax,RegZMax)       &
+      &   * xyr_F2BasicZ(RegXMax,RegYMax,RegZMax-1)     &
+      &     / r_dz(RegZMax-1)                           &
+      &   * (DTS ** 2.0d0)                              &
+      &   / z_dz(RegZMax)                               &
+      & + 1.0d0                                         
+    
+    B(RegZMin+1:RegZMax) =                             &
+      & - (beta ** 2.0d0)                               &
+      &   * xyz_F1BasicZ(RegXMax,RegYMax,RegZMin:RegZMax-1)    &
+      &   * xyr_F2BasicZ(RegXMax,RegYMax,RegZMin:RegZMax-1)    &
+      &     / r_dz(RegZmin:RegZMax-1)                   &
+      &   * (DTS ** 2.0d0)                     &
+      &   / z_dz(RegZMin:RegZMax-1)
+    
+    C(RegZMin: RegZMax-1) =                           &
+      & - ( beta ** 2.0d0 )                           &
+      &   * xyz_F1BasicZ(RegXMax,RegYMax,RegZMin+1:RegZMax)    &
+      &   * xyr_F2BasicZ(RegXMax,RegYMax,RegZMin  :RegZMax-1)  &
+      &     / r_dz(RegZmin:RegZMax-1)                   &
+      &   * (DTS ** 2.0d0) &
+      &   / z_dz(RegZMin+1:RegZMax)
+
+
+    !デバッグ出力ファイルオープン. 情報取得. 
+!    call FileOpen(unit, file="dynimpfunc_log", mode='w')
+!    write(unit,*) "kz, A_k"
+!    write(unit,*) "------------------------------------"
+!    do kz = RegZmin, RegZmax
+!      write(unit,*) kz, A(kz)
+!    end do
+!    write(unit,*) "------------------------------------"
+!    write(unit,*) "kz, B_k"
+!    write(unit,*) "------------------------------------"
+!    do kz = RegZmin+1, RegZmax
+!      write(unit,*) kz, B(kz)
+!    end do
+!    write(unit,*) "------------------------------------"
+!    write(unit,*) "kz, C_k"
+!    write(unit,*) "------------------------------------"
+!    do kz = RegZmin, RegZmax-1
+!      write(unit,*) kz, C(kz)
+!    end do
+!    write(unit,*) "------------------------------------"
+!    close(unit)
+
+
+    !----------------------------------------------------------------
+    ! 係数行列を LU 分解
+    !----------------------------------------------------------------
+    !配列の大きさを保管
+    N   = RegZMax - RegZMin +1 !係数行列/改行列の次数, 整合寸法
+    M   = (RegXMax - RegXMin +1)*(RegYMax - RegYMin +1) 
+                               !方程式の組数
+    NUD = 1                    !係数行列の上三角部分の帯幅
+    NLD = 1                    !係数行列の下三角部分の帯幅
+    NAL = NLD                  !LU 分解の結果 L の整合寸法
+    NA  = NUD + NLD + 1
+
+    !配列の割り当て
+    allocate( AL1(N), AL2(NAL, N), AU2(NA, N), IP(N) )
+
+    !LU 分解の実行
+    !  LAPACK の利用
+!    call ResolvLU_Lapack( )
+    call ResolvLU_Matrix( )
+   
+  end subroutine xyz_Exner_init
+  
+
+!!!--------------------------------------------------------------------!!!
+  function xyz_Exner(xyr_FzNl, &
+    &                pyz_VelXNs, pyz_VelXAs, &
+    &                xqz_VelYNs, xqz_VelYAs, &
+    &                xyr_VelZNs, xyz_ExnerNs)
+    !
+    !陰解法を用いたエクスナー関数の計算. 
+    !
+
+    !暗黙の型宣言禁止
+    implicit none
+    
+    !入出力変数
+    real(DP), intent(in)   :: pyz_VelXNs &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax) 
+                                                           !速度 u [τ]
+    real(DP), intent(in)   :: pyz_VelXAs &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax) 
+                                                           !速度 u [τ+Δτ]
+    real(DP), intent(in)   :: xqz_VelYNs &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax) 
+                                                           !速度 v [τ]
+    real(DP), intent(in)   :: xqz_VelYAs &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax) 
+                                                           !速度 v [τ+Δτ]
+    real(DP), intent(in)   :: xyr_VelZNs &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax) 
+                                                           !速度 w [τ]
+    real(DP), intent(in)   :: xyr_FzNl &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax) 
+                                                           !Z 方向の外力項[t]
+    real(DP), intent(in)   :: xyz_ExnerNs &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax) 
+                                                           !無次元圧力
+    real(DP)               :: xyz_Exner &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax) 
+                                                           !無次元圧力[τ+Δτ]
+
+    !変数定義
+    real(DP)  :: D1(DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax)  
+    real(DP)  :: D2(RegXMin:RegXMax,RegYMin:RegYMax,RegZMin:RegZMax)  
+    real(DP)  :: D((RegXMax-RegXMin+1)*(RegYMax-RegYMin+1),(RegZMax-RegZMin+1))
+    real(DP)  :: E(DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax)  
+    real(DP)  :: F(DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax)  
+    real(DP)  :: xyz_DivVelNs(DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax)
+    real(DP)               :: DTS ! 短い時間格子間隔
+
+    DTS = DelTimeShort
+
+
+    !変数の初期化
+    xyz_Exner = 0.0d0
+    
+    !速度の収束を計算
+    xyz_DivVelNs =  xyz_dx_pyz( pyz_VelXNs )   &
+      &             + xyz_dy_xqz( xqz_VelYNs ) &
+      &             + xyz_dz_xyr( xyr_VelZNs )
+  
+    !行列計算のための係数
+    E = xyr_dz_xyz( DampSound * xyz_DivVelNs )                      &
+      & - ( 1.0d0 - beta ) * xyr_dz_xyz( xyz_ExnerNs )              &
+      & + xyr_FzNl / xyr_avr_xyz( CpDry * xyz_VPotTempBasicZ ) 
+    
+    F = - beta * xyz_F1BasicZ * DTS &
+      & * xyz_dz_xyr(                                               &
+      &    xyr_avr_xyz( xyz_DensBasicZ * xyz_VPotTempBasicZ)        &
+      &    * (                                                      &
+      &         xyr_VelZNs                                          &
+      &       - xyr_avr_xyz(CpDry * xyz_VPotTempBasicZ) * DTS       &
+      &         * (                                                 &
+      &               (1.0d0 - beta) * xyr_dz_xyz( xyz_ExnerNs )    &
+      &             - xyr_dz_xyz( DampSound * xyz_DivVelNs )        &
+      &            )                                                &
+      &       + xyr_FzNl * DTS                                      &
+      &      )                                                      &
+      &   ) 
+
+    D1 = xyz_ExnerNs                                           &
+      & - (1.0d0 - beta)                                            &
+      &   * xyz_F1BasicZ * DTS                                      &
+      &   * xyz_dz_xyr(                                             &
+      &       xyr_avr_xyz(xyz_DensBasicZ * xyz_VPotTempBasicZ) * xyr_VelZNs   &
+      &     )                                                       &
+      & - (xyz_VelSoundBasicZ ** 2.0d0) *DTS        & 
+      &   / (CpDry * xyz_VPotTempBasicZ)                            &
+      &   * xyz_dx_pyz( pyz_VelXAs )                                &
+      & - (xyz_VelSoundBasicZ ** 2.0d0) *DTS        & 
+      &   / (CpDry * xyz_VPotTempBasicZ)                            &
+      &   * xyz_dy_xqz( xqz_VelYAs )                                &
+      & + F
+
+    D1(:,:,RegZMin) = D1(:,:,RegZMin)                       &
+      & - beta * xyz_F1BasicZ(:,:,RegZMin) * (DTS ** 2.0d0)         &
+      &   * xyr_F2BasicZ(:,:, RegZMin-1) * E(:,:,RegZMin-1)         &
+      &   / z_dz(RegZMin)
+    
+    D1(:,:,RegZMax) = D1(:,:,RegZMax)                       &
+      & + beta * xyz_F1BasicZ(:,:,RegZMax) * (DTS ** 2.0d0)         &
+      &   * xyr_F2BasicZ(:,:,RegZMax) * E(:,:,RegZMax)              &
+      &   / z_dz(RegZMax)     
+
+    D2 = D1(RegXMin:RegXMax,RegYMin:RegYMax,RegZMin:RegZMax)
+
+    do kz = RegZMin, RegZMax
+      do jy = RegYMin, RegYMax 	
+        do ix = RegXMin, RegXMax 	
+	  D(ix + (RegXMax-RegXMin+1) * (jy - 1), kz) =  D2(ix,jy,kz)
+        end do 
+      end do
+    end do	
+   
+    !-----------------------------------------------------------
+    !連立一次方程式の解を求める
+    !------------------------------------------------------------
+
+    !解の計算
+    !  MATRIX 利用
+    call LinSolv_Matrix( D ) 
+
+    !戻り値を出力
+
+    do kz = RegZMin, RegZMax
+      do jy = RegYMin, RegYMax 	
+        do ix = RegXMin, RegXMax 	
+          xyz_Exner(ix,jy,kz) = D(ix + (RegXMax-RegXMin+1) * (jy - 1 ), kz)
+        end do 
+      end do
+    end do	
+   
+  end function xyz_Exner
+
+!!!--------------------------------------------------------------------!!!
+  subroutine ResolvLU_MATRIX( )
+    !
+    !実 3 項行列の LU 分解(倍精度). MATRIX 利用
+    !
+
+    !暗黙の型宣言禁止
+    implicit none
+
+    !変数定義
+    real(8)                :: TX(N, M)         !定数/解行列 (ダミー)
+    real(8), parameter     :: EPS = 1.0d-16    !特異性判定基準値
+    integer                :: IOPT(2)          !制御コード
+    real(8)                :: WK1(NLD+NUD+1,2) !作業配列
+    real(8)                :: WK2(N,2)         !作業配列
+    integer                :: IER
+    integer                :: NM
+
+    !変数の初期化
+    AU2           = 0.0d0
+    AU2(1, 2:N  ) = C
+    AU2(2, 1:N  ) = A
+    AU2(3, 1:N-1) = B
+    IOPT(1)     = 2       !LU 分解だけを行う
+    IOPT(2)     = 1       !行スケーリングを行わない. 計算の安定性を優先
+    NM          = N
+    
+    !解行列の計算. 
+    call HDLGBM(AU2, N, NLD, NUD, NA, TX, M, NM, EPS, &
+      &         IOPT, AL2, NAL, IP, WK1, WK2, IER )
+    
+    !コンティションチェック
+!    if (IER /= 0) then 
+!      write(*,*) "MATRIX code is eregular !!"
+!      stop
+!    end if
+    
+  end subroutine ResolvLU_MATRIX
+  
+
+!!!--------------------------------------------------------------------!!!
+  subroutine LinSolv_MATRIX(X)
+    !
+    !LU 分解された実 3 項行列の連立 1 次方程式(倍精度). LAPACK 利用
+    !
+
+    !暗黙の型宣言禁止
+    implicit none
+
+    !変数定義
+    real(8), intent(inout) :: X(M, N)    !定数/解行列
+    real(8)                :: TX(N, M)   !定数/解行列の転置行列
+    real(8), parameter     :: EPS = 1.0d-16    !特異性判定基準値
+    integer                :: IOPT(2)          !制御コード
+    real(8)                :: WK1(NLD+NUD+1,2) !作業配列
+    real(8)                :: WK2(N,2)         !作業配列
+    integer                :: IER
+    integer                :: NM
+
+    !変数の初期化
+    IOPT(1)     = 3       ! LU 分解の結果を利用し解を求める
+    IOPT(2)     = 1       !行スケーリングを行わない. 計算の安定性を優先
+    TX = transpose( X )
+    NM = N
+
+    !解行列の計算. 
+    call HDLGBM(AU2, N, NLD, NUD, NA, TX, M, NM, EPS, &
+      &         IOPT, AL2, NAL, IP, WK1, WK2, IER )
+
+    !解の出力
+    X = transpose( TX )
+
+    !コンティションチェック
+!    if (IER /= 0) then 
+!      write(*,*) "MATRIX code is eregular !!"
+!      stop
+!    end if
+   
+  end subroutine LinSolv_MATRIX
+
+!!!--------------------------------------------------------------------!!!
+  function xyr_GradPi(xyz_ExnerA, xyz_ExnerN, pyz_VelX, xqz_VelY, xyr_VelZ)
+    !
+    ! x 方向に半格子ずれた点での圧力傾度力項の計算. 
+    ! クランク・ニコルソン法を用いるために, 時刻 τ と τ+Δτでの
+    ! エクスナー関数の値を引数として取る.
+    ! 音波減衰項を含めた形式で定式化してあることに注意.
+    !
+    
+    !暗黙の型宣言禁止
+    implicit none
+    
+    !変数定義
+    real(DP), intent(in)  :: xyz_ExnerA &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax)
+                                               !エクスナー関数の擾乱
+    real(DP), intent(in)  :: xyz_ExnerN &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax)
+                                               !エクスナー関数の擾乱
+    real(DP), intent(in)  :: pyz_VelX &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax)
+                                               !水平速度
+    real(DP), intent(in)  :: xqz_VelY &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax)
+                                               !水平速度
+    real(DP), intent(in)  :: xyr_VelZ &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax)
+                                               !鉛直速度
+    real(DP)              :: xyr_GradPi &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax)
+                                               !圧力傾度力
+    real(DP)              :: xyz_DivVel &
+      &                     (DimXMin:DimXMax,DimYMin:DimYMax,DimZMin:DimZMax)
+                                               !速度の収束
+
+    !速度の収束
+    xyz_DivVel =  xyz_dx_pyz( pyz_VelX )   &
+      &           + xyz_dy_xqz( xqz_VelY ) &
+      &           + xyz_dz_xyr( xyr_VelZ )
+    
+    !速度 w の圧力勾配
+!    xyr_GradPi = 0.0d0
+    xyr_GradPi =   &
+      & xyr_avr_xyz(CpDry * xyz_PotTempBasicZ )   &
+      &   * (                                                      &
+      &       beta * xyr_dz_xyz( xyz_ExnerA )                         &
+      &       + (1.0d0 - beta) * xyr_dz_xyz( xyz_ExnerN )             &
+      &       - xyr_dz_xyz( DampSound * xyz_DivVel )                  &
+      &     )                                              
+    
+  end function xyr_GradPi
+  
+  
+end module DynImpFunc_3d

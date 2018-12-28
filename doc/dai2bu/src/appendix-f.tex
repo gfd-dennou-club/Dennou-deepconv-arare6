@@ -1,0 +1,65 @@
+% 表題: 諸々の計算
+%
+% 履歴: 2006/03/13 杉山耕一朗
+
+\chapter{単位の換算等の計算}
+
+
+\section{混合比とモル比(分圧)との換算式}
+
+混合気体を考える. 乾燥成分の添え字を $d$ とし, 湿潤成分の添え字を $v$ と
+する. ここでは任意の湿潤成分気体(添え字 $x$)の混合比, 分圧を求める. 
+
+混合比 $q_{x}$ を分圧 $p_{x}$ で表現すると, 
+%
+\begin{eqnarray}
+ q_{x} 
+  &=& \frac{\rho_{x}}{\rho_{d}} 
+  \nonumber \\
+  &=& \left(
+       \frac{R_{d} T}{p} \frac{1/M_{d} + \sum_{v} q_{v}/M_{v}}{1/M_{d}}
+      \right)
+    \frac{p_{x}}{R_{x}T}
+    \nonumber \\
+ &=& 
+  \frac{p_{x}}{p} M_{x} (1/M_{d} + \sum_{v} q_{v}/M_{v})
+  \nonumber \\
+ q_{x} \left(1 - \frac{p_{x}}{p} \right) &=& 
+  \frac{p_{x}}{p} M_{x} (1/M_{d} + \sum_{v \neq x} q_{v}/M_{v})  
+  \nonumber \\
+ q_{x} &=& 
+  \frac{p_{x}}{p}\frac{ M_{x} (1/M_{d} + \sum_{v \neq x} q_{v}/M_{v})  }
+  {\left(1 - \frac{p_{x}}{p} \right) }
+  \nonumber \\
+ q_{x} &=& 
+  \frac{ p_{x} M_{x}  (1/M_{d} + \sum_{v \neq x} q_{v}/M_{v}) }{p - p_{x}}
+  \nonumber \\
+ q_{x} &=& 
+  \frac{ p_{x} M_{x}  (1/M_{d} + \sum_{v \neq x} q_{v}/M_{v}) }
+  {p_{0} \pi^{{c_{p}}_{d}/R_{d}} - p_{x}}
+\end{eqnarray}
+%
+となり, モル比 $x_{x}$ で表現すると, 
+%
+\begin{eqnarray}
+ q_{x} = 
+  \frac{ x_{x} M_{x} (1/M_{d} + \sum_{v \neq x} q_{v}/M_{v})}{ 1 - x_{x} }
+\end{eqnarray}
+%
+となる. 
+
+一方で, 分圧 $p_{x}$ を混合比 $q_{x}$ で表現すると, 
+%
+\begin{eqnarray}
+ p_{x} &=& \frac{q_{x} p}{M_{x} (1/M_{d} + \sum_{v} q_{v}/M_{v})}
+  \nonumber \\
+ p_{x} &=& \frac{q_{x}p_{0} \pi^{{c_{p}}_{d}/R_{d}}  }{M_{x} (1/M_{d} + \sum_{v} q_{v}/M_{v})}
+\end{eqnarray}
+%
+であり, モル比 $x_{x}$ で表現すると, 
+%
+\begin{eqnarray}
+ x_{x} &=& \frac{q_{x}}{M_{x} (1/M_{d} + \sum_{v} q_{v}/M_{v})}
+\end{eqnarray}
+%
+である. 

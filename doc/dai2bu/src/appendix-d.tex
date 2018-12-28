@@ -1,0 +1,111 @@
+% 表題: 式の導出
+%
+% 履歴: 2005/09/21 杉山耕一朗
+
+
+\chapter{湿潤飽和調節法の定式化}
+
+
+湿潤飽和調節を用いる段階では, 潜熱の開放による温位の変化を考えるので, 
+熱力学第一法則の非断熱項は無視する. 
+%
+\begin{eqnarray}
+ d\theta + \gamma dq_{v} = 0. 
+  \Deqlab{neturikigaku_first_low2}
+\end{eqnarray}
+%
+ただし $\gamma = L_{v}/(c_{p} \Pi)$ である. 相変化の効果を除いた予報方程
+式を解くことで得られ
+た値を $[\theta]^{*}$, $[q_{v}]^{*}$, $[q_{c}]^{*}$, $[q_{r}]^{*}$ とし, 
+相変化の効果も含めたより真に近い値を 
+$[\theta]^{t + \Delta t}$, $[q_{v}]^{t + \Delta t}$, 
+$[q_{c}]^{t + \Delta t}$, $[q_{r}]^{t + \Delta t}$ する. 
+この時, \Deqref{neturikigaku_first_low2} 式は, 
+%
+\begin{eqnarray}
+ ([\theta]^{t + \Delta t} - [\theta]^{*}) = 
+ \gamma ([q_{v}]^{*} - [q_{v}]^{t + \Delta t}) 
+\Deqlab{dtheta-dqv}
+\end{eqnarray}
+%
+となる. ここで過飽和を許さないので, 
+%
+\begin{eqnarray}
+ [q_{v}]^{t + \Delta t} = q_{sw}([\theta]^{t + \Delta t}) \nonumber 
+\end{eqnarray}
+%
+と表すことができる. ここで $q_{vsw}$ は飽和蒸気圧である. 
+$q_{vsw}([\theta]^{t + \Delta t})$ を $[\theta]^{*}$ の回りで
+テーラー展開して 2 次の微小項以下を無視すると, 
+%
+\begin{eqnarray}
+ q_{sw}([\theta]^{t + \Delta t}) 
+  = q_{sw}([\theta]^{*})
+  + \DP{q_{vsw}([\theta]^{*})}{\theta} ([\theta]^{t + \Delta t} - [\theta]^{*})
+\Deqlab{qvsw_taler}
+\end{eqnarray}
+%
+となる. \Deqref{qvsw_taler} 式を \Deqref{dtheta-dqv} 式に代入することに
+よって \Deqref{moistajst_theta1} 式が得られる. 
+%
+\begin{eqnarray}
+&& ([\theta]^{t + \Delta t} - [\theta]^{*}) = 
+ \gamma \left( 
+	 [q_{v}]^{*} - q_{sw}([\theta]^{*})
+	 - \DP{q_{vsw}([\theta]^{*})}{\theta}
+	 ([\theta]^{t + \Delta t} - [\theta]^{*})
+	 \right) 
+\nonumber \\
+&&\left(
+   1 + \gamma \DP{q_{vsw}([\theta]^{*})}{\theta}
+  \right)  ([\theta]^{t + \Delta t} - [\theta]^{*}) = 
+ \gamma \left( 
+	 [q_{v}]^{*} - q_{sw}([\theta]^{*})
+	 \right) 
+\nonumber \\
+&& [\theta]^{t + \Delta t} =  [\theta]^{*} + 
+ \gamma  \frac{[q_{v}]^{*} - q_{vsw}([\theta]^{*})}
+	 {   1 + \gamma \DP{q_{vsw}([\theta]^{*})}{\theta}}.
+\end{eqnarray}
+%
+
+
+\Deqref{moistajst_qv1} 式は \Deqref{dtheta-dqv} 式から直接得ることがで
+きる. 
+%
+\begin{eqnarray}
+&& ([\theta]^{t + \Delta t} - [\theta]^{*}) = 
+ \gamma ([q_{v}]^{*} - [q_{v}]^{t + \Delta t}) ,
+\nonumber \\
+&&[q_{v}]^{t + \Delta t}  =
+ [q_{v}]^{*} - ([\theta]^{t + \Delta t} - [\theta]^{*}) / \gamma. 
+\nonumber \\
+\end{eqnarray}
+%
+
+\Deqref{moistajst_qc1} 式は水蒸気と雲水量の和が常に等しいという
+条件から容易に得られる. 
+%
+\begin{eqnarray}
+&& 
+ ([q_{v}]^{*} + [q_{c}]^{*}) 
+ = ([q_{v}]^{t + \Delta t} + [q_{c}]^{t + \Delta t}) ,
+\nonumber \\
+&&[q_{c}]^{t + \Delta t}  =
+ [q_{v}]^{*} + [q_{c}]^{*} - [q_{v}]^{t + \Delta t}  .
+\end{eqnarray}
+%
+%ただし \Deqref{time-div_theta2} -- \Deqref{time-div_qr2} 式により
+%$q_{r}$ の値は定まっている. そのため湿潤飽和調節法を適用する
+%段階では水蒸気 $q_{v}$ と雲粒 $q_{c}$ の和の保存を考えればよい. 
+
+
+
+\chapter{NH4SH の生成反応に関する湿潤飽和調節法の定式化}
+
+%
+\begin{eqnarray}
+% \theta^{t+\Delta t} - \theta^{*} =
+\DP{\exp{1/T}}{T} = \Dinv{T} e^{1/T}
+\end{eqnarray}
+%

@@ -1,0 +1,383 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv -- 離散モデル
+%       付録A
+%
+% 履歴  2004/08/14  杉山耕一朗: 作成開始
+%       2005/04/13  小高正嗣
+%       2012/04/24  小高正嗣  : 3D 化
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+\chapter{圧力方程式 \Deqref{uwpi:sabun} の左辺の空間微分の書き下し}
+\Dchaplab{appendix-a}
+
+\Deqref{uwpi:sabun} 左辺の変形を行う. 
+%
+\begin{eqnarray}
+\Deqref{uwpi:sabun}\mbox{left side} &=&
+ \pi^{\tau + \Delta \tau}_{i,j,k}
+ \nonumber \\
+ &&- \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \Dinv{\Delta z}
+  \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{k(w)}
+   \left(
+     \DP{\pi^{\tau + \Delta \tau}}{z} 
+   \right)_{i,j,k(w)}
+\right\}
+ \nonumber \\
+ &&+ \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \Dinv{\Delta z}
+  \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{k-1(w)}
+   \left(
+     \DP{\pi^{\tau + \Delta \tau}}{z} 
+   \right)_{i,j,k-1(w)}
+\right\}
+  \nonumber \\
+ &=&
+ \pi^{\tau + \Delta \tau}_{i,j,k}
+ \nonumber \\
+ &&- \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \Dinv{\Delta z}
+  \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{k(w)}
+   \left(
+    \frac{\pi^{\tau + \Delta \tau}_{i,j,k+1} 
+    - \pi^{\tau + \Delta \tau}_{i,j,k}}{\Delta z} 
+   \right)
+\right\}
+ \nonumber \\
+ &&+ \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \Dinv{\Delta z}
+  \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{k-1(w)}
+   \left(
+    \frac{\pi^{\tau + \Delta \tau}_{i,j,k} 
+    - \pi^{\tau + \Delta \tau}_{i,j,k-1}}{\Delta z} 
+   \right)
+\right\}
+  \nonumber \\
+ &=& 
+  \left\{
+   - \beta^{2}
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \Dinv{\Delta z^{2}} 
+  \left(
+    \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+  \right)_{k(w)}
+  \right\}
+   \pi^{\tau + \Delta \tau}_{i,j,k+1}
+\nonumber \\   
+ &&+ \left[
+  1 + \beta^{2}
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \Dinv{\Delta z^{2}} 
+   \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2} 
+   \right)_{k(w)}
+   + 
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2} 
+   \right)_{k-1(w)}
+   \right\} 
+    \right]
+ \pi^{\tau + \Delta \tau}_{i,j,k}
+   \nonumber \\   
+ &&+ \left\{
+   - \beta^{2}
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \Dinv{\Delta z^{2}} 
+   \left(
+    \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2} 
+       \right)_{k-1(w)}
+   \right\}
+   \pi^{\tau + \Delta \tau}_{i,j,k-1}.
+   \Deqlab{uwpi:LH_sabun}
+\end{eqnarray}
+%
+
+\section{下部境界}
+
+下部境界($k(w) = 0(w)$)について考える. この時 \Deqref{uwpi:w_sabun} 式は, 
+%
+\begin{eqnarray}
+ \beta \left(
+	\DP{\pi^{\tau + \Delta \tau}}{z}  
+       \right)_{i,j,0(w)}
+ &=&
+\left[
+\left( \DP{(\alpha Div)^{\tau}}{z} \right)
+  - (1 - \beta) \left( \DP{\pi^{\tau}}{z} \right)
+  + \left(\Dinv{\bar{c_{p}} \bar{\theta}_{v}} F_{w}^{t}\right)
+\right]_{i,j,0(w)} 
+\nonumber \\
+ &\equiv& E_{i,j,0(w)}
+  \Deqlab{uwpi:w_sabun_kabu}
+\end{eqnarray}
+%
+となるので, \Deqref{uwpi:sabun} 式の左辺は, $k = 1$ の場合には, 
+%
+%
+\begin{eqnarray}
+\Deqref{uwpi:sabun}\mbox{left side}
+ &=&
+ \pi^{\tau + \Delta \tau}_{i,j,1}
+ \nonumber \\
+ &&- \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho}
+   \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z}
+  \left\{
+   \left(
+    \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{1(w)}
+   \left(
+    \DP{\pi^{\tau + \Delta \tau}}{z} 
+   \right)_{i,j,1(w)}
+\right\}
+ \nonumber \\
+ &&+ \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z}
+  \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{0(w)}
+   \left(
+     \DP{\pi^{\tau + \Delta \tau}}{z} 
+   \right)_{i,j,0(w)}
+\right\}
+  \nonumber \\
+ &=&
+ \pi^{\tau + \Delta \tau}_{i,j,1}
+ \nonumber \\
+ &&- \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho}
+   \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z}
+  \left\{
+   \left(
+    \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{1(w)}
+   \left(
+    \frac{\pi^{\tau + \Delta \tau}_{i,j,2} 
+    - \pi^{\tau + \Delta \tau}_{i,j,1}}{\Delta z} 
+   \right)
+\right\}
+ \nonumber \\
+ &&+ \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z}
+  \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{0(w)}
+   \left(
+     \DP{\pi^{\tau + \Delta \tau}}{z} 
+   \right)_{i,j,0(w)}
+\right\}
+  \nonumber \\
+ &=&
+  \left\{
+ - \beta^{2} 
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho}
+  \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z^{2}}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{1(w)}
+  \right\}
+  \pi^{\tau + \Delta \tau}_{i,j,2}
+ \nonumber \\
+ &&+ 
+  \left\{
+  1 + \beta^{2} 
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho}
+  \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z^{2}}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{1(w)}
+  \right\} \pi^{\tau + \Delta \tau}_{i,j,1}
+ \nonumber \\
+ &&+ \beta 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho}
+   \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z}
+%\left[
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{0(w)}
+   E_{i,j,0(w)}
+  \nonumber 
+\end{eqnarray}
+%
+
+
+\section{上部境界}
+
+上部境界($k(w) = km(w)$)について考える. \Deqref{uwpi:sabun} 式の左辺は, 
+%
+\begin{eqnarray}
+\beta \left(
+	\DP{\pi^{\tau + \Delta \tau}}{z}  
+       \right)_{i,j,km(w)}
+ &=&
+ \left[
+ \left( \DP{(\alpha Div)^{\tau}}{z} \right)
+  - (1 - \beta) \left( \DP{\pi^{\tau}}{z} \right)
+  + \left(\Dinv{\bar{c_{p}} \bar{\theta}_{v}} F_{w}^{t}\right)
+\right]_{i,j,km(w)}
+\nonumber \\
+ &\equiv& E_{i,j,km(w)}
+  \Deqlab{uwpi:w_sabun_joubu}
+\end{eqnarray}
+%
+となるので, \Deqref{uwpi:sabun} 式の左辺は, $k(w) = km(w)$ の場合には, 
+%
+%
+\begin{eqnarray}
+\Deqref{uwpi:sabun}\mbox{left side}
+ &=&
+ \pi^{\tau + \Delta \tau}_{i,j,km}
+ \nonumber \\
+ &&- \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{km}
+  \Dinv{\Delta z}
+  \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{km(w)}
+   \left(
+     \DP{\pi^{\tau + \Delta \tau}}{z} 
+   \right)_{i,j,km(w)}
+\right\}
+ \nonumber \\
+ &&+ \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{km}
+  \Dinv{\Delta z}
+  \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{km-1(w)}
+   \left(
+     \DP{\pi^{\tau + \Delta \tau}}{z} 
+   \right)_{i,j,km-1(w)}
+\right\}
+  \nonumber \\
+ &=&
+ \pi^{\tau + \Delta \tau}_{i,j,km}
+ \nonumber \\
+ &&- \beta 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{km}
+  \Dinv{\Delta z}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{km(w)}
+   E_{i,j,km(w)}
+ \nonumber \\
+ &&+ \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}
+        {\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{km}
+  \Dinv{\Delta z}
+  \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{km-1(w)}
+   \left(
+    \frac{\pi^{\tau + \Delta \tau}_{i,j,km}
+          - \pi^{\tau + \Delta \tau}_{i,j,km-1}}{\Delta z}
+   \right)
+\right\}
+  \nonumber \\
+ &=&
+  \left\{
+   1 + 
+  \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{km}
+  \Dinv{\Delta z^{2}}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{km-1(w)}
+  \right\}
+    \pi^{\tau + \Delta \tau}_{i,j,km}
+  \nonumber \\
+ &&+ \left\{
+  - \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho}
+   \bar{\theta}_{v}^{2}} 
+  \right)_{km}
+  \Dinv{\Delta z^{2}}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{km-1(w)}
+  \right\}
+     \pi^{\tau + \Delta \tau}_{i,j,km-1}
+  \nonumber \\
+ &&- \beta 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{km}
+  \Dinv{\Delta z}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{km(w)}
+   E_{i,j,km(w)}
+ \nonumber 
+\end{eqnarray}
+%
+

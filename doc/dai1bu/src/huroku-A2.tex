@@ -1,0 +1,757 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv -- 数理モデル
+%       付録 A-2 準圧縮方程式系の導出 - 基本場と擾乱場の分離 -
+%
+% 履歴  2005/11/26 杉山耕一朗
+%       2007/06/22 小高正嗣
+%       2012/04/18 小高正嗣      3 次元化
+%       2012/12/05 小高正嗣      圧力方程式に熱膨張項を追加
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+準圧縮方程式系では, 変数を基本場と擾乱場に分離し, 線形化を行う. 
+
+\subsection{基本場と擾乱場の分離}
+
+変数を基本場と擾乱場に分離し, 基本場は静水圧平衡にあると仮定する. この
+時, 変数は以下のように書ける.
+%
+\begin{eqnarray}
+&& u = \bar{u}(z) + u^{'}(x,z,t) \nonumber \\
+&& v = \bar{v}(z) + v^{'}(x,z,t) \nonumber \\
+&& w = w^{'}(x,z,t) \nonumber \\
+&& \pi = \bar{\pi}(z) + \pi^{'}(x,z,t) \nonumber \\
+&& \theta_{v} = \bar{\theta_{v}}(z) + {\theta_{v}}^{'}(x,z,t) \nonumber \\
+&& \rho = \bar{\rho}(z) + \rho^{'}(x,z,t) \nonumber \\
+&& q_{v} = \bar{q_{v}}(z) + q_{v}^{'}(x,z,t) \nonumber \\
+&& q_{r} = q_{r}^{'}(x,z,t) \nonumber \\
+&& q_{c} = q_{c}^{'}(x,z,t) \nonumber 
+\end{eqnarray}
+% 
+但し, $\theta_{v} = \theta/f$ とし, 
+基本場の風速 $u, w$ と雲粒混合比と雨粒混合はゼロと見なした. 
+そして基本場には静水圧平衡, 
+%
+\begin{eqnarray}
+ \DP{\bar{\pi}}{z} 
+  = - \frac{g}{{c_{p}}_{d} \bar{\theta_{v}}} 
+  = - \frac{g}{{c_{p}}_{d} (\bar{\theta}/\bar{f})} 
+\end{eqnarray}
+%
+の関係が成り立つものとする. 
+
+
+
+\subsection{水平方向の運動方程式の線形化}
+
+水平方向の運動方程式を基本場と擾乱場に分離する. 
+%
+\begin{eqnarray}
+ \DP{u^{'}}{t} &=& 
+  - \left( 
+       (\bar{u} + u^{'}) \DP{(\bar{u} + u^{'})}{x} 
+     + (\bar{v} + v^{'}) \DP{(\bar{u} + u^{'})}{y} 
+     + w^{'} \DP{(\bar{u} + u^{'})}{z} 
+    \right) 
+\nonumber  \\
+&&  - {c_{p}}_{d}
+  \left(
+     \bar{\theta_{v}} \DP{\bar{\pi}}{x}
+   + \bar{\theta_{v}} \DP{\pi^{'}}{x}
+   + {\theta_{v}}^{'} \DP{\bar{\pi}}{x}
+   + {\theta_{v}}^{'} \DP{\pi^{'}}{x}
+  \right)
+  + Turb.u \nonumber  \\
+ \DP{v^{'}}{t} &=& 
+  - \left( 
+       (\bar{u} + u^{'}) \DP{(\bar{v} + v^{'})}{x} 
+     + (\bar{v} + v^{'}) \DP{(\bar{v} + v^{'})}{y} 
+     + w^{'} \DP{(\bar{v} + v^{'})}{z} 
+    \right) \nonumber  \\
+&&  - {c_{p}}_{d}
+  \left(
+     \bar{\theta_{v}} \DP{\bar{\pi}}{y}
+   + \bar{\theta_{v}} \DP{\pi^{'}}{y}
+   + {\theta_{v}}^{'} \DP{\bar{\pi}}{y}
+   + {\theta_{v}}^{'} \DP{\pi^{'}}{y}
+  \right)
+  + Turb.v \nonumber 
+\end{eqnarray}
+%
+上式において移流項以外の 2 次の微小項を消去し, さらに基本場は水平方向に
+は変化しないことを利用すると, 以下の擾乱成分の式が得られる.
+%
+\begin{eqnarray}
+ \DP{u^{'}}{t} 
+  &=&   - \left( 
+       (\bar{u} + u^{'}) \DP{u^{'}}{x} 
+     + (\bar{v} + v^{'}) \DP{u^{'}}{x}      
+     + w^{'} \DP{u^{'}}{z} 
+    \right)
+  - w^{'} \DP{\bar{u}}{z} 
+  - {c_{p}}_{d} \bar{\theta_{v}} \DP{\pi^{'}}{x} 
+\nonumber \\
+&&
++ Turb.\bar{u} + Turb.u^{'}
+\Deqlab{bunri:moist:dudt} \\
+%
+ \DP{v^{'}}{t} 
+  &=& 
+  - \left( 
+       (\bar{u} + u^{'}) \DP{v^{'}}{x} 
+     + (\bar{v} + v^{'}) \DP{v^{'}}{y}      
+     + w^{'} \DP{v^{'}}{z} 
+    \right)
+  - w^{'} \DP{\bar{v}}{z} 
+  -{c_{p}}_{d} \bar{\theta_{v}}
+  \DP{\pi^{'}}{y}
+\nonumber \\
+&&
+  + Turb.\bar{v}  + Turb.v^{'}
+  \Deqlab{bunri:moist:dvdt} 
+\end{eqnarray}
+%
+ここで $\bar{\theta_{v}}$ は, 
+%
+\begin{eqnarray}
+\bar{\theta_{v}} 
+= \frac{\bar{\theta}}{\bar{f}}
+= \frac{\bar{\theta}}
+{
+  {\left( 
+    1 - \frac{\sum \bar{q_{v}}/M_{v}}{1/M_{d} + \sum \bar{q_{v}}/M_{v}}
+   \right)
+  (1 + \sum \bar{q_{v}} )}
+}
+  \Deqlab{bunri:moist:bar_f}
+\end{eqnarray}
+%
+である. 
+
+
+\subsection{鉛直方向の運動方程式の線形化}
+
+鉛直方向の運動方程式を基本場と擾乱場に分離する. 
+%
+\begin{eqnarray}
+ \DP{w^{'}}{t} &=& 
+  - \left( 
+       (\bar{u} + u^{'}) \DP{w^{'}}{x} 
+     + (\bar{v} + v^{'}) \DP{w^{'}}{y} 
+     + w^{'} \DP{w^{'}}{z} 
+    \right) 
+  \nonumber \\
+&& 
+  - {c_{p}}_{d}
+  \left(
+     \bar{\theta_{v}} \DP{\bar{\pi}}{z}
+   + \bar{\theta_{v}} \DP{\pi^{'}}{z}
+   + {\theta_{v}}^{'} \DP{\bar{\pi}}{z}
+   + {\theta_{v}}^{'} \DP{\pi^{'}}{z}
+  \right) 
+  - g
+  + Turb.w
+\nonumber 
+\end{eqnarray}
+%
+上式において移流項以外の 2 次の微小項を消去すると以下となる. 
+%
+\begin{eqnarray}
+ \DP{w^{'}}{t} &=& 
+  - \left( 
+       (\bar{u} + u^{'}) \DP{w^{'}}{x} 
+     + (\bar{v} + v^{'}) \DP{w^{'}}{y} 
+     + w^{'} \DP{w^{'}}{z} 
+    \right)
+ \nonumber \\
+&&   -{c_{p}}_{d}
+  \left(
+     \bar{\theta_{v}} \DP{\bar{\pi}}{z}
+   + \bar{\theta_{v}} \DP{\pi^{'}}{z}
+   + {\theta_{v}}^{'} \DP{\bar{\pi}}{z}
+  \right)
+    - g
+    + Turb.w . \nonumber 
+\end{eqnarray}
+%
+さらに静水圧の式を利用すると以下となる. 
+%
+\begin{eqnarray}
+ \DP{w^{'}}{t} 
+  &=& 
+  - \left( 
+       (\bar{u} + u^{'}) \DP{w^{'}}{x} 
+     + (\bar{v} + v^{'}) \DP{w^{'}}{y} 
+     + w^{'} \DP{w^{'}}{z} 
+    \right)
+  \nonumber \\
+&&
+  + {c_{p}}_{d} \bar{\theta_{v}} 
+  \left( \frac{g}{{c_{p}}_{d} \bar{\theta_{v}}} \right)
+  -   {c_{p}}_{d} \bar{\theta_{v}} \DP{\pi^{'}}{z}
+  +   {c_{p}}_{d} {\theta_{v}}^{'} 
+  \left( \frac{g}{{c_{p}}_{d} \bar{\theta_{v}}} \right)
+  - g + Turb.w  \nonumber \\
+  &=& 
+  - \left( 
+       (\bar{u} + u^{'}) \DP{w^{'}}{x} 
+     + (\bar{v} + v^{'}) \DP{w^{'}}{y} 
+     + w^{'} \DP{w^{'}}{z} 
+    \right)
+  -    {c_{p}}_{d} \bar{\theta_{v}} \DP{\pi^{'}}{z}
+  +   \frac{{\theta_{v}}^{'}}{\bar{\theta_{v}}} g
+  + Turb.w  \nonumber 
+\end{eqnarray}
+%
+ここで ${\theta_{v}}^{'}$ は, 
+%
+\begin{eqnarray}
+ {\theta_{v}}^{'} 
+  &=& \Dinv{f}
+  \left\{
+   \theta^{'}
+   - \sum \frac{\theta}{f} \DP{f}{q_{v}} q_{v}^{'}
+   - \sum \frac{\theta}{f} \DP{f}{q_{c}} q_{c}^{'}
+   - \sum \frac{\theta}{f} \DP{f}{q_{r}} q_{r}^{'}
+  \right\}
+  \nonumber \\
+ &=& \Dinv{f}
+  \left\{
+   \frac{\theta^{'}}{\theta}
+   - \sum \Dinv{f} \DP{f}{q_{v}} q_{v}^{'}
+   - \sum \Dinv{f} \DP{f}{q_{c}} q_{c}^{'}
+   - \sum \Dinv{f} \DP{f}{q_{r}} q_{r}^{'}
+  \right\}
+  \Deqlab{DTheta}
+\end{eqnarray}
+%
+であり, \Deqref{DTheta} 式の第 2 項を計算すると, 
+%
+\begin{eqnarray}
+\sum \Dinv{f}\DP{f}{q_{v}} 
+ &=& 
+ \Dinv{\frac{1/M_{d}}{1/M_{d} + \sum q_{v}/M_{v}}
+ (1 + \sum q_{v} + \sum q_{c} + \sum q_{r})}
+ \DP{\frac{1/M_{d}}{1/M_{d} + \sum q_{v}/M_{v}}
+ (1 + \sum q_{v} + \sum q_{c} + \sum q_{r})}{q_{v}}
+ \nonumber \\
+ &=&
+ \Dinv{\frac{1/M_{d}}{1/M_{d} + \sum q_{v}/M_{v}}
+ (1 + \sum q_{v} + \sum q_{c} + \sum q_{r})}  \nonumber \\ 
+&&
+ \left[
+   \frac{1/M_{d}}{1/M_{d} + \sum q_{v}/M_{v}}
+ - 
+ \left\{
+  \frac{\sum 1/M_{d}M_{v}}{(1/M_{d} + \sum q_{v}/M_{v})^{2}}  
+  (1 + \sum q_{v} + \sum q_{c} + \sum q_{r})
+ \right\}
+ \right]
+ \nonumber \\
+ &=&
+  \Dinv{1 + \sum q_{v} + \sum q_{c} + \sum q_{r}} 
+  - \frac{\sum 1/M_{v}}{1/M_{d} + \sum  q_{v}/M_{v}} 
+ \nonumber 
+\end{eqnarray}
+%
+であり, \Deqref{DTheta} 式の第 3 項を計算すると, 
+%
+\begin{eqnarray}
+\sum \Dinv{f}\DP{f}{q_{c}} 
+ &=& 
+ \Dinv{\frac{1/M_{d}}{1/M_{d} + \sum q_{v}/M_{v}}
+ (1 + \sum q_{v} + \sum q_{c} + \sum q_{r})}
+ \DP{\frac{1/M_{d}}{1/M_{d} + \sum q_{v}/M_{v}}
+ (1 + \sum q_{v} + \sum q_{c} + \sum q_{r})}{q_{c}}
+ \nonumber \\
+ &=&
+  \Dinv{1 + \sum q_{v} + \sum q_{c} + \sum q_{r}} 
+ \nonumber 
+\end{eqnarray}
+%
+であり, \Deqref{DTheta} 式の第 4 項を計算すると, 
+%
+\begin{eqnarray}
+\sum \Dinv{f}\DP{f}{q_{r}} 
+ &=& 
+ \Dinv{\frac{1/M_{d}}{1/M_{d} + \sum q_{v}/M_{v}}
+ (1 + \sum q_{v} + \sum q_{c} + \sum q_{r})}
+ \DP{\frac{1/M_{d}}{1/M_{d} + \sum q_{v}/M_{v}}
+ (1 + \sum q_{v} + \sum q_{c} + \sum q_{r})}{q_{r}}
+ \nonumber \\
+ &=&
+  \Dinv{1 + \sum q_{v} + \sum q_{c} + \sum q_{r}} 
+ \nonumber 
+\end{eqnarray}
+%
+となるので, 
+%
+\begin{eqnarray}
+ {\theta_{v}}^{'} 
+  = \Dinv{f}
+  \left\{
+   \frac{\theta^{'}}{\theta}
+   + \frac{\sum q_{v}^{'}/M_{v}}{1/M_{d} + \sum  q_{v}/M_{v}} 
+   - \frac{\sum q_{v}^{'} + \sum q_{c}^{'} + \sum q_{r}^{'}}
+          {1 + \sum q_{v} + \sum q_{c} + \sum q_{r}} 
+  \right\}
+\end{eqnarray}
+%
+である. ここで擾乱成分は平均成分に比べて十分に小さいので, 
+全量を平均成分に置き換えることで, 
+%
+\begin{eqnarray}
+ {\theta_{v}}^{'} 
+  = \frac{\bar{\theta}}{\bar{f}}
+  \left\{
+   \frac{\theta^{'}}{\bar{\theta}}
+   + \frac{\sum q_{v}^{'}/M_{v}}{1/M_{d} + \sum  \bar{q_{v}}/M_{v}} 
+   - \frac{\sum q_{v}^{'} + \sum q_{c}^{'} + \sum q_{r}^{'}}
+          {1 + \sum \bar{q_{v}}}
+  \right\}
+\end{eqnarray}
+%
+となる. これを用いると, 擾乱成分の速度 $w$ の式は以下のように書ける. 
+%
+\begin{eqnarray}
+ \DP{w^{'}}{t} 
+  &=& 
+  - \left( 
+       (\bar{u} + u^{'}) \DP{w^{'}}{x} 
+     + (\bar{v} + v^{'}) \DP{w^{'}}{y} 
+     + w^{'} \DP{w^{'}}{z} 
+    \right)  
+  - {c_{p}}_{d} \bar{\theta_{v}} \DP{\pi^{'}}{z}
+\nonumber \\
+&&  +   
+\left(
+   \frac{\theta^{'}}{\bar{\theta}}
+   + \frac{\sum q_{v}^{'}/M_{v}}{1/M_{d} + \sum  \bar{q_{v}}/M_{v}} 
+   - \frac{\sum q_{v}^{'} + \sum q_{c}^{'} + \sum q_{r}^{'}}
+          {1 + \sum \bar{q_{v}}}
+  \right) g
+  + Turb.w  \nonumber \\
+\end{eqnarray}
+%
+
+
+\subsection{圧力方程式の線形化}
+
+式\Deqref{equations:u-w-pi-theta:continue}を線形化する. 変数を平均成分
+と擾乱成分に分解し, 擾乱成分は平均成分よりも十分小さく, 平均成分は $z$ 
+のみの関数とする. 式\Deqref{equations:u-w-pi-theta:continue}左辺は
+%
+\[
+  \mathrm{式\Deqref{equations:u-w-pi-theta:continue}左辺}
+  = 
+  \DP{\pi '}{t} 
++ \left(
+       (\bar{u} + u') \DP{\pi '}{x} + (\bar{v} + v') \DP{\pi '}{y} 
+       + w' \DP{\pi '}{z} 
+  \right) 
++ w' \DP{\overline{\pi}}{z}
+\]
+%
+となる. 
+
+式\Deqref{equations:u-w-pi-theta:continue}右辺第一項は音速 ${C_{s}}^2$
+の定義 ${C_s}^2 = {c_{p}}_{d} R_{d} \pi \theta_{v}/c_{v}$ を用いること
+で, 以下のように展開する. 
+%
+\begin{eqnarray}
+  \frac{{C_s}^2}{{c_{p}}_{d} \theta_{v}} \Ddiv \Dvect{u}
+= 
+  \frac{R_{d} (\bar{\pi} + \pi ' )}{{c_{v}}_{d}} \Ddiv \Dvect{u}
+= 
+  \frac{R_{d} \bar{\pi} }{{c_{v}}_{d}} \Ddiv \Dvect{u}
+  + \frac{R_{d} \pi ' }{{c_{v}}_{d}} \Ddiv \Dvect{u}
+\end{eqnarray}
+%
+基本場の音速を用いることで, 
+%
+\begin{eqnarray}
+  \frac{{C_s}^2}{{c_{p}}_{d} \theta_{v}} \Ddiv \Dvect{u}
+= 
+  \frac{\overline{{C_s}^2}}{{c_{p}}_{d} \bar{\theta_{v}}}\Ddiv \Dvect{u}
+  + \frac{R_{d} \pi ' }{{c_{v}}_{d}} \Ddiv \Dvect{u}
+\end{eqnarray}
+%
+と書ける. 
+また組成の変化に伴う項は, 熱力学の式において行ったように以下のように近似する.
+%
+\begin{eqnarray*}
+\sum_{i} \Dinv{f}\DP{f}{q_{v_{i}}}\dot{q_{v_{i}}} 
+ &=& \sum_{i}\Dinv{f}\left[
+       \frac{1/M_{d}}{1/M_{d} + \sum_{j}q_{v_{j}}/M_{v_{j}}} \right. \\
+ && \left.
+     - \frac{1/M_{d} 1/M_{v_{i}}}{(1/M_{d} + \sum_{j}q_{v_{j}}/M_{v_{j}})^{2}}
+       (1 + \sum_{j}q_{v_{j}} + \sum _{j}q_{c_{j}} + \sum_{j}q_{r_{j}})
+     \right]\dot{q_{v_{i}}} \\
+ &=& \sum _{i}
+    \left[
+      \frac{1}{1 + \sum_{j}q_{v_{j}} + \sum _{j}q_{c_{j}} + \sum_{j}q_{r_{j}}}
+      - \frac{1/M_{v_{i}}}{1/M_{d} + \sum_{j}q_{v_{j}}/M_{v_{j}}}
+    \right]\dot{q_{v_{i}}}  \\
+ &=& \frac{\sum \dot{q}_{v}}{1 + \sum q_{v} + \sum q_{c} + \sum q_{r}}
+    - \frac{\sum \dot{q_{v}}/M_{v}}{1/M_{d} + \sum q_{v}/M_{v}} \\
+ &\approx &
+     \frac{\sum \dot{q}_{v}}{1 + \sum \overline{q_{v}}}
+    - \frac{\sum \dot{q_{v}}/M_{v}}{1/M_{d} + \sum \overline{q_{v}}/M_{v}}, \\
+\sum_{i} \Dinv{f}\DP{f}{q_{c_{i}}}\dot{q_{c_{i}}} 
+ &=& \sum_{i}\Dinv{f}
+       \frac{1/M_{d}}{1/M_{d} + \sum_{j}q_{v_{j}}/M_{v_{j}}}\dot{q_{c_{i}}}  \\
+ &=& \frac{\sum \dot{q}_{c}}{1 + \sum q_{v} + \sum q_{c} + \sum q_{r}} \\
+ &\approx &
+     \frac{\sum \dot{q}_{c}}{1 + \sum \overline{q_{v}}}, \\
+\sum_{i} \Dinv{f}\DP{f}{q_{r_{i}}}\dot{q_{r_{i}}} 
+ &=& \sum_{i}\Dinv{f}
+       \frac{1/M_{d}}{1/M_{d} + \sum_{j}q_{v_{j}}/M_{v_{j}}}\dot{q_{r_{i}}}  \\
+ &=& \frac{\sum \dot{q}_{r}}{1 + \sum q_{v} + \sum q_{c} + \sum q_{r}} \\
+ &\approx &
+     \frac{\sum \dot{q}_{r}}{1 + \sum \overline{q_{v}}}.
+\end{eqnarray*}
+%
+これらを用いると, 
+%
+\begin{eqnarray}
+\DP{\pi'}{t}
+ &=& 
+- \left(
+       (\bar{u} + u') \DP{\pi '}{x} + (\bar{v} + v') \DP{\pi '}{y} 
+       + w' \DP{\pi '}{z} 
+  \right) 
+- w' \DP{\overline{\pi}}{z}
++ \frac{R_{d} \pi ' }{{c_{v}}_{d}}\Ddiv \Dvect{u}
+\nonumber \\
+&& 
++
+\frac{\overline{C_{s}^{2}}}{c_{p_{d}}\overline{\theta _{v}}}
+   \left\{
+     - \Ddiv \Dvect{u} + \frac{\dot{\theta}}{\overline{\theta}}
+     - \left(
+         \frac{\sum \dot{q}_{v} + \sum \dot{q}_{c} + \sum \dot{q}_{r}}
+            {1 + \sum \overline{q_{v}}}
+       - \frac{\sum \dot{q_{v}}/M_{v}}{1/M_{d} + \sum \overline{q_{v}}/M_{v}}
+     \right)
+   \right\}, \nonumber\\
+\end{eqnarray}
+%
+但し, 
+\begin{eqnarray}
+ \Ddiv \Dvect{u}
+ = \DP{(\bar{u} + u')}{x} + \DP{(\bar{v} + v')}{y} + \DP{w'}{z}
+ = \DP{u'}{x} + \DP{v'}{y} + \DP{w'}{z}
+\nonumber
+\end{eqnarray}
+である. 
+
+右辺の基本場の移流項と発散項は以下のようにまとめる
+%
+\begin{eqnarray*}
+- w' \DP{\overline{\pi}}{z} - 
+  \frac{\overline{C_{s}^{2}}}
+       {c_{p_{d}}\overline{\theta _{v}}} \Ddiv \Dvect{u}
+ &=&  
+ - w^{'} \DP{}{z} 
+ \left( \frac{\bar{\rho} R_{d}\bar{\theta_{v}}}{p_{0}}\right)^{R_{d}/{c_{v}}_{d}}
+ - \frac{\overline{{C_{s}}^{2}} }{ {c_{p}}_{d} \bar{\theta_{v}}}
+   \Ddiv \Dvect{u} \\
+%
+ &=& 
+- w^{'} 
+ \frac{R_{d}}{{c_{v}}_{d}} \bar{\pi}
+ \Dinv{\left( \frac{\bar{\rho}
+	R_{d}\bar{\theta_{v}}}{p_{0}}\right)}
+ \frac{R_{d}}{p_{0}}
+ \DP{ \bar{\rho} \bar{\theta_{v}}}{z} 
+ - \frac{\overline{{C_{s}}^{2}} }{ {c_{p}}_{d} \bar{\theta_{v}}}
+   \Ddiv \Dvect{u} \\
+%
+ &=&
+ - \frac{\overline{{C_{s}}^{2}}}{{c_{p}}_{d}  \bar{\rho} \bar{\theta_{v}}^{2}}
+ \left\{
+ w^{'} 
+ \DP{ \bar{\rho} \bar{\theta_{v}}}{z} 
+ + \bar{\rho} \bar{\theta_{v}}
+  \Ddiv \Dvect{u}
+\right\} \\
+%
+ &=&
+- \frac{\overline{{C_{s}}^{2}}}{{c_{p}}_{d}  \bar{\rho} \bar{\theta_{v}}^{2}}
+ \Ddiv \left\{
+	\bar{\rho} \bar{\theta_{v}} \Dvect{u}
+       \right\}
+\\
+ &=&
+- \left\{
+   \frac{\overline{{C_{s}}^{2}}}{{c_{p}}_{d} \bar{\theta_{v}}}
+   \left( \DP{u}{x} + \DP{v}{y} \right)
+%
+   + 
+   \frac{\overline{{C_{s}}^{2}}}{{c_{p}}_{d}  \bar{\rho} \bar{\theta_{v}}^{2}}
+   \DP{\bar{\rho} \bar{\theta_{v}} w}{z}
+  \right\}
+\end{eqnarray*}
+%
+以上より,
+%
+\begin{eqnarray}
+ \DP{\pi^{'}}{t} &=&
+- \left\{
+   \frac{\overline{{C_{s}}^{2}}}{{c_{p}}_{d} \bar{\theta_{v}}}
+   \left( \DP{u}{x} + \DP{v}{y} \right)
+%
+   + 
+   \frac{\overline{{C_{s}}^{2}}}{{c_{p}}_{d}  \bar{\rho} \bar{\theta_{v}}^{2}}
+   \DP{\bar{\rho} \bar{\theta_{v}} w}{z}
+  \right\}\nonumber \\
+&&
+- \left(
+       (\bar{u} + u') \DP{\pi '}{x} + (\bar{v} + v') \DP{\pi '}{y} 
+       + w' \DP{\pi '}{z} 
+  \right) 
+  + \frac{R_{d} \pi '}{{c_{v}}_{d}} \left(\DP{u}{x} + \DP{v}{y} + \DP{w}{z}\right)
+\nonumber \\
+&&
++ 
+\frac{\overline{C_{s}^{2}}}{c_{p_{d}}\overline{\theta _{v}}}
+   \left\{
+     \frac{\dot{\theta}}{\overline{\theta}}
+     - \left(
+         \frac{\sum \dot{q}_{v} + \sum \dot{q}_{c} + \sum \dot{q}_{r}}
+            {1 + \sum \overline{q_{v}}}
+       - \frac{\sum \dot{q_{v}}/M_{v}}{1/M_{d} + \sum \overline{q_{v}}/M_{v}}
+     \right)
+   \right\}.
+\end{eqnarray}
+
+
+\subsubsection*{補足: Klemp and Wilhelmson (1978) における近似}
+
+Klemp and Wilhelmson (1978) では, 擾乱成分の移流, および非断熱的な加熱に
+よる熱膨張と凝縮に伴う圧力変化を無視し,
+%
+\begin{eqnarray}
+\DD{\pi}{t} 
+ = 
+  - \frac{{C_{s}}^{2}}{ {c_{p}}_{d} (\theta/f)}
+    \Ddiv \Dvect{u} 
+\nonumber 
+\end{eqnarray}
+%
+として定式化している.
+
+
+\subsection{熱の式の線形化}
+
+熱の式を平均成分と擾乱成分に分離する. 
+%
+\begin{eqnarray}
+&& \DP{(\bar{\theta} + \theta^{'})}{t} 
+ = 
+ - (\bar{u} + u^{'})\DP{(\bar{\theta} + \theta^{'})}{x} 
+ - (\bar{v} + v^{'})\DP{(\bar{\theta} + \theta^{'})}{y} 
+ - w^{'}\DP{(\bar{\theta} + \theta^{'})}{z} 
+ + Q + Turb.(\bar{\theta} + \theta^{'})
+\nonumber 
+\end{eqnarray}
+%
+ここで平均場の量は $z$ の関数であることを用いると, 
+%
+\begin{eqnarray}
+&& \DP{\theta^{'}}{t} 
+ = 
+ - \left(
+      (\bar{u} + u^{'})\DP{\theta^{'}}{x} 
+    + (\bar{v} + v^{'})\DP{\theta^{'}}{y} 
+    + w^{'}\DP{\theta^{'}}{z} 
+   \right)
+ - w^{'}\DP{\bar{\theta}}{z} 
+ + Q  + Turb.\bar{\theta}   + Turb.\theta^{'}
+\nonumber \\
+\end{eqnarray}
+%
+となる. 
+
+
+\subsection{混合比の保存式の線形化}
+
+凝縮成分の混合比の保存式についても, 変数を平均成分と擾乱成分に分離する. 
+熱の式と同様に, 以下のように書ける. 但し, 生成項, 落下項は擾乱成分のみ
+存在すると仮定する. この仮定は平均場では凝縮は生じていないと考えることに
+等しい. 
+%
+\begin{eqnarray}
+%
+&& \DP{q_{v}^{'}}{t} 
+= 
+ - \left(
+      (\bar{u} + u^{'})\DP{q_{v}^{'}}{x} 
+    + (\bar{v} + v^{'})\DP{q_{v}^{'}}{y} 
+    + w^{'}\DP{q_{v}^{'}}{z} 
+   \right)
+  - w^{'}\DP{\bar{q_{v}}}{z}
+  \nonumber \\
+&& 
+  + Src.q_{v}^{'} + Turb.\bar{q_{v}} + Turb.q_{v}^{'}, \\
+%
+&& \DP{q_{c}^{'}}{t} 
+=
+  - \left(
+      (\bar{u} + u^{'})\DP{q_{c}^{'}}{x} 
+    + (\bar{v} + v^{'})\DP{q_{c}^{'}}{y} 
+    + w^{'}\DP{q_{c}^{'}}{z} 
+   \right)
+  + Src.q_{c}^{'} + Turb.q_{c}^{'}, \\
+%
+&& \DP{q_{r}^{'}}{t} 
+= - \left(
+      (\bar{u} + u^{'})\DP{q_{r}^{'}}{x} 
+    + (\bar{v} + v^{'})\DP{q_{r}^{'}}{y} 
+    + w^{'}\DP{q_{r}^{'}}{z} 
+    \right)
+   + Src.q_{r}^{'} + Fall.q_{r}^{'} + Turb.q_{r}^{'}
+\nonumber \\
+%
+\end{eqnarray}
+%
+但し雲水量と雨水量は擾乱成分のみの量である. 
+
+
+\section{まとめ}
+
+準圧縮方程式系は以下のようにまとめられる. ただし, 擾乱を示す $~^{'}$ は
+除いた. 
+%
+\begin{description}
+%
+ \item[運動方程式]~
+%
+\begin{eqnarray}
+ \DP{u}{t} 
+  &=& 
+  - \left( (\bar{u} + u) \DP{u}{x} + (\bar{v} + v) \DP{u}{y} + w
+     \DP{u}{z} \right)
+  - w \DP{\bar{u}}{z}
+  - {c_{p}}_{d} \bar{\theta_{v}}  \DP{\pi}{x}
+  + Turb.\bar{u} + Turb.u
+\nonumber \\
+  \Deqlab{quasi-equations:u-w-pi-theta:u} \\
+%
+ \DP{v}{t} 
+  &=& 
+  - \left( (\bar{u} + u) \DP{v}{x} + (\bar{v} + v) \DP{v}{y} + w \DP{v}{z} \right)
+  - w \DP{\bar{v}}{z}
+  - {c_{p}}_{d} \bar{\theta_{v}}  \DP{\pi}{y}
+  + Turb.\bar{v}  + Turb.v
+\nonumber \\
+  \Deqlab{quasi-equations:u-w-pi-theta:v} \\
+%
+ \DP{w}{t} 
+ &=& 
+  - \left( 
+       (\bar{u} + u) \DP{w}{x} + (\bar{v} + v) \DP{w}{y} + w \DP{w}{z} 
+    \right)  
+  - {c_{p}}_{d} \bar{\theta_{v}} \DP{\pi}{x}
+  + Turb.w 
+\nonumber \\
+&&  +   
+ \left(
+   \frac{\theta}{\bar{\theta}}
+   + \frac{\sum q_{v}/M_{v}}{1/M_{d} + \sum  \bar{q_{v}}/M_{v}} 
+   - \frac{\sum q_{v} + \sum q_{c} + \sum q_{r}}
+          {1 + \sum \bar{q_{v}}}
+ \right) g
+  \Deqlab{quasi-equations:u-w-pi-theta:w} 
+\end{eqnarray}
+%
+ \item[圧力方程式]~
+%
+\begin{eqnarray}
+ \DP{\pi}{t}&=&
+- \left\{
+   \frac{\overline{{C_{s}}^{2}}}{{c_{p}}_{d} \bar{\theta_{v}}}
+   \left( \DP{u}{x} + \DP{v}{y} \right)
+%
+   + 
+   \frac{\overline{{C_{s}}^{2}}}{{c_{p}}_{d}  \bar{\rho} \bar{\theta_{v}}^{2}}
+   \DP{\bar{\rho} \bar{\theta_{v}} w}{z}
+  \right\}\nonumber \\
+&&
+- \left(
+       (\bar{u} + u) \DP{\pi}{x} + (\bar{v} + v) \DP{\pi}{y} + w \DP{\pi}{z} 
+  \right)
+  + \frac{R_{d} \pi '}{{c_{v}}_{d}} \left(\DP{u}{x} + \DP{v}{y} +
+				     \DP{w}{z}\right)
+ \nonumber \\
+&&
++ 
+\frac{\overline{C_{s}^{2}}}{c_{p_{d}}\overline{\theta _{v}}}
+   \left\{
+     \frac{\dot{\theta}}{\overline{\theta}}
+     - \left(
+         \frac{\sum \dot{q}_{v} + \sum \dot{q}_{c} + \sum \dot{q}_{r}}
+            {1 + \sum \overline{q_{v}}}
+       - \frac{\sum \dot{q_{v}}/M_{v}}{1/M_{d} + \sum \overline{q_{v}}/M_{v}}
+     \right)
+   \right\}.
+\nonumber \\
+  \Deqlab{quasi-equations:u-w-pi-theta:continue}
+\end{eqnarray}
+%
+ \item[熱の式]~
+%
+\begin{eqnarray}
+\DP{\theta}{t} 
+ = 
+ - \left(
+      (\bar{u} + u)\DP{\theta}{x} 
+    + (\bar{v} + v)\DP{\theta}{y} 
+    + w\DP{\theta}{x} 
+   \right)
+ - w\DP{\bar{\theta}}{x} 
+ + Q  + Turb.\bar{\theta}   + Turb.\theta
+\nonumber \\
+  \Deqlab{quasi-equations:u-w-pi-theta:theta}
+\end{eqnarray}
+%
+ \item[凝縮成分の混合比の保存式]~
+%
+\begin{eqnarray}
+ \DP{q_{v}}{t} 
+&=& 
+ - \left(
+       (\bar{u} + u)\DP{q_{v}}{x} 
+       +  (\bar{v} + v)\DP{q_{v}}{y} 
+       + w\DP{q_{v}}{z} 
+   \right)
+  - w\DP{\bar{q_{v}}}{z}
+  \nonumber \\
+&&
+  + Src.q_{v} + Turb.\bar{q_{v}} + Turb.q_{v}, 
+  \Deqlab{quasi-equations:u-w-pi-theta:qv} \\
+%
+\DP{q_{c}}{t} 
+&=&
+  - \left(
+      (\bar{u} + u)\DP{q_{c}}{x} 
+      +  (\bar{v} + v)\DP{q_{c}}{y} 
+      + w\DP{q_{c}}{z} 
+	 \right)
+  + Src.q_{c} + Turb.q_{c}, 
+  \Deqlab{quasi-equations:u-w-pi-theta:qc} \\
+ %
+ \DP{q_{r}}{t} 
+ &=& - \left(
+	(\bar{u} + u) \DP{q_{r}}{x} 
+	+  (\bar{v} + v)\DP{q_{r}}{y} 
+	+ w\DP{q_{r}}{z} 
+	   \right)
+ + Src.q_{r} + Fall.q_{r} + Turb.q_{r}
+\nonumber \\
+  \Deqlab{quasi-equations:u-w-pi-theta:qr}
+\end{eqnarray}
+%
+\end{description}

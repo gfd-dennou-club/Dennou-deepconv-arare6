@@ -1,0 +1,99 @@
+#-*- mode: yaml; coding: utf-8; -*-
+#= 設定ファイル
+#
+# Rakefile 内で load される.
+#
+#== 挙動の制御
+#
+#== 挙動の制御
+#
+#=== CSS, JS の置き場所
+#
+#  Rakefile の実体の場所を指定すると良い.
+#  このディレクトリから bootstrap, jquery を読む
+#
+base_path: /library/cc-env/RDWebgen
+#
+#=== 下層のディレクトリも再帰的に処理するか?
+#
+recursive: false
+#
+#=== 再帰的処理をしない場合の扱うディレクトリのリスト
+#
+# - recursive: true の場合は無視される
+#
+src:
+  - doc
+  - doc/tutorial
+#  - subdirs
+#  - subdirs/subsubdirs
+#
+#=== RD ファイル内の画像へのリンクを thumbnail へ置き換えるか
+#
+thumbnail: true
+#
+#=== 日本語, 英語ファイルの処理
+#
+# ja:true で htm.ja を生成
+# en:true で htm.en を生成
+#
+lang:
+  ja: true
+  en: true
+#
+#== HTML meta 情報
+#
+# TODO: email で与えた文字列を画像に変換して配置したいが, ちょっと大仰かな...
+#
+author: Deepconv Development Group/GFD Dennou Staff
+title: Deepconv
+url:   /library/deepconv
+email: http://www.gfd-dennou.org/library/dcmodel/htmltools/dcstaff_email.png
+since: 2003/02/25
+#
+#
+#== CSSの指定
+#
+# * default は twitter bootstrap に幾つかの要素を追加した
+#   dcmodel-with-bootstrap.css を読み込む
+#
+css: "/library/dcmodel/htmltools/dcmodel-with-bootstrap.css"
+# css: false
+#
+#== additional HEADER
+#
+# <head></head> に追加する任意の HTML 片をここに記述
+# 出力時に改行は保持されないことに注意されたい
+#
+additional_head: |+
+  <!-- this is a test of additional header -->
+#
+# * メニューバーに表示するリンク
+#
+link_ja:
+  - title: 地球流体電脳倶楽部
+    url:   /
+  - title: dcmodel プロジェクト
+    url:   /library/dcmodel/index.htm.ja
+link_en:
+  - title: GFD Dennou Club
+    url:   /
+  - title: dcmodel Project
+    url:   /library/dcmodel/index.htm.en
+
+#-------------------------------------------------------------------------
+# Not implement yet.
+#
+#== 生成する HTML ファイルの URIのベース
+#
+# * "http://..." で指定する
+# * false の場合, Rakefile の場所からの相対PATHになる.
+#
+# publish_base: http://www.gfd-dennou.org/member/uwabami/tmp/
+# publish_base: false
+#
+#== Template 置き場
+#
+# * HTML のヘッダ/フッタのテンプレートを外部から読み込めるようにする?
+#
+# assets: "./assets"

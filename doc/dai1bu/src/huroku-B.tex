@@ -1,0 +1,638 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv -- 数理モデル
+%       付録 B 乱流パラメタリゼーション
+%
+% 履歴  2003-07-25 高橋 こう子   新規作成
+%       2003-09-03 高橋 こう子   骨子完成
+%       2003-09-08 高橋 こう子   参考文献追加
+%       2003-09-09 高橋 こう子   Appendix 追加
+%       2003-11-17 高橋 こう子   修正
+%       2003-11-22 高橋 こう子   運動エネルギーの式修正
+%       2004-07-25 小高正嗣      2 次元乾燥大気版へ再構成
+%       2007-06-05 小高正嗣      乱流運動エネルギー方程式の導出を追加
+%       2012-04-18 小高正嗣      3 次元化
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{乱流パラメタリゼーション}
+
+%----------------------------------------------------------------------
+%\newpage
+
+%\subsection{レイノルズ応力方程式}
+
+
+%----------------------------------------------------------------------
+%\newpage
+
+\section{乱流パラメタリゼーション}
+
+Klemp and Wilhelmson (1978) および CReSS で用いられている 1.5 次のクロー
+ジャーを用いる. このとき乱流運動エネルギーの時間発展方程式は, 
+%
+\begin{eqnarray}
+ \DD{E}{t} &=& B + S + D_{E}  
+  - \left(\frac{C_{\varepsilon}}{l}\right)
+    E^{\frac{3}{2}}
+\Deqlab{B:dEdt}	  
+\end{eqnarray} 
+%
+と与えられる. $l$ は混合距離で, $l = \left(\Delta x \Delta
+z\right)^{1/2}$ とする.  $B$ と $S$ はそれぞれ浮力と流れの変形速度によ
+る乱流エネルギー生成項, $D_{E}$ は乱流エネルギー拡散項, 第 4 項は乱流
+エネルギーの消散項であり,
+%
+\begin{eqnarray}
+ B &=& 
+  \frac{g_{j}}{\overline{\theta}} 
+  \overline{u^{\prime}_{j} \theta^{\prime}} ,
+ \\
+ S &=& 
+  - \overline{(u_{i}^{\prime} u_{j}^{\prime})}
+  \DP{u_{i}}{x_{j}} ,
+ \\
+ D_{E} &=& \DP{}{x_{j}} \left(K_{m} \DP{E}{x_{j}} \right)
+\end{eqnarray}
+%
+である. 1.5 次のクロージャーでは, レイノルズ応力を以下のように定義する.
+%
+\begin{eqnarray}
+  \overline{(u_{i}^{\prime} u_{j}^{\prime})}
+  &=& - K_{m} \left(\DP{u_{i}}{x_{j}}
+	  	        + \DP{u_{j}}{x_{i}}\right)
+	  + \frac{2}{3} \delta_{ij} E,
+  \Deqlab{レイノルズ応力1}
+\\
+  \overline{u_{j}^{\prime} \theta } &=& - K_{h}\DP{\theta}{x_{j}}.
+  \Deqlab{レイノルズ応力2}
+\end{eqnarray}
+%
+ここで $K_{m}$ は運動量に対する渦粘性係数であり, $E$ はサブグリッドス
+ケールの乱流運動エネルギー, $K_{h}$ は渦拡散係数である.
+$K_{m}$, $K_{h}$ は $E$ を用いて以下のように与えられる.
+%
+ \begin{eqnarray}
+  K_{m} &=& C_{m} E^{\frac{1}{2}} l,
+   \Deqlab{B:E}\\
+  K_{h} &=& 3 K_{m}.
+ \end{eqnarray}
+%
+パラメータ $C_{\varepsilon}, C_{m}$ はともに 0.2 である. 
+a
+\subsection{乱流運動エネルギー方程式の導出}
+
+Klemp and Wilhelmson (1978) では\Deqref{B:dEdt}について, 「Deardroff
+  (1975), Mellor and Yamada (1974), Schemm and Lipps (1976) で用いられ
+ている式と類似のものである」とだけ記述され, その導出の詳細については解
+説されていない. それゆえ大気大循環モデルでよく用いられている Mellor
+and Yamada (1974, 1982) のパラメタリゼーションとの対応が不明瞭であ
+る. そこで以下では Mellor and Yamada (1973, 1974) の定式化の手順に沿っ
+て式\Deqref{B:dEdt}, \Deqref{レイノルズ応力1}, \Deqref{レイノルズ応力
+2} の導出を行う.
+
+考えているサブグリッドスケール内において, 密度は一定, 動粘性係数や拡散
+係数などの物理定数は一定とする. 出発点となる方程式は, Mellor and
+Yamada (1973) の式 (7) および (8)
+\begin{eqnarray}
+  \DP{\overline{u^{\prime}_{i}u^{\prime}_{j}}}{t}
+      &+& \DP{}{x_{k}}\left[
+          u_{k}\overline{u^{\prime}_{i}u^{\prime}_{j}}
+       + \overline{u^{\prime}_{k}u^{\prime}_{i}u^{\prime}_{j}}
+       -  \nu \DP{}{x_{k}}\overline{u^{\prime}_{i}u^{\prime}_{j}}\right] 
+       \nonumber \\ 
+      &+& \DP{}{x_{j}}\overline{pu^{\prime}_{i}} 
+        + \DP{}{x_{i}}\overline{pu^{\prime}_{j}}
+        + f_{k}(\varepsilon _{jkl}\overline{u_{l}^{\prime}u^{\prime}_{i}}
+        + \varepsilon _{ikl}\overline{u_{l}^{\prime}u^{\prime}_{j}}) 
+	\nonumber \\
+      &=& -\overline{u^{\prime}_{k}u^{\prime}_{i}}\DP{u_{j}}{x_{k}}
+          -\overline{u^{\prime}_{k}u^{\prime}_{j}}\DP{u_{i}}{x_{k}}
+          -\beta(g_{j}\overline{u^{\prime}_{i}\theta }
+          + g_{i}\overline{u^{\prime}_{j}\theta }) \nonumber \\
+      &+& \overline{p\left(\DP{u^{\prime}_{i}}{x_{j}} 
+       + \DP{u^{\prime}_{j}}{x_{i}}\right)}
+       -  2\nu \overline{\DP{u^{\prime}_{i}}{x_{k}}\DP{u^{\prime}_{j}}{x_{k}}},
+           \Deqlab{MY1974:eq(7)}
+    \end{eqnarray}
+    \begin{eqnarray}
+      \DP{\overline{u^{\prime}_{j}\theta^{\prime}}}{t}
+      &+& 
+      \DP{}{x_{k}}\left[
+        u_{k}\overline{\theta^{\prime} u^{\prime}_{j}} 
+      + \overline{u^{\prime}_{k}u^{\prime}_{j}\theta^{\prime} }
+      - \alpha \overline{u^{\prime}_{j}\DP{\theta^{\prime} }{x_{k}}}
+      - \nu \overline{\theta^{\prime} \DP{u^{\prime}_{j}}{x_{k}}}\right] 
+      + \DP{}{x_{j}}\overline{p\theta^{\prime} } 
+      + \varepsilon _{jkl}f_{k}\overline{u^{\prime}_{l}\theta^{\prime} } 
+      \nonumber \\
+      &=& -\overline{u^{\prime}_{j}u^{\prime}_{k}}\DP{\theta }{x_{k}} 
+          -\overline{\theta^{\prime} u^{\prime}_{k}}\DP{u_{j}}{x_{k}} 
+          -\beta g_{j}\overline{(\theta^{\prime})^{2}} 
+          + \overline{p\DP{\theta^{\prime} }{x_{k}}}
+          -(\alpha + \nu )
+            \overline{\DP{u^{\prime}_{j}}{x_{k}}\DP{\theta^{\prime} }{x_{k}}}.
+         \Deqlab{MY1974:eq(8)}
+\end{eqnarray}
+および, \Deqref{MY1974:eq(7)}において $i=j$ とした式
+\begin{eqnarray}
+  \DP{q^{2}}{t} + u_{k}\DP{q^{2}}{x_{k}} 
+    + \DP{}{x_{k}}\left(\overline{u^{\prime}_{k}u^{\prime}_{j}u^{\prime}_{j}}
+    - \nu \DP{q^{2}}{x_{k}}\right)
+    &=&
+    - \overline{u^{\prime}_{j}u^{\prime}_{k}}\DP{u_{j}}{x_{k}} 
+    - \DP{}{x_{k}}\overline{pu^{\prime}_{j}} \nonumber \\ 
+   && + g_{j}\beta\overline{u^{\prime}_{j}\theta^{\prime}}
+    - 2\nu \overline{\left(\DP{u^{\prime}_{j}}{x_{k}}\right)}
+    \Deqlab{qの予報式}
+\end{eqnarray}
+ここで 
+\begin{eqnarray*}
+  q &\equiv&  \sqrt{\overline{(u^{\prime}_{i})^{2}}}  \\
+    & = &    \sqrt{2E} 
+\end{eqnarray*}
+で, $\nu, \alpha, \beta$ はそれぞれ動粘性係数, 拡散係数および熱膨
+張率, $g_{j}$ は重力加速度ベクトルの第 $j$ 成分である.
+
+\Deqref{MY1974:eq(7)}および\Deqref{MY1974:eq(8)}に現れる圧力に関する相関項
+および 3 次の相関量については以下の仮定をおく. 
+
+\begin{enumerate}
+  \item $\overline{p\left(\DP{u^{\prime}_{i}}{x_{j}} + \DP{u^{\prime}_{i}}{x_{j}}\right)}$
+        (圧力による運動エネルギーの再分配)
+
+        \[
+          = - \frac{q}{3l_{1}}(\overline{u^{\prime}_{i}u^{\prime}_{j}} - 
+                              \frac{\delta _{ij}}{3}q^{2})
+            + Cq^{2}\left(\DP{u_{i}}{x_{j}} 
+            + \DP{u_{j}}{x_{i}}\right),
+        \]
+        とおく. ここで $l_{1}$ は乱流の特徴的なスケール,
+        $C$ は無次元の定数である.
+
+  \item $\overline{p\DP{\theta^{\prime} }{x_{k}}}$ (圧力による熱エネルギー再分配)
+
+        1. の導出と同様の考察によって,
+        \[
+          = -\frac{q}{3l_{2}}\overline{u^{\prime}_{i}\theta^{\prime} }
+        \]
+        とおく. ここでの乱れのスケールは $l_{2}$ とする.
+
+  \item $2\nu \overline{\DP{u^{\prime}_{i}}{x_{k}}\DP{u^{\prime}_{j}}{x_{k}}}$
+        (粘性による散逸)
+
+        粘性に関与するような小スケールの現象は等方的とみて $q$ のみ
+        で表現する.
+        \[
+          = \frac{2}{3}\frac{q^{3}}{\Lambda _{1}}\delta _{ij}.
+        \]
+        ここで $\Lambda _{1}$ は粘性の及ぶ特徴的スケールである.
+
+   \item $(\alpha + \nu )
+          \overline{\DP{u^{\prime}_{j}}{x_{k}}\DP{\theta^{\prime} }{x_{k}}}$
+
+        \[
+          = 0
+        \]
+	とおく. 
+
+  \item $\overline{u^{\prime}_{k}u^{\prime}_{i}u^{\prime}_{j}}, 
+        \overline{u^{\prime}_{k}u^{\prime}_{j}\theta^{\prime} }, 
+        \overline{u^{\prime}_{k}(\theta^{\prime})^{2}}$ 
+
+        速度変動による $\overline{u^{\prime}_{k}u^{\prime}_{i}u^{\prime}_{j}}, 
+        \overline{u^{\prime}_{k}u^{\prime}_{j}\theta^{\prime} }, 
+        \overline{u^{\prime}_{k}(\theta^{\prime})^{2}}$ と考え次のようにおく.
+        \begin{eqnarray*}
+          \overline{u^{\prime}_{k}u^{\prime}_{i}u^{\prime}_{j}} 
+          &=& -q\lambda _{1}\left(
+            \DP{\overline{u^{\prime}_{i}u^{\prime}_{j}}}{x_{k}} + 
+            \DP{\overline{u^{\prime}_{i}u^{\prime}_{k}}}{x_{j}} + 
+            \DP{\overline{u^{\prime}_{j}u^{\prime}_{j}}}{x_{i}}\right), \\
+          \overline{u^{\prime}_{k}u^{\prime}_{j}\theta^{\prime} } 
+          &=& -q\lambda _{2}\left( 
+            \DP{\overline{u^{\prime}_{k}\theta^{\prime} }}{x_{j}} + 
+            \DP{\overline{u^{\prime}_{j}\theta^{\prime} }}{x_{k}}\right), \\
+          \overline{u^{\prime}_{k}(\theta^{\prime})^{2}} &=& -q\lambda _{3}
+                   \DP{\overline{(\theta^{\prime})^{2}}}{x_{k}}. 
+        \end{eqnarray*}
+        ここで $\lambda _{i}(i=1,2,3)$ はそれぞれの特徴的スケールである.
+
+   \item $\overline{pu^{\prime}_{i}}, \overline{p\theta^{\prime} }$
+        (圧力変動による拡散)
+
+        \[
+            \overline{pu^{\prime}_{i}} =  \overline{p\theta^{\prime} } = 0
+        \]
+        とする. この近似は 
+        Deardroff (1975), Schemm and Lipps (1976) でも行われている.
+
+   \item $f_{k}(\varepsilon _{jkl}\overline{u_{l}^{\prime}u^{\prime}_{i}}
+         + \varepsilon _{ikl}\overline{u_{l}^{\prime}u^{\prime}_{j}}), \;
+         f_{k}\varepsilon _{jkl}\overline{u_{l}^{\prime}\theta^{\prime} }$ 
+	 (コリオリ項)
+
+        \[
+           f_{k}\varepsilon _{jkl}\overline{u_{l}^{\prime}u^{\prime}_{i}} =
+           f_{k}\varepsilon _{ikl}\overline{u_{l}^{\prime}u^{\prime}_{j}} = 0,
+        \]
+        \[
+           f_{k}\varepsilon _{jkl}\overline{u_{l}^{\prime}\theta^{\prime}} = 0
+        \]
+	とする. この近似は 
+        Deardroff (1975), Schemm and Lipps (1976) でも行われている.
+
+   \item $\alpha \overline{u^{\prime}_{j}\DP{\theta^{\prime} }{x_{k}}}, \;
+          \nu \overline{\theta^{\prime} \DP{u^{\prime}_{j}}{x_{k}}}$
+
+        \begin{equation}
+          = 0
+	\end{equation}
+	とする. 
+
+\end{enumerate}
+以上の近似を\Deqref{MY1974:eq(7)}, \Deqref{MY1974:eq(8)}, \Deqref{qの予報式}
+に対して行うと, 以下の式を得る.
+\begin{eqnarray}
+    \DD{\overline{u^{\prime}_{i}u^{\prime}_{j}}}{t}
+          &-& \DP{}{x_{k}}\left[
+              q\lambda _{1}\left(
+                \DP{\overline{u^{\prime}_{i}u^{\prime}_{j}}}{x_{k}} + 
+                \DP{\overline{u^{\prime}_{i}u^{\prime}_{k}}}{x_{j}} + 
+                \DP{\overline{u^{\prime}_{j}u^{\prime}_{i}}}{x_{i}}\right)
+		-\nu\DP{}{x_{k}}\overline{u^{\prime}_{i}u^{\prime}_{j}}\right] 
+              \nonumber \\
+          &=& - \overline{u^{\prime}_{k}u^{\prime}_{i}}\DP{u_{j}}{x_{k}}
+              - \overline{u^{\prime}_{k}u^{\prime}_{j}}\DP{u_{i}}{x_{k}}
+	      - \beta(g_{j}\overline{u^{\prime}_{i}\theta^{\prime} }
+              + g_{i}\overline{u^{\prime}_{j}\theta^{\prime} })
+              \nonumber \\
+          & & - \frac{q}{3l_{1}}(\overline{u^{\prime}_{i}u^{\prime}_{j}}
+              - \frac{\delta _{ij}}{3}q^{2})
+              + Cq^{2}\left(\DP{u_{i}}{x_{j}} 
+              + \DP{u_{j}}{x_{i}}\right)
+              - \frac{2}{3}\frac{q^{3}}{\Lambda _{1}}\delta _{ij},
+	      \Deqlab{MY1974:Level4(1)}
+              \\
+    \DD{\overline{u^{\prime}_{j}\theta^{\prime} }}{t}
+          &-& \DP{}{x_{k}}\left[q\lambda _{2}\left(
+              \DP{\overline{u^{\prime}_{k}\theta^{\prime} }}{x_{j}}
+              + \DP{\overline{u^{\prime}_{j}\theta^{\prime} }}{x_{k}}\right)\right]
+              \nonumber \\
+          &=& - \overline{u^{\prime}_{j}u^{\prime}_{k}}\DP{\theta }{x_{k}} 
+              - \overline{\theta^{\prime} u^{\prime}_{k}}\DP{u^{\prime}_{j}}{x_{k}} 
+              - \beta g_{j}\overline{(\theta^{\prime})^{2}} 
+              - \frac{q}{3l_{2}}\overline{u^{\prime}_{j}\theta^{\prime} }, 
+	      \Deqlab{MY1974:Level4(2)}
+             \\
+  \DD{q^{2}}{t} 
+    &+& \DP{}{x_{k}}\left[
+         q\lambda _{1}\left(
+               2\DP{q^{2}}{x_{k}} + 
+                \DP{\overline{u^{\prime}_{j}u^{\prime}_{k}}}{x_{j}}\right)
+        - \nu \DP{q^{2}}{x_{k}}\right]
+   \nonumber \\
+   &=&
+    - 2\overline{u^{\prime}_{j}u^{\prime}_{k}}\DP{u_{j}}{x_{k}} 
+    + 2g_{j}\beta\overline{u^{\prime}_{j}\theta^{\prime}}
+    - 2\frac{q^{3}}{\Lambda _{1}}
+	      \Deqlab{MY1974:Level4(3)}
+\end{eqnarray}
+ここで
+\[
+  \DD{}{t} \equiv \DP{}{t} + u_{k}\DP{}{x_{k}}
+\]
+である. これらは Mellor and Yamada (1974) の Level 4 モデルの式に対応
+する式である.
+
+式\Deqref{MY1974:Level4(1)}, \Deqref{MY1974:Level4(2)},
+\Deqref{MY1974:Level4(3)}に対し, さらに以下の近似を加える.
+\begin{itemize}
+  \item 式\Deqref{MY1974:Level4(1)}は, 右辺の第 4 項と第 5 項だけ考慮する.
+        さらに\Deqref{MY1974:Level1(1)}では $C=1/3$ とする.
+
+  \item 式\Deqref{MY1974:Level4(2)}は, 右辺の第 1 項と第 4 項だけ考慮する.
+        さらに $\overline{u^{\prime}_{j}u^{\prime}_{k}}\sim q^{2}\delta_{jk}/3$ とする.
+
+  \item 式\Deqref{MY1974:Level4(3)}は, 左辺の 3 次相間項を無視する.
+\end{itemize}
+これらの近似を行うと, 式\Deqref{MY1974:Level4(1)},
+\Deqref{MY1974:Level4(2)}, \Deqref{MY1974:Level4(3)}は
+\begin{eqnarray}
+  \overline{u^{\prime}_{i}u^{\prime}_{j}} 
+    &=& \frac{\delta _{ij}}{3}q^{2}
+       - ql_{1}\left(\DP{u_{i}}{x_{j}} + \DP{u_{j}}{x_{i}}\right)
+    \Deqlab{MY1974:Level1(1)}
+    \\
+   \overline{u^{\prime}_{j}\theta^{\prime}}
+    &=& - ql_{2}\DP{\theta }{x_{j}} 
+    \Deqlab{MY1974:Level1(2)}
+             \\
+  \DD{q^{2}}{t} 
+   &=&
+    - 2\overline{u^{\prime}_{j}u^{\prime}_{k}}\DP{u_{j}}{x_{k}} 
+    + 2g_{j}\beta\overline{u^{\prime}_{j}\theta^{\prime}}
+    + \DP{}{x_{k}}\left[\nu \DP{q^{2}}{x_{k}}\right]
+    - 2\frac{q^{3}}{\Lambda _{1}}
+    \Deqlab{MY1974:Level3(1)}
+\end{eqnarray}
+となる. \Deqref{MY1974:Level1(1)}は Mellor and Yamada (1974) の Level
+1 モデルの $\overline{u^{\prime}_{i}u^{\prime}_{j}}$ の式である.
+\Deqref{MY1974:Level1(2)}は Mellor and Yamada (1974) の Level 1 モデル
+の $\overline{u^{\prime}_{j}\theta^{\prime}}$ の式で
+$\overline{(\theta^{\prime})^{2}}$ の項を無視したものに対応する.
+\Deqref{MY1974:Level3(1)} は Mellor and Yamada (1974) の Level 3 モデ
+ルの $q^{2}$ の式において, 3 次相関項を無視し粘性拡散項を残したものに
+対応する.
+
+$ql_{1}=K_{m}, ql_{2}=K_{h}$ とし, 
+$q$ を $E$ で表し動粘性係数を乱流拡散係数で置き換えると
+\begin{eqnarray}
+  \overline{u^{\prime}_{i}u^{\prime}_{j}} 
+    &=& \frac{2}{3}\delta _{ij}E
+       - K_{m}\left(\DP{u_{i}}{x_{j}} + \DP{u_{j}}{x_{i}}\right)
+    \\
+   \overline{u^{\prime}_{j}\theta^{\prime}}
+    &=& - K_{h}\DP{\theta }{x_{k}} 
+             \\
+  \DD{E}{t} 
+   &=&
+    - \overline{u^{\prime}_{j}u^{\prime}_{k}}\DP{u_{j}}{x_{k}} 
+    + g_{j}\beta\overline{u^{\prime}_{j}\theta^{\prime}}
+    + \DP{}{x_{k}}\left[K_{m} \DP{q^{2}}{x_{k}}\right]
+    - \frac{2^{3/2}}{\Lambda _{1}}E^{3/2}
+  \Deqlab{乱流エネルギーの式}
+\end{eqnarray}
+となる. 理想気体の場合 $\beta = 1/\theta$ であることに注意すると, 式
+\Deqref{乱流エネルギーの式}は散逸項の係数を除き\Deqref{B:dEdt}に一致
+する.
+
+以上より, Klemp and Wilhelmson (1978) の乱流パラメタリゼーションは,
+Mellor and Yamada (1974) の Level 3 モデルと Level 1 モデルとを組みあ
+わせたものと理解することができる. Klemp and Wilhelmson (1978) と同様に
+乱流運動エネルギーのみ予報し他の相関量は診断的に求めるモデルとして 
+Mellor and Yamada (1974) の Level 2.5 モデルがある. しかし Level 2.5 
+モデルは Level 3 モデルと Level 2 モデルとの組合せであることに注意が必
+要である.
+
+
+\subsection{乱流拡散係数を用いた表現}
+
+\Deqref{B:dEdt} 式を \Deqref{B:E} 式を用いて $K_{m}$ に関する式に変形す
+る. まず\Deqref{B:dEdt} 式右辺の各項を書き下す. 浮力による乱流エネルギー
+生成項は,
+\begin{equation}
+ B = \frac{g_{j}}{\overline{\theta}} 
+  \overline{u^{\prime}_{j} \theta^{\prime}} 
+  = 
+  - \frac{g}{\overline{\theta}} 
+  \overline{w^{\prime}  \theta^{\prime}} 
+  = 
+  - \frac{g}{\overline{\theta}} 
+  \left( K_{h} \DP{\theta}{z} \right)
+\Deqlab{B}
+\end{equation}
+%
+である. 次に流れの変形速度による乱流エネルギー生成項 $S$ は, 
+\begin{eqnarray}
+ S 
+  &=& 
+  - \overline{(u_{i}^{\prime} u_{j}^{\prime})}
+  \DP{u_{i}}{x_{j}} 
+  \nonumber \\
+  &=& 
+   \left\{ 
+      K_{m} \left(\DP{u_{i}}{x_{j}} + \DP{u_{j}}{x_{i}}\right)
+	  - \frac{2}{3} \delta_{ij} E
+   \right\} 
+  \DP{u_{i}}{x_{j}} 
+  \nonumber \\
+  &=& 
+   2 K_{m} \left\{ 
+       \left( \DP{u}{x} \right)^{2}
+     + \left( \DP{v}{y} \right)^{2}   
+     + \left( \DP{w}{z} \right)^{2}
+    \right\}
+  \nonumber \\
+ &&
+  +  K_{m}\left(\DP{u}{y} + \DP{v}{x}\right)^{2}
+  +  K_{m}\left(\DP{v}{z} + \DP{w}{y}\right)^{2}
+  +  K_{m}\left(\DP{w}{x} + \DP{u}{x}\right)^{2}
+     \nonumber \\
+ && - \frac{2}{3} E \left( \DP{u}{x} + \DP{v}{y} + \DP{w}{z} \right) 
+\Deqlab{S}
+\end{eqnarray}
+である. 乱流エネルギー拡散項 $D_{E}$ は, 
+\begin{eqnarray}
+ D_{E} &=& \DP{}{x_{j}} \left(K_{m} \DP{E}{x_{j}} \right), 
+  \nonumber \\
+  &=& \DP{}{x} \left(K_{m} \DP{E}{x} \right)  
+      + \DP{}{y} \left(K_{m} \DP{E}{y} \right)  
+      + \DP{}{x} \left(K_{m} \DP{E}{x} \right)  
+\Deqlab{De}
+\end{eqnarray}
+である. 以上の \Deqref{B}, \Deqref{S}, \Deqref{De} 式を \Deqref{B:dEdt} 式
+に代入することで以下の式を得る. 
+ \begin{eqnarray}
+  \DD{E}{t}
+  &=& 
+   - \frac{g}{\overline{\theta}} 
+      \left( K_{h} \DP{\theta}{z} \right)
+    + 2 K_{m} \left\{ 
+       \left( \DP{u}{x} \right)^{2}
+     + \left( \DP{v}{y} \right)^{2}
+     + \left( \DP{w}{z} \right)^{2}
+    \right\}
+\nonumber \\
+ &&
+  +  K_{m}\left\{
+     \left(\DP{u}{y} + \DP{v}{x}\right)^{2}
+   + \left(\DP{v}{z} + \DP{w}{y}\right)^{2}
+   + \left(\DP{w}{x} + \DP{u}{z}\right)^{2}\right\}
+\nonumber \\
+ &&
+  - \frac{2}{3} E \left( \DP{u}{x} + \DP{v}{y} + \DP{w}{z} \right) 
+\nonumber \\
+  & & + \DP{}{x} \left(K_{m} \DP{E}{x} \right)  
+      + \DP{}{y} \left(K_{m} \DP{E}{y} \right)  
+      + \DP{}{x} \left(K_{m} \DP{E}{x} \right)  
+  \nonumber \\
+  &&
+   - \left(\frac{C_{\varepsilon}}{l}\right)
+	  E^{\frac{3}{2}}.
+\Deqlab{B:TurbE}	  
+\end{eqnarray}
+
+
+\Deqref{B:TurbE}式を\Deqref{B:E}を用いて $K_{m}$ に関する式に変形する.
+乱流エネルギー拡散項は
+%
+ \begin{eqnarray}
+  D_{E}
+   &=& \frac{1}{C_{m}^{2} l^{2}}
+       \Biggl\{\DP{}{x}
+               \left(K_{m} \DP{K_{m}^{2}}{x}\right)
+             + \DP{}{y}
+	        \left(K_{m} \DP{K_{m}^{2}}{y}\right)
+             + \DP{}{z}
+	        \left(K_{m} \DP{K_{m}^{2}}{z}\right)
+       \Biggr\}
+  \nonumber \\
+   &=& \frac{1}{C_{m}^{2} l^{2}}
+       \Biggl\{K_{m} \DP[2]{K_{m}^{2}}{x}
+               + \DP{K_{m}}{x}
+                 \DP{K_{m}^{2}}{x}
+               + K_{m} \DP[2]{K_{m}^{2}}{y}
+               + \DP{K_{m}}{y}
+                 \DP{K_{m}^{2}}{y}
+       \Biggl.
+  \nonumber \\
+  &&
+  \Biggl.
+               + K_{m} \DP[2]{K_{m}^{2}}{z}
+               + \DP{K_{m}}{z}
+                 \DP{K_{m}^{2}}{z}
+       \Biggr\}
+  \nonumber \\
+   &=& \frac{K_{m}}{C_{m}^{2} l^{2}}
+       \left(\DP[2]{K_{m}^{2}}{x}
+	       + \DP[2]{K_{m}^{2}}{y}
+	       + \DP[2]{K_{m}^{2}}{z}
+       \right)
+  \nonumber \\
+  &&
+   + \frac{2 K_{m}}{C_{m}^{2} l^{2}}
+         \Biggl\{
+           \left(\DP{K_{m}}{x}\right)^{2}
+	 + \left(\DP{K_{m}}{y}\right)^{2}
+	 + \left(\DP{K_{m}}{z}\right)^{2}
+	 \Biggr\}
+ \end{eqnarray}
+%
+となるので, \Deqref{B:TurbE} 式を変形すると, 
+%
+\begin{eqnarray}
+\frac{2 K_{m}}{C_{m}^{2} l^{2}}  \DD{K_{m}}{t}
+  &=& 
+   - \frac{g}{\overline{\theta}} 
+      \left( K_{h} \DP{\theta}{z} \right)
+  + 2 K_{m} \left\{ 
+       \left( \DP{u}{x} \right)^{2}
+     + \left( \DP{v}{y} \right)^{2}
+     + \left( \DP{w}{z} \right)^{2}
+    \right\}
+\nonumber \\
+ &&
+  +  K_{m}\left\{
+     \left(\DP{u}{y} + \DP{v}{x}\right)^{2}
+   + \left(\DP{v}{z} + \DP{w}{y}\right)^{2}
+   + \left(\DP{w}{x} + \DP{u}{z}\right)^{2}\right\}
+\nonumber \\
+  &&
+  - \frac{2}{3} \frac{K_{m}^{2}}{C_{m}^{2} l^{2}} 
+    \left( \DP{u}{x} + \DP{v}{y} + \DP{w}{z} \right) 
+\nonumber \\
+   && + \frac{K_{m}}{C_{m}^{2} l^{2}}
+       \left(\DP[2]{K_{m}^{2}}{x}
+	       + \DP[2]{K_{m}^{2}}{y}
+	       + \DP[2]{K_{m}^{2}}{z}
+       \right)
+  \nonumber \\
+  &&
+   + \frac{2 K_{m}}{C_{m}^{2} l^{2}}
+         \Biggl\{
+           \left(\DP{K_{m}}{x}\right)^{2}
+	 + \left(\DP{K_{m}}{y}\right)^{2}
+	 + \left(\DP{K_{m}}{z}\right)^{2}
+	 \Biggr\}
+\nonumber \\
+  && 
+   - \frac{C_{\varepsilon}}{C_{m}^{3} {l}^{4}} 
+	  K_{m}^{3}.
+\end{eqnarray}
+係数を整理すると,
+\begin{eqnarray}
+ \DP{K_{m}}{t}
+  &=& 
+   - \left( 
+      u \DP{K_{m}}{x} + v \DP{K_{m}}{y} + w \DP{K_{m}}{z}
+     \right)
+   - \frac{g C_{m}^{2} l^{2}}{ 2 \overline{\theta}} \frac{K_{h}}{K_{m}}
+      \left(\DP{\theta}{z} \right)
+\nonumber \\
+  && 
+  + \left( C_{m}^{2} l^{2} \right) \left\{ 
+       \left( \DP{u}{x} \right)^{2}
+     + \left( \DP{v}{y} \right)^{2}
+     + \left( \DP{w}{z} \right)^{2}
+    \right\}
+\nonumber \\
+  &&
+  +  \frac{ C_{m}^{2} l^{2} }{2}
+   \left\{
+     \left(\DP{u}{y} + \DP{v}{x}\right)^{2}
+   + \left(\DP{v}{z} + \DP{w}{y}\right)^{2}
+   + \left(\DP{w}{x} + \DP{u}{z}\right)^{2}\right\}
+\nonumber \\
+  &&
+  - \frac{K_{m}}{3}
+     \left( \DP{u}{x} + \DP{v}{y} + \DP{w}{z} \right) 
+   + \Dinv{2}
+       \left(\DP[2]{K_{m}^{2}}{x}
+	       + \DP[2]{K_{m}^{2}}{y}
+	       + \DP[2]{K_{m}^{2}}{z}
+       \right)
+\nonumber \\
+   && 
+   + \left(\DP{K_{m}}{x}\right)^{2}
+   + \left(\DP{K_{m}}{y}\right)^{2}
+   + \left(\DP{K_{m}}{z}\right)^{2}
+   - \frac{C_{\varepsilon}}{2 C_{m} l^{2}} K_{m}^{2}
+\nonumber 
+\end{eqnarray}
+% 
+となる. $C_{m} = C_{\varepsilon} = 0.2$ と $K_{h} = 3 K_{m}$ という
+関係を用いると以下の式を得る.
+%
+\begin{eqnarray}
+ \DP{K_{m}}{t}
+  &=& 
+   - \left( 
+      u \DP{K_{m}}{x} + v \DP{K_{m}}{y} + w \DP{K_{m}}{z}
+     \right)
+   - \frac{3g C_{m}^{2} l^{2}}{ 2 \overline{\theta}}
+      \left(\DP{\theta}{z} \right)
+\nonumber \\
+  && 
+  + \left( C_{m}^{2} l^{2} \right) \left\{ 
+       \left( \DP{u}{x} \right)^{2}
+     + \left( \DP{v}{y} \right)^{2}
+     + \left( \DP{w}{z} \right)^{2}
+    \right\}
+\nonumber \\
+  &&
+  +  \frac{ C_{m}^{2} l^{2} }{2}
+   \left\{
+     \left(\DP{u}{y} + \DP{v}{x}\right)^{2}
+   + \left(\DP{v}{z} + \DP{w}{y}\right)^{2}
+   + \left(\DP{w}{x} + \DP{u}{z}\right)^{2}\right\}
+\nonumber \\
+  &&
+  - \frac{K_{m}}{3}
+     \left( \DP{u}{x} + \DP{v}{y} + \DP{w}{z} \right) 
+   + \Dinv{2}
+       \left(\DP[2]{K_{m}^{2}}{x}
+	       + \DP[2]{K_{m}^{2}}{y}
+	       + \DP[2]{K_{m}^{2}}{z}
+       \right)
+\nonumber \\
+   && 
+   + \left(\DP{K_{m}}{x}\right)^{2}
+   + \left(\DP{K_{m}}{y}\right)^{2}
+   + \left(\DP{K_{m}}{z}\right)^{2}
+   - \frac{1}{2 l^{2}} K_{m}^{2}.
+\Deqlab{close_1.5}
+\end{eqnarray}
+%
+
+

@@ -1,0 +1,208 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv -- 離散モデル
+%       乱流拡散係数の式の離散化
+%
+% 履歴: 2005-02-04 杉山耕一朗
+%       2005/04/13 小高正嗣
+%       2006/03/13 杉山耕一朗
+%       2012/04/20 小高正嗣  : 3D 化
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{乱流拡散係数の式}
+
+Klemp and Wilhelmson (1978) および CReSS (坪木と榊原篤志, 2001) と同様
+に, 1.5 次のクロージャーを用いる. 乱流拡散係数の時間発展方程式をリープ
+フロッグ法を用いて時間方向に離散化すると, 以下のようになる.
+%
+\begin{eqnarray}
+ [K_{m}]_{i,j,k}^{t + \Delta t} = [K_{m}]_{i,j,k}^{t - \Delta t}  
+  + 2 \Delta t [F_{K_m}]_{i,j,k}^{t}
+\end{eqnarray}
+%
+ここで, 
+%
+\begin{eqnarray}
+ [F_{K_m}]_{i,j,k}^{t} &=& 
+  - [{\rm Adv}.K_m]_{i,j,k}^{t} 
+  + [{\rm Buoy}.K_m]_{i,j,k}^{t - \Delta t}  
+  + [{\rm Shear}.K_m]_{i,j,k}^{t - \Delta t}  
+\nonumber \\
+&&
+  + [{\rm Turb}.K_m]_{i,j,k}^{t - \Delta t}  
+  + [{\rm Disp}.K_m]_{i,j,k}^{t - \Delta t}  
+\end{eqnarray}
+%
+である. CReSS にならい, 移流項を $t$ で, 移流項以外を $t - \Delta t$ で
+評価する.
+%
+
+$\left[F_{K_m}\right]_{i,j,k}^{t}$ に含まれる各項は以下のように書き下す
+ことができる.
+%
+\begin{eqnarray}
+[{\rm Adv}.K_m]_{i,j,k}^{t} 
+  &=& 
+    \left\{
+        u_{i(u),j,k} \left( \DP{K_{m}}{x} \right)_{i(u),j,k} 
+     \right\}_{i,j,k}^{t} 
+    + 
+    \left\{
+        v_{i,j(v),k} \left( \DP{K_{m}}{y} \right)_{i,j(v),k} 
+     \right\}_{i,j,k}^{t} 
+\nonumber \\
+&&    + 
+    \left\{
+        w_{i,j,k(w)} \left( \DP{K_{m}}{z} \right)_{i,j,k(w)} 
+     \right\}_{i,j,k}^{t}
+\\ 
+\left[{\rm Buoy}.K_m\right]_{i,j,k}^{t - \Delta t}   &=& 
+   - \left\{
+      \frac{3 g C_{m}^{2} l^{2}}{ 2 \overline{\theta}} 
+      \left(\DP{\theta_{el}}{z} \right)_{i,j,k(w)}
+     \right\}_{i,j,k}^{t-\Delta t}
+\\
+ \left[{\rm Shear}.K_m\right]_{i,k}^{t - \Delta t}   &=& 
+   \left( C_{m}^{2} l^{2} \right)_{i,j,k}
+   \left[
+   \left\{
+       \left( \DP{u}{x} \right)_{i,j,k}^{t - \Delta t}
+   \right\}^{2}
+    +  
+   \left\{
+     \left( \DP{v}{y} \right)_{i,j,k}^{t - \Delta t}
+   \right\}^{2}
+    + 
+   \left\{
+       \left( \DP{w}{z} \right)_{i,j,k}^{t - \Delta t}
+   \right\}^{2}
+    \right]_{i,j,k}^{t - \Delta t}
+\nonumber \\
+ &&
+  + \left(  \frac{ C_{m}^{2} l^{2} }{2} \right)_{i,j,k}
+    \left[
+     \left\{ 
+       \left( \DP{u}{z} \right)_{i(u),j,k(w)}
+     \right\}_{i,j,k}^{t-\Delta t}     
+    +
+     \left\{ 
+       \left( \DP{w}{x} \right)_{i(u),j,k(w)} 
+     \right\}_{i,j,k}^{t - \Delta t}
+    \right]^{2}
+\nonumber \\
+ &&
+  + \left(  \frac{ C_{m}^{2} l^{2} }{2} \right)_{i,j,k}
+    \left[
+     \left\{ 
+       \left( \DP{u}{y} \right)_{i(u),j(v),k}
+     \right\}_{i,j,k}^{t-\Delta t}     
+    +
+     \left\{ 
+       \left( \DP{v}{x} \right)_{i(u),j(v),k} 
+     \right\}_{i,j,k}^{t - \Delta t}
+    \right]^{2}
+\nonumber \\
+ &&
+  + \left(  \frac{ C_{m}^{2} l^{2} }{2} \right)_{i,j,k}
+    \left[
+     \left\{ 
+       \left( \DP{v}{z} \right)_{i,j(v),k(w)}
+     \right\}_{i,j,k}^{t-\Delta t}     
+    +
+     \left\{ 
+       \left( \DP{w}{y} \right)_{i,j(v),k(w)} 
+     \right\}_{i,j,k}^{t - \Delta t}
+    \right]^{2}
+\nonumber \\
+&&
+  - \left( \frac{K_{m}}{3} \right)_{i,j,k}^{t - \Delta t}
+    \left\{
+     \left( \DP{u}{x} \right)_{i,j,k}^{t-\Delta t}
+  + 
+     \left( \DP{v}{y} \right)_{i,j,k}^{t-\Delta t}
+  + 
+     \left( \DP{w}{z} \right)_{i,j,k}^{t-\Delta t}
+    \right\}
+\\
+ \left[{\rm Turb}.K_m\right]_{i,j,k}^{t - \Delta t}   &=& 
+   \Dinv{2}
+   \left[
+    \left\{
+     \DP{}{x}
+     \left( 
+      \DP{K_{m}^{2}}{x}
+     \right)_{i(u),j,k}
+    \right\}_{i,j.k}^{t-\Delta t}
+   +
+    \left\{
+     \DP{}{y}
+     \left( 
+      \DP{K_{m}^{2}}{y}
+     \right)_{i,j(v),k}
+    \right\}_{i,j.k}^{t-\Delta t}
+   \right.
+\nonumber \\
+&&
+   + 
+   \left.
+   \left\{
+    \DP{}{z}
+       \left(
+          \DP{K_{m}^{2}}{z}
+       \right)_{i,j,k(w)}
+   \right\}_{i,j,k}^{t-\Delta t}
+   \right]
+   + 
+   \left[
+   \left\{
+    \left( \DP{K_{m}}{x}\right)^{2}
+   \right\}_{i(u),j,k}
+   \right]_{i,j,k}^{t - \Delta t}
+\nonumber \\
+   && 
+   + 
+   \left[
+   \left\{
+    \left( \DP{K_{m}}{y}\right)^{2}
+   \right\}_{i,j(v),k}
+   \right]_{i,j,k}^{t - \Delta t}
+   + 
+   \left[
+   \left\{
+     \left(\DP{K_{m}}{z}\right)^{2}
+   \right\}_{i,k(w)}
+   \right]_{i,k}^{t - \Delta t}
+\\
+ \left[{\rm Disp}.K_m\right]_{i,j,k}^{t - \Delta t}   &=& 
+   - \Dinv{2 l^{2}} \left( K_{m}^{2} \right)_{i,j,k}^{t - \Delta t}
+\Deqlab{TurbE_risan}
+\end{eqnarray}
+%
+ここで $C_{\varepsilon} = C_{m} = 0.2$, $l = {\rm Min}(\Delta z, {\rm
+  Min}(\Delta x, \Delta y))$ とする. また $\theta_{el}$ は以下で与えら
+れる.
+%
+\begin{eqnarray}
+ \theta_{el} &=& \overline{ \theta_{v}} + \theta_{v}^{'} \;\;\; (for \;\; q_{c} = 0)\\
+%
+ \theta_{el} 
+  &=& \overline{\theta_{v}} + \theta_{v}^{'} + \frac{ \sum L
+  q_{v}}{{c_p}_{d} \bar{\pi}}  
+   \;\;\; (for \;\; q_{c} > 0)
+\end{eqnarray}
+%
+ただし, 
+%
+\begin{eqnarray}
+ \overline{\theta_{v}} + \theta_{v}^{'}   &=& 
+    \bar{\theta_{v}} 
+    \left\{
+     1 + \frac{\theta}{\bar{\theta}}
+     + \frac{\sum q_{v}/M_{v}}{1/M_{d} + \sum  \bar{q_{v}}/M_{v}}
+     - \frac{\sum q_{v} + \sum q_{c} + \sum q_{r}}
+     {1 + \sum \bar{q_{v}}}
+    \right\}
+\end{eqnarray}
+%
+である.

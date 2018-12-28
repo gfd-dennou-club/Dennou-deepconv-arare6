@@ -1,0 +1,147 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv -- 数理モデル
+%
+% 履歴  2003-07-25 高橋 こう子   新規作成
+%       2003-09-03 高橋 こう子   骨子完成
+%       2003-09-08 高橋 こう子   参考文献追加
+%       2003-09-09 高橋 こう子   Appendix 追加
+%       2003-11-17 高橋 こう子   修正
+%       2003-11-22 高橋 こう子   運動エネルギーの式修正
+%       2004-07-25 小高正嗣      2 次元乾燥大気版へ再構成
+%       2005-04-13 小高正嗣      jreport 変更, latex2html へ対応
+%       2007-06-06 小高正嗣      付録-C と変数名リストファイル名を修正
+%       2011-12-26 小高正嗣      付録-A3 を追加
+%       2012-04-18 小高正嗣      3 次元化
+%       2012-12-05 小高正嗣      圧力方程式に熱膨張項を追加
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[a4j,12pt]{jreport}
+
+% 使用パッケージ
+\usepackage{Dennou6}
+\usepackage{ascmac}
+\usepackage{html}	% latex2html パッケージ
+\usepackage{amsmath}
+
+% リンク作成用
+%
+\usepackage[dvipdfmx,hidelinks]{hyperref}
+\AtBeginDvi{\special{pdf:tounicode EUC-UCS2}}
+
+% 字下げなし
+\Dnoparindent
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 分数の定義
+% (分数の中に分数がある場合, 文字の大きさを揃えるため)
+\def\dfrac#1#2{{\displaystyle\frac{#1}{#2}}}
+\def\cfrac#1#2{\dfrac{\mathstrut #1}{#2}}
+%
+% eqnarray 環境の変更
+% & & をつけたところに空白ができないようにする
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 節, 式, 図, 表の表示設定
+%\renewcommand{\thesection}{\arabic{section}}
+%\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+%\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
+%\renewcommand{\theequation}{\thesection.\arabic{equation}}
+%\renewcommand{\thefigure}{\thesection.\arabic{figure}}
+%\renewcommand{\thetable}{\thesection.\arabic{table}}
+%
+% 節, 式, 図, 表, ページの番号設定
+%\setcounter{secnumdepth}{3} % 番号表示する節の深さ
+%\setcounter{tocdepth}{3}    % 目次で表示する節の深さ
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\Dtitle[deepconv の定式化]
+       {非静力学モデル deepconv の定式化}
+
+\Dauthor{地球流体電脳倶楽部}
+
+\Ddate{2012 年 12 月 5 日}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\maketitle
+
+\begin{latexonly}	% 目次は latex でのみ表示
+  \tableofcontents
+\end{latexonly}
+
+\Dparskip
+
+%--------------------------------------------------------------------
+
+% 第1節 基礎方程式
+\input{kiso.tex}
+
+% 参考文献
+\input{reference.tex}
+
+\appendix
+
+% 付録 A  基礎方程式の導出
+\chapter{準圧縮方程式系の導出}
+\section{基礎方程式}
+\input{huroku-A1.tex}
+\section{準圧縮方程式系の導出}
+\input{huroku-A2.tex}
+\section{準圧縮方程式系のエネルギー方程式}
+\input{huroku-A3.tex}
+
+
+%% 付録 B  乱流パラメタリゼーション
+\input{huroku-B.tex}
+
+% 付録 C  雲微物理パラメタリゼーション
+\input{huroku-C.tex}
+
+% 付録 D  変数名リスト
+\input{varlist.tex}
+
+
+%======================================================================
+\newpage
+
+\chapter*{謝辞}
+\markright{謝辞}				% ヘッダ出力
+\addtocontents{toc}{\protect\vspace{1em}}	% 空行を目次へ出力
+\addtocontents{toc}{謝辞}			% 目次へ出力
+
+ 本資源は, 
+ 地球流体電脳倶楽部の
+ インターネット上での学術知識の集積と活用の実験の一環として
+ \begin{center}
+	\htmladdnormallink{
+	http://www.gfd-dennou.org/library/deepconv/}  
+	{http://www.gfd-dennou.org/library/deepconv/}  
+ \end{center}
+ において公開されているものである.
+ (\copyright deepconv 開発グループ 2012).
+ 本資源は, 著作者の諸権利に抵触しない(迷惑をかけない)限りにおいて自由に
+ 利用していただいて構わない. なお, 利用する際には今一度自ら内容を確かめ
+ ることをお願いする(無保証無責任原則).
+
+ 本資源に含まれる元資源提供者(図等の版元等を含む)からは, 直接的な形での
+ WEB 上での著作権または使用許諾を得ていない場合があるが, 勝手ながら,
+ 「未来の教育」のための実験という学術目的であることをご理解いただけるも
+ のと信じ, 学術標準の引用手順を守ることで諸手続きを略させていただいてい
+ る. 本資源の利用者には, この点を理解の上, 注意して扱っていただけるよう
+ お願いする. 万一, 不都合のある場合には
+ \[
+  \mbox{dcstaff@gfd-dennou.org}
+ \]
+ まで連絡していただければ幸いである. 
+
+%======================================================================
+\end{document}
+

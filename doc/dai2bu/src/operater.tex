@@ -1,0 +1,193 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv -- 離散モデル
+%       空間方向の離散化
+%  
+% 履歴  2004/08/14  杉山耕一朗: 作成開始
+%       2004/09/03  小高正嗣, 北守太一
+%       2005/04/13  小高正嗣
+%       2012/04/12  小高正嗣  : 3D 化
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{空間方向の離散化}
+
+この節では空間微分の離散化の方法とそのために必要となる平均操作, 境界条
+件の与え方について説明する. 離散化は 2 次精度差分または 4 次精度差分を
+用いて行う.
+
+\Dfigref{koushi} の空間の位置を表す添字として, 
+$x$ 方向フラックスの格子点を ($i(u),j,k$), 
+$y$ 方向フラックスの格子点を ($i,j(v),k$), 
+$z$ 方向フラックスの格子点を ($i,j,k(w)$), 
+スカラー量の格子点を ($i,j,k$), 
+格子の角に当たる点を ($i(u),j(v),k(w)$) とする
+(\Dfigref{koushi} 参照). 
+但し $1 \leq i(u) \leq im$,  $1 \leq i \leq im$, 
+$1 \leq j(v) \leq jm$, $1 \leq j \leq jm$, 
+$1 \leq k(w) \leq km$, $1 \leq k \leq km$ である. 
+
+
+\section{平均操作}
+
+空間微分の離散化を行う前に, そのために必要となる平均操作を定義しておく.
+例えば $x$ 方向フラックス格子点で評価される変数をスカラー量の格子点で評
+価する場合は, フラックス格子点の値を平均してスカラー格子点での値とみなす.
+
+必要となる平均操作を以下に示す. ここでは $x$ 方向のフラックス格子点の変
+数を $u_{i(u), j, k}$, $y$ 方向のフラックス格子点の変数を $v_{i, j(v),
+  k}$, $z$ 方向のフラックス格子点の変数を $w_{i, k(w)}$, スカラー格子点
+の変数を $\pi_{i, k}$ としている.
+%
+\begin{eqnarray}
+&&\pi_{i(u),j,k} \equiv \frac{\pi_{i+1,j,k} + \pi_{i,j,k}}{2} \\
+&&\pi_{i,j(v),k} \equiv \frac{\pi_{i,j+1,k} + \pi_{i,j,k}}{2} \\
+&&\pi_{i,j,k(w)} \equiv \frac{\pi_{i,j,k+1} + \pi_{i,j,k}}{2} \\
+&&\pi_{i(u),j(v),k(w)} \equiv 
+ \frac{1}{8}\left(
+ \pi_{i,j,k} + \pi_{i+1,j,k}+ \pi_{i,j+1,k}+ \pi_{i+1,j+1,k}\right. 
+ \nonumber  \\
+ & &
+ \left.
+ \pi_{i,j,k+1} + \pi_{i+1,j,k+1}+ \pi_{i,j+1,k+1}+ \pi_{i+1,j+1,k+1}\right). 
+  \\
+%
+&&u_{i,j,k} \equiv \frac{u_{i(u),j,k} + u_{i-1(u),j,k}}{2} \\
+&&u_{i,j(v),k} \equiv \frac{u_{i(u),j,k+1} + u_{i-1(u),j,k+1} 
+ + u_{i(u),j,k} + u_{i-1(u),j,k}}{4} \\
+&&u_{i,j,k(w)} \equiv \frac{u_{i(u), k+1} + u_{i-1(u), k+1} 
+ + u_{i(u), k} + u_{i-1(u), k}}{4} \\
+&&u_{i(u),j,(v),k(w)} \equiv   \frac{u_{i(u),j,k+1} + u_{i(u),j,k} 
+ + u_{i(u),j+1,k+1} + u_{i(u),j+1,k}}{4} \\ 
+%
+%
+&&v_{i,j,k} \equiv \frac{v_{i,j(v),k} + u_{i,j-1(v),k}}{2} \\
+&&v_{i(u),j,k)} \equiv \frac{v_{i+1,j(v),k} + u_{i,j(v),k} 
+ + u_{i+1,j-1(v),k} + u_{i,j-1(v),k}}{4} \\
+&&v_{i,j,k(w)} \equiv \frac{u_{i,j(v),k} + u_{i,j-1(v),k} 
+ + u_{i,j(v),k+1} + u_{i,j-1,k+1}}{4} \\
+&&v_{i(u),j,(v),k(w)} \equiv   \frac{u_{i+1,j(v),k+1} + u_{i+1,j(v),k} 
+ + u_{i,j(v),k+1} + u_{i,j(v),k}}{4} \\ 
+%
+&&w_{i,j,k} \equiv \frac{w_{i,j,(w)} + w_{i,j,k-1(w)}}{2} \\
+&&w_{i,j(v),k} \equiv \frac{w_{i,j+1,k(w)} + w_{i,j,k(w)} 
+ + w_{i,j+1,k-1(w)} + w_{i,j,k-1(w)}}{4} \\
+&&w_{i(u),j,k} \equiv \frac{w_{i+1,j,k(w)} + w_{i,j,k(w)} 
+ + w_{i+1,j,k-1(w)} + w_{i,j,k-1(w)}}{4} \\
+&&w_{i(u),j(v),k(w)} \equiv \frac{w_{i+1,j,k(w)} + w_{i,j,k(w)}
+  + w_{i+1,j+1,k(w)} + w_{i,j+1,k(w)}}{4} 
+\end{eqnarray}
+%
+
+
+\section{空間微分の離散化}
+
+\subsection{2 次精度中心差分}
+
+空間微分を 2 次精度差分で離散化する際に必要となる微分操作を以下に示す. 
+ここでは $x$ 方向のフラックス格子点の変数を $u_{i(u), k}$, 
+$z$ 方向のフラックス格子点の変数を $w_{i, k(w)}$, 
+スカラー格子点の変数を $\pi_{i, k}$ としている.
+$x$, $z$ 方向ともにフラックス格子点の変数を $\phi_{i(u), k(w)}$ としている.
+
+それぞれの変数に対して微分を評価する格子点は一意に決まる. 
+そのため, 他の格子点において微分を評価する場合には平均操作を用いる. 
+%
+\begin{eqnarray}
+&& \left[\DP{\pi}{x} \right]_{i(u),j,k} 
+ \equiv \frac{\pi_{i+1,j,k} - \pi_{i,j,k}}{\Delta x} \\
+&& \left[\DP{\pi}{y} \right]_{i,j(v),k} 
+ \equiv \frac{\pi_{i,j+1,k} - \pi_{i,j,k}}{\Delta y} \\
+&& \left[\DP{\pi}{z} \right]_{i,j,k(w)} 
+ \equiv \frac{\pi_{i,j,k+1} - \pi_{i,j,k}}{\Delta z}  \\
+%
+&& \left[\DP{u}{x} \right]_{i,j,k} 
+ \equiv \frac{u_{i(u),j,k} - u_{i-1(u),j,k}}{\Delta x} \\
+&& \left[\DP{u}{y} \right]_{i(u),j(v),k} 
+ \equiv \frac{u_{i(u),j+1,k} - u_{i(u),j,k}}{\Delta y} \\
+&& \left[\DP{u}{z} \right]_{i(u),j,k(w)} 
+ \equiv \frac{u_{i(u),j,k+1} - u_{i(u),j,k}}{\Delta z} \\
+%
+&& \left[\DP{v}{x} \right]_{i(u),j(v),k} 
+ \equiv \frac{v_{i+1,j(v),k} - v_{i,j(v),k}}{\Delta x} \\
+&& \left[\DP{v}{y} \right]_{i,j,k} 
+ \equiv \frac{v_{i,j+1(v),k} - v_{i,j(j),k}}{\Delta y} \\
+&& \left[\DP{v}{z} \right]_{i,j(v),k(w)} 
+ \equiv \frac{v_{i,j(v),k+1} - v_{i,j(v),k}}{\Delta z} \\
+%
+&& \left[\DP{w}{x} \right]_{i(u),j,k(w)} 
+ \equiv \frac{w_{i+1,j,k(w)} - w_{i,j,k(w)}}{\Delta x} \\
+&& \left[\DP{w}{y} \right]_{i,j(v),k(w)} 
+ \equiv \frac{w_{i,j+1,k(w)} - w_{i,j,k(w)}}{\Delta y} \\
+&& \left[\DP{w}{z} \right]_{i,j,k} 
+ \equiv \frac{w_{i,j,k(w)} - w_{i,j,k-1(w)}}{\Delta z} 
+%\\
+%
+%&& \left[\DP{\phi}{x} \right]_{i(u),j,k} 
+% \equiv \frac{\phi_{i+1,j,k} - \phi_{i,j,k}}{\Delta x} \\
+%&& \left[\DP{\phi}{y} \right]_{i,j(v),k} 
+% \equiv \frac{\phi_{i,j+1,k} - \phi_{i,j,k}}{\Delta y} \\
+%&& \left[\DP{\phi}{z} \right]_{i,j,k(w)} 
+% \equiv \frac{\phi_{i,j,k+1} - \phi_{i,j,k}}{\Delta z} 
+\end{eqnarray}
+
+
+\subsection{4 次精度中心差分}
+
+2 次精度中心差分の場合と同様に, 空間微分を 4 次精度差分で離散化する際
+に必要となる微分操作を以下に示す.  
+
+%
+\begin{eqnarray}
+&& \left[\DP{\pi}{x} \right]_{i(u),j,k} 
+ \equiv \frac{9}{8}\left(\frac{\pi_{i+1,j,k} - \pi_{i,j,k}}{\Delta x}\right) - 
+       \frac{1}{24}\left(\frac{\pi_{i+2,j,k} - \pi_{i-1,j,k}}{\Delta x}\right) \\
+&& \left[\DP{\pi}{y} \right]_{i,j(v),k} 
+ \equiv \frac{9}{8}\left(\frac{\pi_{i,j+1,k} - \pi_{i,j,k}}{\Delta y}\right) - 
+       \frac{1}{24}\left(\frac{\pi_{i,j+2,k} - \pi_{i,j-1,k}}{\Delta y}\right) \\
+&& \left[\DP{\pi}{z} \right]_{i,k(w)} 
+ \equiv \frac{9}{8}\left(\frac{\pi_{i,j,k+1} - \pi_{i,j,k}}{\Delta z}\right) - 
+       \frac{1}{24}\left(\frac{\pi_{i,j,k+2} - \pi_{i,j,k-1}}{\Delta z}\right) \\
+%
+&& \left[\DP{u}{x} \right]_{i,j,k} 
+ \equiv \frac{9}{8}\left(\frac{u_{i(u),j,k} - u_{i-1(u),j,k}}{\Delta x}\right) -
+     \frac{1}{24}\left(\frac{u_{i(u)+1,j,k} - u_{i-2(u),j,k}}{\Delta x}\right) \\
+&& \left[\DP{u}{y} \right]_{i(u),j(v),k} 
+ \equiv \frac{9}{8}\left(\frac{u_{i(u),j+1(v),k} - u_{i(u),j(v),k}}{\Delta y}\right) -
+     \frac{1}{24}\left(\frac{u_{i(u),j+2(v),k} - u_{i(u),j-1(v),k}}{\Delta y}\right) \\
+&& \left[\DP{u}{z} \right]_{i(u),j,k(w)} 
+ \equiv \frac{9}{8}\left(\frac{u_{i(u),j,k+1} - u_{i(u),j,k}}{\Delta z}\right) -
+     \frac{1}{24}\left(\frac{u_{i(u),j,k+2} - u_{i(u),j,k-1}}{\Delta z}\right) \\
+%
+&& \left[\DP{v}{x} \right]_{i(u),j(v),k} 
+ \equiv \frac{9}{8}\left(\frac{v_{i+1,j(v),k} - v_{i,j(v),k}}{\Delta x}\right) -
+     \frac{1}{24}\left(\frac{v_{i+2,j(v),k} - v_{i-1,j(v),k}}{\Delta x}\right) \\
+&& \left[\DP{v}{y} \right]_{i,j,k} 
+ \equiv \frac{9}{8}\left(\frac{v_{i,j(v),k} - v_{i,j-1(v),k}}{\Delta y}\right) -
+     \frac{1}{24}\left(\frac{v_{i,j+1(v),k} - v_{i,j-2(v),k}}{\Delta y}\right) \\
+&& \left[\DP{v}{z} \right]_{i,j(v),k(w)} 
+ \equiv \frac{9}{8}\left(\frac{v_{i,j(v),k+1} - v_{i,j(v),k}}{\Delta z}\right) -
+     \frac{1}{24}\left(\frac{v_{i,j(v),k+2} - v_{i,j(v),k-1}}{\Delta z}\right) \\
+&& \left[\DP{w}{x} \right]_{i(u),j,k(w)} 
+ \equiv \frac{9}{8}\left(\frac{w_{i+1,j,k(w)} - w_{i,j,k(w)}}{\Delta x}\right) -
+     \frac{1}{24}\left(\frac{w_{i+2,j,k(w)} - w_{i-1,j,k(w)}}{\Delta x}\right) \\
+&& \left[\DP{w}{y} \right]_{i,j(v),k(w)} 
+ \equiv \frac{9}{8}\left(\frac{w_{i,j+1,k(w)} - w_{i,j,k(w)}}{\Delta y}\right) -
+     \frac{1}{24}\left(\frac{w_{i,j+2,k(w)} - w_{i,j-1,k(w)}}{\Delta y}\right) \\
+&& \left[\DP{w}{z} \right]_{i,j,k} 
+ \equiv \frac{9}{8}\left(\frac{w_{i,j,k(w)} - w_{i,j,k-1(w)}}{\Delta z}\right) -
+     \frac{1}{24}\left(\frac{w_{i,j,k+1(w)} - w_{i,j,k-2(w)}}{\Delta z}\right) 
+%\\
+%
+%&& \left[\DP{\phi}{x} \right]_{i,k(w)} 
+% \equiv \frac{9}{8}
+%        \left(\frac{\phi_{i(u), k(w)} - \phi_{i-1(u), k(w)}}{\Delta x}\right) -
+%  \frac{1}{24}
+%     \left(\frac{\phi_{i+1(u), k(w)} - \phi_{i-2(u), k(w)}}{\Delta x}\right) \\
+%&& \left[\DP{\phi}{z} \right]_{i(u),k} 
+% \equiv \frac{9}{8}\left(
+%        \frac{\phi_{i(u), k(w)} - \phi_{i(u), k-1(w)}}{\Delta z}\right) -
+%        \frac{1}{24}\left(
+%        \frac{\phi_{i(u), k+1(w)} - \phi_{i(u), k-2(w)}}{\Delta z}\right)
+\end{eqnarray}
+

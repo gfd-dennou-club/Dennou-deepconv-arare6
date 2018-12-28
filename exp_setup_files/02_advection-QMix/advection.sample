@@ -1,0 +1,134 @@
+!= Configuration file for deepconv/arare
+!
+! Authors::   SUGIYAMA Ko-ichiro, ODAKA Masatsugu
+! Version::   $Id: advection.conf,v 1.1 2014/07/08 01:18:59 sugiyama Exp $
+! Tag Name::  $Name:  $
+! Copyright:: Copyright (C) GFD Dennou Club, 2006. All rights reserved.
+! License::   See COPYRIGHT[link:COPYRIGHT]
+!
+!
+!== History
+!
+! * 2006/09/20 (Masataugu ODAKA): Update
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+
+&deepconv_main_nml
+    FlagWindMethod = "Const",
+/
+
+!!!
+!!!入出力ファイルに関する設定
+!!!
+&fileset_nml
+  FileInstitution    = "odakker@gfd-dennou.org"   !ファイルを最終的に変更した人, 組織. 
+/
+
+&restartfileio_nml	
+  InitialFile  = "advection_xy-x_init.nc",
+  OutputFile   = "advection_xy-x_res.nc",
+/
+
+!!!
+!!!積分時間に関する設定
+!!!
+&timeset_nml
+  DelTimeLong  =  8.0d0      !長いタイムステップ
+  DelTimeShort =  2.0d0      !短いタイムステップ(音波関連項)
+  RestartTime   = 0.0d0
+  IntegPeriod  = 40000.0d0     !積分時間 
+  DelTimeOutput = 4000.0d0    !出力時間間隔
+/
+
+!!!
+!!!格子点数に関する設定
+!!!
+&gridset_nml
+  xdim  = 5                  ! X 方向刻み点数
+  ydim  = 200                ! Y 方向刻み点数
+  zdim  = 5                  ! Z 方向刻み点数
+  NCMAX = 1                  ! 化学種の数
+/
+
+&axesset_nml
+  Xmax  =  10.0d3            ! X 座標の終点
+  Ymax  = 400.0d3            ! X 座標の終点
+  Zmax  =  10.0d3            ! Z 座標の終点
+/
+
+!!!
+!!!実験パラメタ(物理・化学)の設定
+!!!
+&constants_nml
+  Grav         = 0.0d0,        !重力             [m/s]
+  PressBasis   = 1000.0d2,     !(温位の)基準圧力 [Pa]
+  TempSfc      = 300.0d0,      !地表面温度       [K]
+  PressSfc     = 1000.0d2,     !地表面圧力       [Pa]
+  CpDry        = 1004.0d0,     !乾燥成分の比熱
+  MolWtDry     = 0.029d0,      !乾燥成分の分子量
+/
+
+&composition_nml
+  SpcWetSymbol(1)  = 'H2O-g',  !湿潤成分
+  SpcWetMolFr(1)   = 1.0d-3,   !湿潤成分の存在度(モル比)
+/
+
+!!!
+!!!減衰係数の設定
+!!!
+&damping_nml
+  EFTime = 0.0d0             !スポンジ層の減衰係数の e-folding time
+  DepthH = 0.0d0             !スポンジ層の厚さ(水平方向)
+  DepthV = 0.0d0             !スポンジ層の厚さ(鉛直方向)
+/
+
+&dynamics_nml
+  FlagAdvection = "std"
+  FlagAcousticmode = "std"
+  FactorDExnerDtAdv = 0.0d0
+  FactorDExnerDtExpnd = 0.0d0
+  AlphaNDiff = 0.0d0    !数値拡散項の係数
+/
+
+
+! データ出力の全体設定
+!
+&gtool_historyauto_nml
+  FilePrefix = "advection_xy-x_"
+  IntValue = 400.0,              ! 出力間隔の数値
+  IntUnit = 'sec',               ! 出力間隔の単位
+/
+!
+! データ出力の個別設定
+!
+&gtool_historyauto_nml
+  Name = 'H2O-g',                            ! 出力変数
+  IntUnit = 'sec',                           ! 出力間隔の単位
+/
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+!!!
+!!! 初期値を作るための情報. 
+!!!   初期値作成ルーチンでのみ使う変数をまとめる
+!!!
+&initialdata_nml
+  FlagBasic        = "IsoThermal",
+  FlagDisturbQMix  = "Square", 
+  FlagDisturbWind  = "Zonal",
+/
+
+&initialdata_disturb_square_nml
+  QMixMax  = 1.0d-3, 
+  XposMin  = 0.0d0,
+  XposMax  = 10.0d3,  
+  YposMin  = 91.0d3, 
+  YposMax  = 111.0d3,
+  ZposMin  = 0.0d0, 
+  ZposMax  = 10.0d3,
+/
+
+&initialdata_disturb_zonal_nml
+  VelX0        = 0.0d0,
+  VelY0        = 20.0d0,
+/
+

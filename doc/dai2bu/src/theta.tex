@@ -1,0 +1,437 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv-- 離散モデル
+%       熱力学の式時間方向の離散化
+%
+% 履歴: 2005-01-25 杉山耕一朗
+%       2005/04/13  小高正嗣
+%       2005/08/25  小高正嗣: 散逸加熱項を追加
+%       2005/08/26  小高正嗣: 基本場温位を乱流拡散を追加
+%       2006/03/12  杉山耕一朗: 湿潤大気版に修正
+%       2012/04/23  小高正嗣  : 3D 化
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{熱力学の式と混合比の保存式の離散化}
+
+熱の式と混合比の保存式の右辺をまとめて $F$ で表し, 
+時間方向にリープフロッグ法を用いて離散化する. 
+%
+\begin{eqnarray}
+ \theta_{i,j,k}^{t + \Delta t} 
+  &=& \theta_{i,j,k}^{t - \Delta t} + 2 \Delta t  [F_{\theta}]_{i,j,k}^{t}
+\Deqlab{risan:time-div_theta} \\
+ \left[ q_{v} \right]_{i,j,k}^{t+\Delta t}
+ &=& 
+ \left[ q_{v} \right]_{i,j,k}^{t-\Delta t}
+ + 2 \Delta t [F_{q_{v}}]_{i,j,k}^{t}
+\Deqlab{risan:time-div_qv} \\
+%
+\left[ q_{c} \right]_{i,j,k}^{t+\Delta t}
+ &=& 
+ \left[ q_{c} \right]_{i,j,k}^{t-\Delta t}
+ + 2 \Delta t [F_{q_{c}}]_{i,j,k}^{t}
+\Deqlab{risan:time-div_qc} \\
+%
+\left[ q_{r} \right]_{i,j,k}^{t+\Delta t}
+ &=& 
+ \left[ q_{r} \right]_{i,j,k}^{t-\Delta t}
+ + 2 \Delta t [F_{q_{r}}]_{i,j,k}^{t}
+\Deqlab{risan:time-div_qr}
+\end{eqnarray}
+% 
+ここで, 
+%
+\begin{eqnarray}
+ [F_{\theta}]_{i,j,k} &=&
+  - \left[{\rm Adv}.{\theta}\right]_{i,j,k}^{t}
+  - \left[{\rm Adv}.{\bar{\theta}}\right]_{i,j,k}^{t}
+  + \left[{\rm Turb}.{\theta} \right]_{i,j,k}^{t - \Delta t} 
+  + \left[{\rm Turb}.{\bar{\theta}} \right]_{i,j,k}^{t - \Delta t} 
+    \nonumber \\
+% &&  + \Dinv{\overline{\pi}_{i,j,k}}
+%  \left( - \left[ \frac{L}{{c_{p}}_{d}} EV_{rv} \right]_{i,j,k}^{t} 
+%   + [Q_{rad}]_{i,j,k}^{t-\Delta t} 
+%   + [Q_{dis}]_{i,j,k}^{t-\Delta t}\right)
+ &&  
+   + \left[{\rm Diff}.{\theta} \right]_{i,j,k}^{t - \Delta t} 
+   + [Q_{cnd}]_{i,j,k}^{t} 
+   + [Q_{rad}]_{i,j,k}^{t-\Delta t} 
+   + [Q_{dis}]_{i,j,k}^{t-\Delta t} 
+  \Deqlab{Ftheta} \\
+%
+ \left[F_{q_{v}}\right]_{i,j,k}^{t}
+ &=& 
+  - \left[ {\rm Adv}.q_{v} \right]_{i,j,k}^{t}
+  - \left[ {\rm Adv}.\bar{q_{v}} \right]_{i,j,k}^{t}
+  + \left[ {\rm Turb}.q_{v} \right]_{i,j,k}^{t - \Delta t}
+  + \left[ {\rm Turb}.\bar{q_{v}} \right]_{i,j,k}^{t - \Delta t}
+\nonumber \\
+ && 
+  + \left[ {\rm Diff}.q_{v} \right]_{i,j,k}^{t - \Delta t}
+  + \left[ EV_{rv} \right]_{i,j,k}^{t}
+\Deqlab{risan:time-div_qv} \\
+%
+ \left[F_{q_{c}}\right]_{i,j,k}^{t}
+ &=& 
+  - \left[ {\rm Adv}.q_{c} \right]_{i,j,k}^{t}
+  + \left[ {\rm Turb}.q_{c} \right]_{i,j,k}^{t-\Delta t}
+  + \left[ {\rm Diff}.q_{c} \right]_{i,j,k}^{t-\Delta t}
+\nonumber \\
+ && 
+  - \left[ CN_{cr} + CL_{cr} \right]_{i,j,k}^{t}
+\Deqlab{risan:time-div_qc} \\
+%
+ \left[F_{q_{r}}\right]_{i,j,k}^{t}
+ &=& 
+  - \left[ {\rm Adv}.q_{r} \right]_{i,j,k}^{t}
+  + \left[ {\rm Turb}.q_{r} \right]_{i,j,k}^{t-\Delta t}
+  + \left[ {\rm Diff}.q_{c} \right]_{i,j,k}^{t-\Delta t}
+\nonumber \\
+ && 
+  + \left[CN_{cr} + CL_{cr} - EV_{rv} \right]_{i,j,k}^{t}
+  + \left[ PR_{r} \right]_{i,j,k}^{t}
+\Deqlab{risan:time-div_qr}
+%
+\end{eqnarray} 
+%
+である. 移流を中心差分で安定して解くために, 数値粘性項 Diff を追加して
+ある. また, $CN_{vc}, EV_{cv}$ 項は湿潤飽和調節法より決めるため, それら
+の項を含めない.
+
+$\theta$, $q_{v}$, $q_{c}$, $q_{r}$ をまとめて $\phi$ で表し, それぞれ
+の項を書き下す. 移流項は,
+%
+\begin{eqnarray}
+  && \left[{\rm Adv}.{\phi}\right]_{i,j,k}^{t}  =
+      \left[
+         u_{i(u),j,k}  \left[ \DP{\phi}{x} \right]_{i(u),j,k} 
+      \right]_{i,j,k}^{t}
+      + 
+      \left[
+         v_{i,j(v),k}  \left[ \DP{\phi}{y} \right]_{i,j(v),k} 
+      \right]_{i,j,k}^{t}
+  \nonumber \\
+  && \hspace{1em}
+      +
+      \left[
+         w_{i,j,k(w)} \left[ \DP{\phi}{z} \right]_{i,j,k(w)} 
+      \right]_{i,j,k}^{t}
+\end{eqnarray}
+%
+であり, 基本場の移流項は, 
+%
+\begin{eqnarray}
+ \left[{\rm Adv}.{\bar{\phi}}\right]_{i,j,k}^{t} =
+      \left[
+         w_{i,j,k(w)} \left[ \DP{\overline{\phi}}{z} \right]_{i,j,k(w)} 
+      \right]_{i,j,k}^{t}
+\end{eqnarray}
+%
+である. 粘性拡散項は CReSS と同様に 1.5 次のクロージャーを用いることで, 
+%
+\begin{eqnarray}
+&&
+\left[{\rm Turb}.{\phi} \right]_{i,j,k}^{t - \Delta t} = 
+   \left[ \DP{}{x} 
+      \left\{
+         \left( K_{h} \right)_{i(u),j,k}
+         \left( \DP{\phi}{x} \right)_{i(u),j,k}
+       \right\}
+   \right]_{i,j,k}^{t - \Delta t}
+\nonumber \\
+&& \hspace{1em}
+    + \left[ \DP{}{y} 
+        \left\{
+           \left( K_{h} \right)_{i,j(v),k}
+           \left( \DP{\phi}{y} \right)_{i,j(v),k}
+        \right\}
+       \right]_{i,j,k}^{t - \Delta t}
+\nonumber \\
+&& \hspace{1em}
+     + \frac{1}{(\overline{\rho})_{i,j,k}}\left[ \DP{}{z}\left\{
+         (\overline{\rho})_{i,j,k(w)}\left( K_{h} \right)_{i,j,k(w)}
+         \left( \DP{\phi }{z} \right)_{i,j,k(w)}
+       \right\} \right]_{i,j,k}^{t - \Delta t}
+ \end{eqnarray}
+%
+となり, 基本場の粘性拡散項は, 
+%
+\begin{eqnarray}
+\left[{\rm Turb}.{\bar{\phi}} \right]_{i,j,k}^{t - \Delta t} &=& 
+      \frac{1}{(\overline{\rho})_{i,j,k}}
+      \left[ \DP{}{z}\left\{(\overline{\rho})_{i,j,k(w)}
+       \left( K_{h} \right)_{i,j,k(w)}
+       \left( \DP{\overline{\phi}}{z} \right)_{i,j,k(w)}
+     \right\} \right]_{i,j,k}^{t - \Delta t}
+ \end{eqnarray}
+%
+となる. 数値粘性項は,
+%
+ \begin{eqnarray}
+&&  \left[ {\rm Diff}_{\phi} \right]_{i,j,k}^{t - \Delta t} = 
+     \nu_{h} \left\{ \DP{}{x} \left(\DP{\phi}{x}\right)_{i(u),j,k} \right\}_{i,j,k}^{t - \Delta t}
+   + \nu_{h} \left\{ \DP{}{y} \left(\DP{\phi}{x}\right)_{i,j(v),k} \right\}_{i,j,k}^{t - \Delta t}
+\nonumber \\
+&& \hspace{1em}
+   + \nu_{v} \left\{ \DP{}{z} \left(\DP{\phi}{z}\right)_{i,j,k(w)} \right\}_{i,j,k}^{t - \Delta t}
+ \end{eqnarray}
+%
+である. $K_{h}$ は乱流エネルギーの時間発展方程式から計算する(詳細は後述). 
+$\nu_{h}, \nu_{v}$ は \Deqref{nu} 式を利用する. 
+
+
+凝縮加熱項 $Q_{cnd}$ は
+%
+\begin{eqnarray}
+ [Q_{cnd}]_{i,j,k}^{t} 
+  &=& - \left[ \frac{L}{{c_{p} \bar{\pi}}_{d} \bar{\pi}} EV_{rv} \right]_{i,j,k}^{t} 
+\nonumber \\
+  &=& - \frac{L}{{c_{p}}_{d} \bar{\pi}} 
+  \left\{
+   4.85 \times 10^{-2} ([q_{vsw}]_{i,j,k}^{t} - [q_{v}]_{i,j,k}^{t}) 
+    (\bar{\rho}_{k} [q_{r}]_{i,j,k})^{0.65}
+  \right\}
+\end{eqnarray}
+%
+である. 
+
+
+散逸加熱項 $Q_{dis}$ は
+\begin{equation}
+  [Q_{dis}]_{i,j,k}^{t-\Delta t} 
+   = \frac{1}{{c_{p}}_{d} \bar{\pi}}
+   \frac{C_{\varepsilon}}{l}
+            \frac{(K_{m,i,j,k}^{t-\Delta t})^{3}}{(C_{m}l)^{3}}
+   = \frac{1}{{c_{p}}_{d} \bar{\pi}}
+   \frac{(K_{m,i,j,k}^{t-\Delta t})^{3}}{{C_{m}}^{2} l^{4}}
+\end{equation}
+%
+と与える. ここで $l={\rm Min}(\Delta z, {\rm Min}(\Delta x, \Delta
+y))$ である.
+
+放射強制 $[Q_{rad}]_{i,j,k}$ は計算設定ごとに与える. 
+
+
+雲水から雨水への変換を表す $CN_{cr}$, $CL_{cr}$ は以下のようになる. 
+%
+ \begin{eqnarray}
+  && [CN_{cr}]_{i,j,k}^{t} = (q_{c,i,k}^{t} - q_{c0})/\tau _{ac} \\
+%
+  && \left[ CL_{cr} \right]_{i,j,k}^{t}
+   = 2.2   [q_{c}]_{i,j,k}^{t} 
+   \left(
+    [\bar{\rho}]_{k}
+     \left[ q_{r} \right]_{i,j,k}^{t}
+   \right)^{0.875} 
+ \end{eqnarray}
+%
+雨水の蒸発を表す $EV_{rv}$ は以下のようになる. 
+%
+ \begin{eqnarray}
+&&  \left[ EV_{rv} \right]_{i,j,k}^{t} = 
+ 4.85 \times 10^{-2} ([q_{vsw}]_{i,j,k}^{t} - [q_{v}]_{i,j,k}^{t})
+ ([\bar{\rho}]_{k} [q_{r}]_{i,j,k}^{t})^{0.65}
+ \end{eqnarray}
+%
+降水による雨水フラックスを表す $PR_{r}$ は以下のように書ける. 
+%
+ \begin{eqnarray}
+  && \left[
+      PR_{r}
+     \right]_{i,j,k}^{t} 
+  = \Dinv{[\bar{\rho}]_{k}} \DP{}{z}([\bar{\rho}]_{i,j,k}
+  [U_{r}]_{i,j,k}^{t} 
+  [q_{r}]_{i,j,k}^{t}). \\
+  && [U_{r}]_{i,j,k}^{t} = 12.2 ([q_{r}]_{i,j,k}^{t})^{0.125}
+ \end{eqnarray}
+%
+ 
+
+
+\subsection{湿潤飽和調節法}
+
+Klemp and Wilhelmson (1983), CReSS ユーザーマニュアル(坪木と榊原, 2001)
+では, 水蒸気と雲水の間の変換を表す $-CN_{vc} + EV_{cv}$ は, 
+Soong and Ogura (1973) において開発された
+湿潤飽和調節法を用いる. 
+この方法は $dS=0$ の断熱線と, $\mu_{vapar} = \mu_{condensed phase}$ の
+平衡条件($\mu$ は化学ポテンシャル)の交わる温度・圧力・組成を
+反復的に求める数値解法である. 
+以下ではそのやり方を解説する. 
+
+
+\subsubsection{飽和蒸気圧を用いる場合}
+
+湿潤飽和調節法を用いる場合, 
+まず始めに \Deqref{risan:time-div_theta} -- \Deqref{risan:time-div_qr}
+式から求まる量に $*$ を添付し, $[\theta]^{*}$, 
+$[q_{v}]^{*}$, $[q_{c}]^{*}$, $[q_{r}]^{*}$ とする. 
+水に対する過飽和混合比
+%
+\begin{eqnarray}
+ \Delta q_{c} = MAX\{0, [q_{v}]^{*} - q_{vsw}([\theta]^{*})\}  
+\end{eqnarray}
+%
+が $\Delta q_{c} > 0$, もしくは雲粒混合比が $q_{c}^{*} > 0$ なら
+ば, 次式を用いて暫定的に $\theta$, $q_{v}$, $q_{c}$ を求める. 
+%
+\begin{eqnarray}
+ \left[ \theta \right]^{t + \Delta t} 
+  &=& 
+  \theta^{*} + 
+  \frac
+  { \gamma ( [q_{v}]^{*} -  q_{vsw}([\theta]^{*})) }
+  { 1 + \gamma \DP{q_{vsw}([\theta]^{*})}{\theta} }
+\Deqlab{moistajst_theta1}
+  \\
+ \left[ q_{v} \right]^{t + \Delta t}
+  &=& [q_{v}]^{*} + \frac{[\theta]^{*} - [\theta]^{t + \Delta t}}{\gamma},
+\Deqlab{moistajst_qv1}
+  \\
+ \left[ q_{c} \right]^{t + \Delta t}
+  &=& [q_{v}]^{*} + [q_{c}]^{*} - [q_{v}]^{t + \Delta t} .
+\Deqlab{moistajst_qc1}
+\end{eqnarray}
+%
+ただし, $\gamma = L_{v}/(c_{p} \Pi)$ である. 
+もしも $[q_c]^{t + \Delta t} > 0$ ならば, 暫定的に得られた値を $*$ 付き
+のものに置き換え, \Deqref{moistajst_theta1} -- \Deqref{moistajst_qc1} 式
+の値が収束するまで繰り返し適用する. 普通, 高々数回繰り返せば収束し, 
+調整後の値が得られるそうである. 
+
+もしも $q_{c}^{t + \Delta t} < 0$ の場合には, 
+%
+\begin{eqnarray}
+&& \left[ \theta \right]^{t + \Delta t} = 
+  [\theta]^{*}  - \gamma [q_{c}]^{*},
+  \Deqlab{moistajst_theta2}
+  \\
+ && \left[ q_{v} \right]^{t + \Delta t},
+  = [q_{v}]^{*} + [q_{c}]^{*}
+  \Deqlab{moistajst_qv2}
+  \\
+ && \left[ q_{c} \right]^{t + \Delta t} 
+  = 0
+ \Deqlab{moistajst_qc2}
+\end{eqnarray}
+%
+とし, 繰り返しを中止する. 
+
+
+
+\subsubsection{圧平衡定数を用いる場合}
+
+硫化アンモニウムの生成反応 
+%
+\begin{eqnarray}
+ {\rm NH_{3}} + {\rm H_{2}S} \rightarrow {\rm NH_{4}SH}
+\end{eqnarray}
+%
+のような, 2 種類の気体 1 モルづつから凝縮物質 1 モルが
+生成されるような生成反応の場合の, 湿潤飽和調節法を考える. 
+
+硫化アンモニウムの生成反応の圧平衡定数は, 
+%
+\begin{eqnarray}
+ K_{p} 
+  \equiv  \ln(p_{\rm NH_{3}} \cdot p_{\rm H_{2}S}) 
+  = 61.781 - \frac{10834}{T}  - \ln{10^{2}}
+\end{eqnarray}
+%
+である. 圧平衡定数を用いることで, 任意の温度に対する
+アンモニアと硫化水素のモル比の積を求めることができる. 
+
+
+任意の温度 $T$ における NH$_{4}$SH の生成量を $X$ とすると, 
+圧平衡定数の式は以下のように書ける. 
+%
+\begin{eqnarray}
+ && (p_{\rm NH_{3}} - X) ( p_{\rm H_{2}S} - X )
+  = e^{k_{p}}
+\nonumber \\
+ && X^{2} - (p_{\rm NH_{3}} + p_{\rm H_{2}S}) X  
+  +  p_{\rm NH_{3}} \cdot p_{\rm H_{2}S}
+  - e^{k_{p}} = 0
+\end{eqnarray}
+%
+解の公式を使うと, 生成量 X は以下となる. 
+%
+\begin{eqnarray}
+&& X = \Dinv{2} 
+  \left\{ 
+   (p_{\rm NH_{3}} + p_{\rm H_{2}S}) 
+   \pm \sqrt{   (p_{\rm NH_{3}} + p_{\rm H_{2}S})^{2} 
+   - 4 (p_{\rm NH_{3}} \cdot p_{\rm H_{2}S} - e^{K_{p}}) }
+  \right\} 
+\nonumber \\
+&& X = \Dinv{2} 
+  \left\{ 
+   (p_{\rm NH_{3}} + p_{\rm H_{2}S}) 
+   \pm \sqrt{   (p_{\rm NH_{3}} - p_{\rm H_{2}S})^{2} 
+   + 4 e^{K_{p}} }
+  \right\} 
+  \Deqlab{def_X_NH4SH}
+\end{eqnarray}
+%
+根号の符号は $\exp{(K_{p})} \approx 0$ の場合にとりうる $X$ の値を
+仮定することで決める. $\exp{(K_{p})} \approx 0$ の場合, 明らかに
+%
+\begin{eqnarray}
+ X = {\rm min}(P_{\rm NH_3}, P_{\rm H_{2}S} )
+\end{eqnarray}
+%
+である. ここで木星大気を想定し, $P_{\rm NH_3} > P_{\rm H_{2}S}$
+であることを仮定すると $X =  P_{\rm H_{2}S}$ である. そこで 
+\Deqref{def_X_NH4SH}の根号の符号は $\exp{(K_{p})} \approx 0$ のとき
+$X =  P_{\rm H_{2}S}$ となるよう, 負を選択する.
+%
+\begin{eqnarray}
+X = \Dinv{2} 
+  \left\{ 
+   (p_{\rm NH_{3}} + p_{\rm H_{2}S}) 
+   - \sqrt{   (p_{\rm NH_{3}} - p_{\rm H_{2}S})^{2} 
+   + 4 e^{K_{p}} }.
+  \right\} 
+\end{eqnarray}
+%
+$X$ の満たすべき条件は, 
+%
+\begin{eqnarray}
+ 0 \leq X \leq {\rm min}(P_{\rm NH_{3}}, P_{\rm H_{2}S}) 
+\Deqlab{NH4SH-condition}
+\end{eqnarray}
+%
+である. 上記の条件を満たさない場合には $X = 0$ とする. 
+
+
+$X$ が \Deqref{NH4SH-condition} 式の条件を満たすならば, 
+次式を用いて暫定的に $\theta$, $q_{v}$, $q_{c}$ を求める. 
+%
+\begin{eqnarray}
+&& \left[ q_{\rm NH_3} \right]^{t + \Delta t}
+ = [q_{\rm NH_3}]^{*} + \Delta q_{\rm NH_3},
+\\
+&& \left[ q_{\rm H_2S} \right]^{t + \Delta t}
+  = [q_{\rm H_2S}]^{*} + \Delta q_{\rm H_2S},
+\\
+&& \left[ q_{\rm NH_4SH} \right]^{t + \Delta t}
+  = [q_{\rm NH_3}]^{*} + [q_{\rm H_2S}]^{*}
+  - [q_{\rm NH_3}]^{t + \Delta t} - [q_{\rm H_2S}]^{t + \Delta t} ,
+\\
+&& \left[ \theta \right]^{t + \Delta t} 
+  = 
+  \theta^{*} + \gamma \left([q_{\rm NH_3}]^{*} + [q_{\rm H_2S}]^{*}
+  - [q_{\rm NH_3}]^{t + \Delta t} - [q_{\rm H_2S}]^{t + \Delta t} 
+\right).
+\end{eqnarray}
+%
+ただし, $\gamma = L_{\rm NH_4SH}/({c_{p}}_{d} \Pi)$ であり, 
+$\Delta q_{\rm NH_3}$ と $\Delta q_{\rm H_2S}$ はそれぞれ, 
+生成量 $X$ に対応する NH$_3$ と H$_2$S の混合比である. 
+温位が収束するまで反復改良を行う. 
+
+
+
+
+

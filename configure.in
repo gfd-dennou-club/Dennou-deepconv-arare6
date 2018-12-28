@@ -1,0 +1,624 @@
+dnl= Template file to create configure script for deepconv
+dnl
+dnl Authors:: Masatsugu Odaka
+dnl Version:: $Id: configure.in,v 1.4 2014/05/12 12:56:31 sugiyama Exp $
+dnl Tag Name:: $Name:  $
+dnl Copyright:: Copyright (C) GFD Dennou Club, 2006. All rights reserved.
+dnl License::   See COPYRIGHT[link:COPYRIGHT]
+dnl
+dnl == History
+dnl 
+dnl * 2006/09/28 (ODAKA Masatsugu): Initial release
+dnl
+dnl== Overview
+dnl
+dnl This file is template file to create "configure" script by
+dnl autoconf 2.13. Some functions are defined in "aclocal.m4"
+dnl (for example, DC_ARG_WITH).
+dnl
+
+########################################################################
+# === STARTUP ===
+#
+## Running autoconf on this file will trigger a warning if 
+## autoconf is not at least version 2.59.
+AC_PREREQ(2.59)
+
+## Initialize autoconf with name of project, version, and support
+## email address. 
+AC_INIT(arare, 0.1, dcstaff@gfd-dennou.org)
+
+## Autoconf will check for the existance of this file before proceeding.
+AC_CONFIG_SRCDIR([src/main/arare.f90])
+AC_PREFIX_DEFAULT( )
+
+## Find out about the host we're building on.
+AC_CANONICAL_HOST
+
+## set DEEPCONVDIR (current working directory)
+DC_SET_DEEPCONVDIR
+
+
+############################################################
+#== Set prefix
+#
+if test X"$prefix" != X"NONE" ; then
+	ac_cv_prefix=`echo $prefix | sed 's/\/\+$//'`
+fi
+
+AC_CACHE_CHECK([prefix], ac_cv_prefix, [
+		ac_cv_prefix=$ac_default_prefix
+])
+prefix=`echo $ac_cv_prefix | sed 's/\/\+$//'`
+
+
+############################################################
+#== Check cross-compiling
+#
+CROSS_COMPILING=$cross_compiling
+AC_SUBST(CROSS_COMPILING)
+
+
+############################################################
+#== Check fortran Compiler and Module type
+#
+sh ./chkfort.sh || exit
+eval `cat chkfort.cfg`
+
+AC_SUBST(FC)
+ac_cv_FC=$FC
+AC_SUBST(MOD)
+AC_SUBST(MODPATHFLAG)
+AC_SUBST(F90MODTYPE)
+: ${IFCCEM:=:}
+AC_SUBST(IFCCEM)
+
+if test X"$MOD" = X".f90" ; then
+	CLEAN_MODS=
+else
+	CLEAN_MODS="*$MOD"
+fi
+AC_SUBST(CLEAN_MODS)
+
+#
+#== Set host type HOST_CPU
+HOST_CPU=$host_cpu
+AC_SUBST(HOST_CPU)
+
+
+############################################################
+# === Checks for programs. ===
+# === Set rdoc Command
+
+AC_CHECK_PROG(RDOC, rdoc, rdoc)
+case "${RDOC-}" in
+     '')
+         AC_MSG_WARN(*** WARN *** Could not find rdoc program.)
+         RDOC=
+         ;;
+esac
+AC_SUBST(RDOC)
+
+# === Set Install Command
+#
+
+case "$build" in
+powerpc-ibm-aix*)
+	INSTALL="\$(CP)"
+	INSTALLBIN="\$(CP)"
+	INSTALLDIR="\$(MKDIR)"
+	echo "\"install\" command is not used"
+	;;
+*)
+	INSTALL="install -m 644"
+	INSTALLBIN="install -m 755"
+	INSTALLDIR="install -d -m 755"
+	;;
+esac
+
+AC_SUBST(INSTALL)
+AC_SUBST(INSTALLBIN)
+AC_SUBST(INSTALLDIR)
+
+
+############################################################
+#
+#== Set variables LINKF, which means link processes.
+#
+# This code is imported from the patch of netcdf 3.6.0-p1 for
+# SX and ES by T.Kagimoto, and modified.
+#
+#=== Specified by user --with-linker option
+#
+DC_ARG_WITH(linker, [Linker (If you use non-fortran compiler)], ac_cv_LINKER, [
+		AC_MSG_RESULT((no))
+])
+
+if test X"$ac_cv_LINKER" != X"" ; then
+    LINKF="$ac_cv_LINKER \$(INCLUDE_GT) \$(INCLUDES)"
+else
+#    LINKF='$(FC) \$(INCLUDE_GT) $(FFLAGS) \$(INCLUDES)'
+    LINKF='$(FC) $(INCLUDE_GT) $(SYSFFLAGS) $(INCLUDES)'
+    case "$host_cpu" in
+        sx5*|sx6*|sx7*|sx8*|es*)
+	    if test ! "$CROSS_COMPILING" = "yes" && \
+	      test ! "$CROSS_COMPILING" = "maybe" ; then
+	        LINKF='c++ $(INCLUDE_GT) $(INCLUDES) -f90lib'
+	    else
+	        LINKF='sxc++ $(INCLUDE_GT) $(INCLUDES) -f90lib'
+	    fi
+            ;;
+        *)
+            ;;
+    esac
+fi
+
+AC_SUBST(LINKF)
+
+
+############################################################
+# === Checks for libraries. ===
+#
+# --- netcdf ---
+#
+
+DC_ARG_WITH(netcdf, [netcdf library filename], ac_cv_lib_netcdf, [
+	AC_MSG_ERROR(specify netcdf library filename (like libnetcdf.a) with --with-netcdf=)
+])
+
+if test ! -f $ac_cv_lib_netcdf ; then
+	AC_MSG_ERROR(specified base directory $ac_cv_lib_netcdf not exist)
+fi
+netcdf_libdir=`dirname $ac_cv_lib_netcdf`
+netcdf_libname=`basename $ac_cv_lib_netcdf .a | sed 's/^lib//'`
+try2=`dirname $netcdf_libdir`/include
+if test -f "$try2/netcdf.h"; then
+	netcdf_incdir=$try2
+else
+	AC_MSG_ERROR(netcdf include file not found)
+fi
+
+DC_ARG_WITH(netcdff, [netcdf library filename], ac_cv_lib_netcdff, [
+	AC_MSG_ERROR(specify netcdf library filename (like libnetcdff.a) with --with-netcdff=)
+])
+
+if test ! -f $ac_cv_lib_netcdff ; then
+	AC_MSG_ERROR(specified base directory $ac_cv_lib_netcdff not exist)
+fi
+netcdff_libdir=`dirname $ac_cv_lib_netcdff`
+netcdff_libname=`basename $ac_cv_lib_netcdff .a | sed 's/^lib//'`
+try2=`dirname $netcdff_libdir`/include
+if test -f "$try2/netcdff.h"; then
+	netcdff_incdir=$try2
+fi
+
+#
+# --- gt4f90io ---
+#
+DC_ARG_WITH(gt4f90io, [gt4f90io library], ac_cv_lib_gt4f90io,
+	AC_MSG_ERROR(specify gtool4 library filename (like libgt4f90io.a) with --with-gt4f90io= option.)
+)
+
+if test ! -f $ac_cv_lib_gt4f90io ; then
+	AC_MSG_ERROR(specified library file $ac_cv_lib_gt4f90io not exist)
+fi
+gt4f90io_libdir=`dirname $ac_cv_lib_gt4f90io`
+gt4f90io_libname=`basename $ac_cv_lib_gt4f90io .a | sed 's/^lib//'`
+try1=""; try2=""
+if test -d ${try1:=$gt4f90io_libdir/module} ; then
+	gt4f90io_moddir=$try1
+elif test -d ${try2:=`dirname $gt4f90io_libdir`/include} ; then
+	gt4f90io_moddir=$try2
+else
+	AC_MSG_ERROR(gt4f90io module directory not found)
+fi
+
+#
+# --- Linear Algebra Library
+#
+
+if test -z "$LINSOLV" ; then
+   LINSOLV="lapack"
+fi
+AC_SUBST(LINSOLV)
+
+
+if test "$LINSOLV" = lapack ; then
+
+  DC_ARG_WITH(lapack, [lapack library], ac_cv_lib_lapack,
+	AC_MSG_ERROR(specify LAPACK library filename (like liblapack.a) with --with-lapack= option.)
+)
+  if test ! -f $ac_cv_lib_lapack ; then
+	AC_MSG_ERROR(specified library file $ac_cv_lib_lapack not exist)
+  fi
+  lapack_libdir=`dirname $ac_cv_lib_lapack`
+  lapack_libname=`basename $ac_cv_lib_lapack .a | sed 's/^lib//'`
+
+
+  DC_ARG_WITH(blas, [blas library], ac_cv_lib_blas,
+	AC_MSG_ERROR(specify BLAS library filename (like libblas.a) with --with-blas= option.)
+)
+  if test ! -f $ac_cv_lib_blas ; then
+	AC_MSG_ERROR(specified library file $ac_cv_lib_blas not exist)
+  fi
+  blas_libdir=`dirname $ac_cv_lib_blas`
+  blas_libname=`basename $ac_cv_lib_blas .a | sed 's/^lib//'`
+
+  SYSLDFLAGS="-L$lapack_libdir -L$blas_libdir $SYSLDFLAGS"
+  SYSLDLIBS="-l$lapack_libname -l$blas_libname $SYSLDLIBS"
+
+else 
+
+  DC_ARG_WITH(library, [linear argebra library], ac_cv_lib_library,
+	AC_MSG_ERROR(specify linear argebra library filename (libssl2.a, etc.) with --with-library= option.)
+)
+  if test ! -f $ac_cv_lib_library ; then
+	AC_MSG_ERROR(specified library file $ac_cv_lib_library not exist)
+  fi
+
+  linear_argebra_libdir=`dirname $ac_cv_lib_library`
+  linear_argebra_libname=`basename $ac_cv_lib_library .a | sed 's/^lib//'`
+
+  SYSLDFLAGS="-L$linear_argebra_libdir $SYSLDFLAGS"
+  SYSLDLIBS="-l$linear_argebra_libname $SYSLDLIBS"
+fi
+
+
+############################################################
+#== Setting LDFLAGS, LDLIBS, FFLAGS
+#
+#
+if test -n "$ac_cv_lib_netcdff"; then
+   SYSLDFLAGS="-L$netcdff_libdir $SYSLDFLAGS"
+   SYSLDLIBS="-l$netcdff_libname $SYSLDLIBS"
+fi
+SYSLDFLAGS="-L$gt4f90io_libdir -L$netcdf_libdir $SYSLDFLAGS"
+SYSLDLIBS="-l$gt4f90io_libname -l$netcdf_libname $SYSLDLIBS"
+#SYSFFLAGS="$SYSFFLAGS $ac_cv_fflags"
+INCLUDE_GT="-I$gt4f90io_moddir"
+
+
+############################################################
+#== --with-docdir=docidir
+#
+ac_cv_dest_doc='${prefix}/doc'
+DC_ARG_WITH(docdir,
+		[document installation directory (default /usr/local/deepconv/doc)],
+		ac_cv_dest_doc, [
+        AC_MSG_ERROR(specify docdir with --with-docdir=DIR)
+])
+
+case $ac_cv_dest_doc in
+
+"/"*)
+	docdir=${ac_cv_dest_doc} ;;
+
+'${prefix}/doc')
+	docdir=${ac_cv_dest_doc} ;;
+
+no)
+	docdir='${prefix}/doc' ;;
+
+*)
+	echo -n 'reconfigure with --with-docdir=DIR, '
+	echo 'but DIR must be ABSOLUTE path name.'
+	AC_MSG_ERROR(unrecognized docdir type) ;;
+esac
+
+AC_SUBST(docdir)
+
+
+############################################################
+#== --with-deepconvlibname=ARG
+#
+
+default_deepconvlibname=arare
+ac_cv_deepconvlibname=${default_deepconvlibname}
+DC_ARG_WITH(deepconvlibname,	[Library Name (default arare)],
+	ac_cv_deepconvlibname,
+	[AC_MSG_ERROR(specify Library Name --with-deepconvlibname=ARG)]
+)
+
+case $ac_cv_deepconvlibname in
+*'/'*)
+	deepconvlibname=`basename ${ac_cv_deepconvlibname}` ;;
+
+*)
+ 	if test "${ac_cv_deepconvlibname}" = "" ; then
+	   deepconvlibname=${default_deepconvlibname}
+	else
+	   deepconvlibname=${ac_cv_deepconvlibname}
+	fi ;;
+esac
+
+echo "set libname \"${deepconvlibname}\""
+
+AC_SUBST(deepconvlibname)
+
+
+############################################################
+#== --with-deepconvsuffix=ARG
+#
+
+default_deepconvsuffix=no
+DC_ARG_WITH(deepconvsuffix,	[Set suffix to installdir, library name, and executable files (default empty)],
+	ac_cv_deepconvsuffix, [
+	ac_cv_deepconvsuffix=""
+])
+
+case $ac_cv_deepconvsuffix in
+*'/'*)
+	deepconvsuffix=`basename ${ac_cv_deepconvsuffix}` ;;
+
+*)
+	if test "${ac_cv_deepconvsuffix}" = "" ; then
+	   deepconvsuffix=${default_deepconvsuffix}
+	else
+	   deepconvsuffix=${ac_cv_deepconvsuffix}
+	fi ;;
+esac
+
+if test "${deepconvsuffix}" = "no" ; then
+   deepconvdstsuffix=""
+   deepconvlibsuffix=""
+   deepconvbinsuffix=""
+else
+   deepconvdstsuffix=-$deepconvsuffix
+   deepconvlibsuffix=-$deepconvsuffix
+   deepconvbinsuffix=.$deepconvsuffix
+fi
+
+echo "set deepconvdstsuffix \"${deepconvdstsuffix}\"", \
+     "set deepconvlibsuffix \"${deepconvlibsuffix}\"", \
+     "set deepconvbinsuffix \"${deepconvbinsuffix}\""
+
+AC_SUBST(deepconvdstsuffix)
+AC_SUBST(deepconvlibsuffix)
+AC_SUBST(deepconvbinsuffix)
+
+
+
+############################################################
+#== --with-lang_conform_check
+#
+
+DC_ARG_WITH(lang_conform_check,
+	[language standard conformance checking (default no)],
+	ac_cv_lang_conform_check,
+	[ac_cv_lang_conform_check=no]
+)
+
+case $ac_cv_lang_conform_check in
+f95)
+	if test X"$F90MODTYPE" = X"fqs.mod"; then
+	   SYSFFLAGS="$SYSFFLAGS -v95d,95o,95s"
+	   echo "set compile and link flags \"-v95d,95o,95s\""
+	   
+	elif test X"$F90MODTYPE" = X"std.mod" && test X"$FC" = X"g95" ; then
+	   SYSFFLAGS="$SYSFFLAGS -std=f95"
+	   echo "set compile and link flags \"-std=f95\""
+	   
+	elif test X"$F90MODTYPE" = X"std.mod" && test X"$FC" = X"ifort" ; then
+	   SYSFFLAGS="$SYSFFLAGS -stand 95 -e95"
+	   echo "set compile and link flags \"-stand 95 -e95\""
+	   
+	else
+	   AC_MSG_ERROR(I do not know language standard conformance checking options of your compiler)
+	fi ;;
+no)	;;
+*)		echo -n 'reconfigure with --with-lang_conform_check={f95,no}'
+		echo ' or --without-lang_conform_check'
+		AC_MSG_ERROR(unknown lang_conform_check type) ;;
+esac
+
+
+############################################################
+#== --enable-diagmsg
+#
+
+DC_ARG_ENABLE(diagmsg,
+	[Output diagnostic messages about the source program [disable]],
+	ac_cv_diagmsg,
+	[ac_cv_diagmsg=no]
+)
+
+
+case $ac_cv_diagmsg in
+yes)
+	if test X"$F90MODTYPE" = X"fqs.mod"; then
+	    case "$SYSFFLAGS" in
+		*"-E cg"*) ;;
+		*)	SYSFFLAGS="$SYSFFLAGS -E cg";;
+	    esac
+	    echo "set compile and link flags \"-E cg\""
+ 
+	elif test X"$F90MODTYPE" = X"std.mod" && test X"$FC" = X"g95" ; then
+	    case "$SYSFFLAGS" in
+		*"-Wall"*) ;;
+		*)	SYSFFLAGS="$SYSFFLAGS -Wall";;
+	    esac
+	    echo "set compile and link flags \"-Wall\""
+
+	elif test X"$F90MODTYPE" = X"std.mod" && test X"$FC" = X"ifort" ; then
+	    case "$SYSFFLAGS" in
+		*"-warn all"*) ;;
+		*)	SYSFFLAGS="$SYSFFLAGS -warn all";;
+	    esac
+	    echo "set compile and link flags \"-warn all\""
+
+	else
+	   AC_MSG_ERROR(I do not know outputs diagnostic messages options of your compiler)
+	fi ;;
+no)   ;;
+*)		echo 'reconfigure with --enable-diagmsg or --disable-diagmsg'
+		AC_MSG_ERROR(unknown diagmsg type) ;;
+esac
+
+
+############################################################
+#== --enable-debug
+#
+
+DC_ARG_ENABLE(debug,
+	[Check Fortran source programs [disable]], ac_cv_debug, 
+	[ac_cv_debug=no]
+)
+
+case $ac_cv_debug in
+yes)
+	if test X"$F90MODTYPE" = X"fqs.mod"; then
+	    case "$SYSFFLAGS" in
+		*"-E cg"*) ;;
+		*)	SYSFFLAGS="$SYSFFLAGS -E cg";;
+	    esac
+	    SYSFFLAGS="$SYSFFLAGS -g -H aesux"
+	    echo "set compile and link flags \"-E cg -g -H aesux\""
+	    
+	elif test X"$F90MODTYPE" = X"std.mod" && test X"$FC" = X"g95" ; then
+	    case "$SYSFFLAGS" in
+		*"-Wall -ftrace=frame"*) ;;
+		*)	SYSFFLAGS="$SYSFFLAGS -Wall -ftrace=frame";;
+	    esac
+	    echo "set compile and link flags \"-Wall -ftrace=frame\""
+	   
+	elif test X"$F90MODTYPE" = X"std.mod" && test X"$FC" = X"ifort" ; then
+	    case "$SYSFFLAGS" in
+		*"-warn all -check all -traceback"*) ;;
+		*)	SYSFFLAGS="$SYSFFLAGS -warn all -check all -traceback";;
+	    esac
+	    echo "set compile and link flags \"-warn all -check all -traceback\""
+	    
+	else
+	   AC_MSG_ERROR(I do not know debug options of your compiler)
+	fi ;;
+no)   ;;
+*)		echo 'reconfigure with --enable-debug or --disable-debug'
+		AC_MSG_ERROR(unknown debug type) ;;
+esac
+
+
+############################################################
+# --- care of some special environments ---
+# 
+
+if test X"$F90MODTYPE" = X"intel.d"; then
+	case "$SYSLDLIBS$SYSLDFLAGS$SYSFFLAGS" in
+	*-Vaxlib*) ;;
+	*)	SYSLDLIBS="$SYSLDLIBS -Vaxlib";;
+	esac
+fi
+
+if test X"$F90MODTYPE" = X"fqs.mod"; then
+	case "$SYSFFLAGS" in
+	*-Am*) ;;
+	*)	SYSFFLAGS="$SYSFFLAGS -Am";;
+	esac
+fi
+
+
+case "$build" in
+powerpc-ibm-aix*)
+	if test X"$FC" = X"xlf90" ;then
+		case "$SYSFFLAGS" in
+		*-qsuffix=f=f90*) ;;
+		*)	SYSFFLAGS="$SYSFFLAGS -qsuffix=f=f90";;
+		esac
+	fi
+	;;
+*) ;;
+esac
+
+AC_SUBST(SYSLDLIBS)
+AC_SUBST(SYSLDFLAGS)
+
+SYSFFLAGS="$SYSFFLAGS \$(INCLUDE_GT) \$(INCLUDES)"
+
+AC_SUBST(SYSFFLAGS)
+AC_SUBST(INCLUDE_GT)
+
+#
+# --- system dependent runtime selection (not checked) ---
+#
+
+DC_ARG_WITH(abort, [abort runtime procedure], ac_cv_fortran_abort,
+        ac_cv_fortran_abort=abort
+)
+SYSDEPABORT=$ac_cv_fortran_abort
+case $SYSDEPABORT in
+abort)		echo 'sysdepabort() calls ABORT';;
+errtra-setrcd)	echo 'sysdepabort() calls ERRTRA/SETRCD/EXIT (intended for Lahey/Fujitsu Fortran)';;
+exit)		echo 'sysdepabort() calls EXIT (intended for Intel Fortran)';;
+setrcd)		echo 'sysdepabort() calls SETRCD/EXIT (intended for FQS Fortran)';;
+stop)		echo 'sysdepabort() executes STOP';;
+*)		echo 'reconfigure with --with-abort={abort,dcl,errtra-setrcd,exit,setrcd,stop}'
+		AC_MSG_ERROR(unknown abort type) ;;
+esac
+AC_SUBST(SYSDEPABORT)
+
+############################################################
+#== Some system commands
+
+#=== make
+#
+#export MAKE
+#sh ./chkgmake.sh || exit
+#eval `cat chkgmake.cfg`
+#
+#AC_SUBST(MAKE)
+
+AC_CHECK_PROG(MAKE, make, make)
+AC_SUBST(MAKE)
+
+#=== ar
+#
+AC_CHECKING(for ar utility)
+case "${AR-unset}" in
+    unset) AC_CHECK_PROGS(AR, ar, ar) ;;
+    *) AC_CHECK_PROGS(AR, $AR ar, ar) ;;
+esac
+AC_MSG_CHECKING(ar flags)
+case "${ARFLAGS-unset}" in
+    unset) ARFLAGS=cru ;;
+esac
+AC_MSG_RESULT($ARFLAGS)
+AC_SUBST(ARFLAGS)
+
+case "$build" in
+    powerpc-ibm-aix*)
+	case "${ARFLAGS-unset}" in
+	    unset) ARFLAGS="-X64" ;;
+	    *-X64*) ;;
+	    *) ARFLAGS="-X64 $ARFLAGS" ;;
+	esac
+	;;
+    *)
+	;;
+esac
+
+AC_SUBST(AR)
+
+#=== ranlib
+#
+AC_PROG_RANLIB
+
+#=== ncdump
+#
+case "${NCDUMP-unset}" in
+    unset) AC_CHECK_PROGS(NCDUMP, ncdump) ;;
+    *) AC_CHECK_PROGS(NCDUMP, $NCDUMP ncdump) ;;
+esac
+if test -z "$NCDUMP"; then
+    AC_MSG_WARN("Could not find ncdump command")
+fi
+
+AC_SUBST(NCDUMP)
+
+
+# Checks for header files.
+
+# Checks for typedefs, structures, and compiler characteristics.
+
+# Checks for library functions.
+
+AC_CONFIG_FILES([Mkinclude])
+AC_OUTPUT

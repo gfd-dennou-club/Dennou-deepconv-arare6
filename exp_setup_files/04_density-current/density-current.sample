@@ -1,0 +1,131 @@
+!= Configuration file for deepconv/arare
+!
+! Authors::   SUGIYAMA Ko-ichiro, ODAKA Masatsugu
+! Version::   $Id: density-current.conf,v 1.1 2014/07/08 01:19:01 sugiyama Exp $
+! Tag Name::  $Name:  $
+! Copyright:: Copyright (C) GFD Dennou Club, 2014. All rights reserved.
+! License::   See COPYRIGHT[link:COPYRIGHT]
+!
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+
+
+&deepconv_main_nml
+  FlagTurbMethod = "ConstKm"
+/    
+
+!!!
+!!!入出力ファイルに関する設定
+!!!
+&fileset_nml
+  FileInstitution    = "sugiyama@gfd-dennou.org"   !ファイルを最終的に変更した人, 組織. 
+/
+
+&restartfileio_nml
+  InitialFile  = "density-current.XX_ini.nc",
+  OutputFile   = "density-current.XX_res.nc"
+/
+
+!!!
+!!!積分時間に関する設定
+!!!
+&timeset_nml
+  DelTimeLong   = 1.0d0       !長いタイムステップ
+  DelTimeShort  = 1.0d-1      !短いタイムステップ(音波関連項)
+  RestartTime   = 0.0d0       !計算開始時間
+  IntegPeriod   = 900.0d0     !積分時間 
+  DelTimeOutput = 300.0d0     !出力時間間隔
+/
+
+!!!
+!!!格子点数に関する設定
+!!!
+&gridset_nml
+  xdim  = 512                ! X 方向刻み点数
+  ydim  = 512                ! Y 方向刻み点数
+  zdim  = 64                 ! Z 方向刻み点数
+  ncmax = 1
+/
+
+&axesset_nml
+  Xmax  = 51.2d3            ! X 座標の終点
+  Ymax  = 51.2d3            ! Y 座標の終点
+  Zmax  = 6.4d3             ! Z 座標の終点
+/
+
+!!!
+!!!実験パラメタ(物理・化学)の設定
+!!!
+&constants_nml
+  Grav       = 9.81d0,         !重力             [m/s]
+  PressBasis = 1.0d5,          !(温位の)基準圧力 [Pa]
+  TempSfc    = 300.0d0,        !地表面温度       [K]
+  PressSfc   = 1.0d5,          !地表面圧力       [Pa]
+  CpDry      = 1004.0d0,       !乾燥成分の比熱
+  MolWtDry   = 0.029d0,        !乾燥成分の分子量
+/
+
+&dynamics_nml
+  FlagAdvection = "std"
+  FlagAcousticmode = "std"
+  FactorDExnerDtAdv = 0.0d0
+  FactorDExnerDtExpnd = 0.0d0
+  AlphaNDiff = 0.0d0  !数値拡散項の係数
+/
+
+
+&turbulence_constKm_nml
+  ConstKm = 75.0d0,
+  ConstKh = 75.0d0,
+/
+
+&damping_nml
+/
+
+&composition_nml
+  SpcWetSymbol(1)  = 'H2O-g',  !湿潤成分
+  SpcWetMolFr(1)   = 0.0d0,  !湿潤成分の存在度(モル比)
+/
+
+!!!
+!!! データ出力の全体設定
+!!!
+&gtool_historyauto_nml
+! AllOutput = .true.
+  FilePrefix = "density-current.XX_"
+  IntValue = 100.0,              ! 出力間隔の数値
+  IntUnit = 'sec',            ! 出力間隔の単位
+/
+!
+! データ出力の個別設定
+!
+&gtool_historyauto_nml
+!  Name = 'PTemp, VelX, VelY, VelZ, Exner, Km, PTempAll, ExnerAll',   ! 出力変数
+  Name = 'PTemp', 
+  IntUnit = 'sec',                               ! 出力間隔の単位
+/
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+!!!
+!!! 初期値を作るための情報. 
+!!!   初期値作成ルーチンでのみ使う変数をまとめる
+!!!
+&initialdata_nml
+  FlagBasic = "Dry", 
+  FlagDisturbPTemp = "CosXZ", 
+/
+
+&initialdata_disturb_cos_nml
+  PTempMax     = -15.0d0,     !温位擾乱の最大値
+  Xc           = 25.6d3,      !擾乱の中心位置(水平方向) [m]
+  Xr           = 4.0d3,       !擾乱の半径(水平方向) [m]
+  Yc           = 25.6d3,      !擾乱の中心位置(水平方向) [m]
+  Yr           = 4.0d3,       !擾乱の半径(水平方向) [m]
+  Zc           = 3.0d3,       !擾乱の中心位置(鉛直方向) [m]
+  Zr           = 2.0d3,       !擾乱の半径(鉛直方向) [m]
+/
+
+&initialdata_basic_nml
+   Humidity = 0.0d0,
+/

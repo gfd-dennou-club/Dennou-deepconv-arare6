@@ -1,0 +1,579 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv -- 数理モデル
+%       付録 A-1 準圧縮方程式系の導出 - 基礎方程式系- 
+% 
+% 履歴  2005/11/15 杉山耕一朗
+%       2006/03/12 杉山耕一朗
+%       2007/06/22 小高正嗣
+%       2012/04/18 小高正嗣      3 次元化
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+地球大気における湿潤対流の定式化同様, 大気の乾燥成分と湿潤成分の分子量
+の差は密度の式には考慮するが, 熱の式には考慮しないような系を考える. こ
+の系では大気の熱エネルギーは乾燥大気の熱エネルギーで決まることになる.
+このような系では温位 $\theta$ を保存量として用いることができる.
+
+
+\subsection{気温 $T$, 密度 $\rho$, 風速 $u, v, w$ を予報変数とする場合}
+
+水平鉛直 3 次元大気の状態を, 気温 $T$, 圧力 $p$, 風速 $u, v, w$, 密度
+$\rho$ で表現する場合, 基礎方程式系は以下のようになる.
+%
+\begin{description}
+%
+ \item[運動方程式]~
+%
+\begin{eqnarray}
+&& \DD{u}{t} + \Dinv{\rho}\DP{p}{x} = Turb.u 
+  \Deqlab{equations:u} \\
+&& \DD{v}{t} + \Dinv{\rho}\DP{p}{y} = Turb.v
+  \Deqlab{equations:v} \\
+&& \DD{w}{t} + \Dinv{\rho}\DP{p}{z} = -g + Turb.w
+  \Deqlab{equations:w} 
+\end{eqnarray}
+%
+ \item[連続の式]~
+%
+\begin{eqnarray}
+ \DD{\rho}{t} + \rho\left( \DP{u}{x} + \DP{v}{y} + \DP{w}{z}\right) = 0
+  \Deqlab{equations:continue}
+\end{eqnarray}
+%
+ \item[密度の式(状態方程式)]~
+%
+\begin{eqnarray}
+ \rho = \frac{p}{R_{d} T_{v}}
+  \Deqlab{equations:rho}
+\end{eqnarray}
+%
+ \item[熱の式]~
+%
+\begin{eqnarray}
+ {c_{p}}_{d}\DD{T}{t} - \Dinv{\rho_{d}} \DD{p}{t} = Q + Turb.T
+  \Deqlab{equations:T}
+\end{eqnarray}
+%
+ \item[凝縮成分の混合比保存式]~
+%
+\begin{eqnarray}
+&& \DD{q_{v}}{t} = Src.q_{v} + Turb.q_{v}
+  \Deqlab{equations:qv} \\
+&& \DD{q_{c}}{t} = Src.q_{c} + Turb.q_{c}
+  \Deqlab{equations:qc} \\
+&& \DD{q_{r}}{t} = Src.q_{r} + Fall.q_{r} + Turb.q_{r}
+  \Deqlab{equations:qr}
+\end{eqnarray}
+%
+\end{description}
+%
+ここで $R_{d}$, ${c_{p}}_{d}$, $\rho_{d}$ は単位質量当たりの乾燥成分の
+気体定数, 定圧比熱, 密度であり, $Q$ は非断熱加熱, $q_{v}$ は気体成分の
+混合比, $q_{c}$ は雲水混合比, $q_{r}$ は雨水混合比である.  $q_{v},
+q_{r}, q_{c}$ は, 凝縮成分の数だけ存在する.  $Turb$, $Src$, $Fall$ を付
+けた項はそれぞれ拡散項, 生成消滅項, 落下項を意味する.
+
+密度の式には凝縮成分の混合比が考慮されている. 
+%
+\begin{eqnarray}
+ \rho &=& \rho_{d} + \sum \rho_{v} + \sum \rho_{c} + \sum \rho_{r}
+  \nonumber \\
+ &=& \rho_{d} (1 + \sum q_{v} + \sum q_{c} + \sum q_{r} ). 
+  \Deqlab{rho:rho}
+\end{eqnarray}
+%
+ただし, $q_v = \rho_v/\rho_{d}$, $q_{c}$, $q_{r}$ はそれぞれ凝縮性気体,
+雲水, 雨水の混合比を意味する. ここで乾燥成分の分圧 $p_{d}$ は.
+%
+\begin{eqnarray}
+ p_{d} 
+  &=& p \left( 1 - \frac{\sum p_{v}}{p} \right) \nonumber
+  \\
+ &=& p \left( 1 - \frac{\sum p_{v}}{p_{d} + \sum p_{v} }\right) \nonumber
+  \\
+ &=& p \left( 1 - \frac{\sum \rho_{v} R_{v} T}{\rho_{d} R_{d}T + \sum
+	\rho_{v} R_{v} T }\right) \nonumber
+  \\
+ &=& p \left( 1 - \frac{\sum q_{v}/M_{v}}{1/M_{d} + \sum q_{v}/M_{v}
+	}\right)
+ \nonumber
+\end{eqnarray}
+%
+となるので, 
+%
+\begin{eqnarray}
+ \rho_{d} 
+  = \frac{p_{d}}{R_{d} T}
+  = \frac{p}{R_{d} T} \left(\frac{1/M_{d}}{1/M_{d} + \sum q_{v}/M_{v}
+	}\right)
+  \Deqlab{rho:rho_d}
+\end{eqnarray}
+%
+である. 但し $M$ は分子量を表し, 凝縮成分の体積は無視できるものと見なした. 
+\Deqref{rho:rho}, \Deqref{rho:rho_d} 式より, 
+%
+\begin{eqnarray}
+ \rho &=& \frac{p}{R_{d}T}
+  \left( \frac{1/M_{d}}{1/M_{d} + \sum q_{v}/M_{v} }\right)
+  (1 + \sum q_{v} + \sum q_{c} + \sum q_{r} )
+\Deqlab{rho:p-T_1}
+\end{eqnarray}
+%
+となる. 
+%
+\begin{eqnarray}
+ f \equiv  
+  \left(\frac{1/M_{d}}{1/M_{d} + \sum q_{v}/M_{v}	}\right)
+  (1 + \sum q_{v} + \sum q_{x} )
+\nonumber 
+\end{eqnarray}
+%
+と定義すると, \Deqref{rho:p-T_1} 式は以下のように書ける. 
+%
+\begin{eqnarray}
+ \rho &=& \frac{p}{R_{d} (T/f)}
+\Deqlab{rho:p-T}
+\end{eqnarray}
+%
+また, 温位とエクスナー関数を用いて表現すると, 
+%
+\begin{eqnarray}
+ \rho 
+  &=& \frac{p}{R_{d} \pi (\theta /f )}
+  \nonumber \\
+  &=& \frac{p_{0} \pi^{{c_{v}}_{d}/R_{d}}}{R_{d} (\theta/f)}
+\Deqlab{rho:p-theta}
+\end{eqnarray}
+%
+である. 但しエクスナー関数 $\pi$ は $\pi = T/\theta$ の関係を満たす. 
+
+温位は乾燥断熱状態における保存量である. 乾燥断熱状態を表す熱力学の式は
+%
+\begin{eqnarray}
+ c_{p}dT - \alpha dp = 0
+\Deqlab{theta1}
+\end{eqnarray}
+% 
+である. ここで $T$ は温度, $p$ は圧力, $c_{p}$ は単位質量当たりの比熱,
+$\alpha$ は比容である. \Deqref{theta1} 式の $\alpha$ は, 理想気体の状態
+方程式を用いると,
+%
+\begin{eqnarray}
+ \alpha = \frac{RT}{p}
+ \Deqlab{theta2}
+\end{eqnarray}
+%
+と書ける. ここで $M$ は分子量, $R$ は気体定数である. \Deqref{theta1} 式
+に \Deqref{theta2} 式を代入し整理すると,
+%
+\begin{eqnarray}
+ \frac{c_{p}}{T}dT - \frac{R}{p} dp = 0
+\Deqlab{theta3}
+\end{eqnarray}
+% 
+となる. 凝縮を生じない場合には気塊の組成は変化しないので$c_{p}$ と $R$
+は共に $p$ に依存しない. 一般に $c_{p}$ は $T$ の関数であるが,
+{\bf \boldmath $c_{p}$ を定数とみなすと},
+%
+\begin{eqnarray}
+\int^{T_{0}}_{T} \Dinv{T}dT 
+ &=& \frac{R}{c_{p}} \int^{p_{0}}_{p} \Dinv{p} dp \nonumber \\
+\ln{(T_{0}/T)}
+ &=& \frac{R}{c_{p}} \ln{(p_{0}/p)} \nonumber \\
+ \theta 
+ &=& T \left(\frac{p_{0}}{p}\right)^\frac{R}{c_{p}} 
+\Deqlab{theta4}
+\end{eqnarray}
+% 
+となり, 温位が得られる. 
+
+
+
+\subsection{温位 $\theta$, 圧力 $p$, 風速 $u, v, w$ を予報変数とする場合}
+
+水平鉛直 3 次元大気の状態を温位 $\theta$, 圧力 $p$, 風速 $u, v, w$, 密
+度 $\rho$ で表現する場合, 基礎方程式系は以下のようになる.  CReSS(坪木と
+榊原, 2001)では, この基礎方程式を用いている.
+%
+\begin{description}
+%
+ \item[運動方程式]~
+%
+\begin{eqnarray}
+&& \DD{u}{t} + \Dinv{\rho}\DP{p}{x} = Turb.u 
+  \Deqlab{equations:u-w-p-theta:u} \\
+&& \DD{v}{t} + \Dinv{\rho}\DP{p}{y} = Turb.v
+  \Deqlab{equations:u-w-p-theta:v} \\
+&& \DD{w}{t} + \Dinv{\rho}\DP{p}{z} = - g + Turb.w
+  \Deqlab{equations:u-w-p-theta:w} 
+\end{eqnarray}
+%
+ \item[圧力方程式]~
+%
+\begin{eqnarray}
+ \DD{p}{t} = \rho {C_{s}}^{2} 
+  \left\{
+   - \Ddiv{\Dvect{u}}
+   + \Dinv{\theta}\DD{\theta}{t} 
+   - \Dinv{f} 
+   \left( 
+     \sum \DP{f}{q_{v}} \DD{q_{v}}{t}
+    + \sum  \DP{f}{q_{c}} \DD{q_{c}}{t}
+    + \sum  \DP{f}{q_{r}} \DD{q_{r}}{t}
+   \right)
+  \right\} 
+\end{eqnarray}
+%
+ \item[密度の式(状態方程式)]~
+%
+\begin{eqnarray}
+ \rho = \frac{p_{0}}{R_{d} \theta_{v}}
+  \left( \frac{p}{p_{0}}\right)^{{c_{v}}_{d}/{c_{p}}_{d}}
+  \Deqlab{equations:rho}
+\end{eqnarray}
+%
+ \item[熱の式]~
+%
+\begin{eqnarray}
+ \DD{\theta}{t} = Q + Turb.\theta
+  \Deqlab{equations:u-w-p-theta:theta}
+\end{eqnarray}
+%
+ \item[凝縮成分の混合比の保存式]~
+%
+\begin{eqnarray}
+&& \DD{q_{v}}{t} = Src.q_{v} + Turb.q_{v}
+  \Deqlab{equations:u-w-p-theta:qv} \\
+&& \DD{q_{c}}{t} = Src.q_{c} + Turb.q_{c}
+  \Deqlab{equations:u-w-p-theta:qc} \\
+&& \DD{q_{r}}{t} = Src.q_{r} + Fall.q_{r} + Turb.q_{r}
+  \Deqlab{equations:u-w-p-theta:qr}
+\end{eqnarray}
+%
+\end{description}
+%
+ただし温位 $\theta$ は
+%
+\begin{eqnarray}
+ \theta \equiv T \left(\frac{p_{0}}{p}\right)^{R_{d}/{c_{p}}_{d}}
+  \Deqlab{equations:theta}
+\end{eqnarray}
+であり, 仮温位 $\theta_{v}$ は, 
+%
+\begin{eqnarray}
+ \theta_{v} \equiv \frac{\theta}{f}
+\end{eqnarray}
+%
+である. 音速 $C_{s}$ は
+%
+\begin{eqnarray}
+ {C_{s}}^{2}
+  \equiv  \frac{{c_{p}}_{d}}{{c_{v}}_{d}} R_{d} T_{v}
+  =   \frac{{c_{p}}_{d}}{{c_{v}}_{d}} R_{d} \frac{T}{f}
+\end{eqnarray}
+%
+である. ${c_{p}}_{d}$ と ${c_{v}}_{d}$ はそれぞれ単位質量当たりの乾燥成
+分の定圧比熱と定積比熱であり, ${c_{v}}_{d} + R_{d} = {c_{p}}_{d}$ とい
+う関係にある.
+
+圧力方程式は密度の式と連続の式を組み合わせることで得られる. まず密度を
+$\rho= \rho(\theta,p,q_{v},q_{x})$ として $\rho$ の全微分を求める.
+%
+\begin{eqnarray}
+ d\rho 
+  &=&d \left[
+	\frac{p_{0}}{R_{d} \theta_{v}} 
+	\left( \frac{p}{p_{0}} \right)^{{c_{v}}_{d}/{c_{p}}_{d}}	
+     \right]
+\nonumber \\
+  &=&d \left[
+	\frac{p_{0}}{R_{d} (\theta / f) } 
+	\left( \frac{p}{p_{0}} \right)^{{c_{v}}_{d}/{c_{p}}_{d}}	
+     \right]
+\nonumber \\
+ &=& 
+  \frac{p_{0} }{R_{d} (\theta/f)} 
+      \frac{{c_{v}}_{d}}{{c_{p}}_{d}}
+      \left( \frac{p}{p_{0}} \right)^{-R_{d}/{c_{p}}_{d}}
+      \Dinv{p_{0}}dp
+-
+      \frac{p_{0} f}{R_{d}}
+      \left( \frac{p}{p_{0}} \right)^{{c_{v}}_{d}/{c_{p}}_{d}}
+       \frac{d\theta}{\theta^{2}}
+\nonumber \\
+  &&+ 
+   \frac{p_{0}}{R_{d} \theta} 
+      \left( \frac{p}{p_{0}} \right)^{{c_{v}}_{d}/{c_{p}}_{d}}
+      \left\{
+       \sum \DP{f}{q_{v}} dq_{v}
+       + \sum \DP{f}{q_{c}} dq_{c}
+       + \sum \DP{f}{q_{r}} dq_{r}
+      \right\}
+\nonumber \\
+ &=& 
+  \Dinv{{C_{s}}^{2}} dp
+  - \frac{\rho}{\theta} d\theta
+  + \sum \frac{\rho}{f} \DP{f}{q_{v}} dq_{v}
+  + \sum \frac{\rho}{f} \DP{f}{q_{c}} dq_{c}
+  + \sum \frac{\rho}{f} \DP{f}{q_{r}} dq_{r}
+\Deqlab{pressure:theta-p:drho}
+\end{eqnarray}
+%
+となる. \Deqref{pressure:theta-p:drho} 式を圧力の式として整理すると, 
+%
+\begin{eqnarray}
+\DD{p}{t}
+ = {C_{s}}^{2} 
+ \left(
+    \DD{\rho}{t}
+  + \frac{\rho}{\theta} \DD{\theta}{t} 
+  - \sum \frac{\rho}{f} \DP{f}{q_{v}} dq_{v}
+  - \sum \frac{\rho}{f} \DP{f}{q_{c}} dq_{c}
+  - \sum \frac{\rho}{f} \DP{f}{q_{r}} dq_{r}
+ \right)
+\nonumber
+\end{eqnarray}
+%
+であり, 連続の式を用いると, 
+%
+\begin{eqnarray}
+\DD{p}{t}
+ = \rho {C_{s}}^{2} 
+ \left(
+  -  \Ddiv \Dvect{u}
+  + \Dinv{\theta} \DD{\theta}{t} 
+  - \sum \Dinv{f} \DP{f}{q_{v}} dq_{v}
+  - \sum \Dinv{f} \DP{f}{q_{c}} dq_{c}
+  - \sum \Dinv{f} \DP{f}{q_{r}} dq_{r}
+ \right)
+\nonumber
+\end{eqnarray}
+%
+となり, 圧力方程式が得られる. 
+
+
+\subsection{温位 $\theta$, 無次元圧力 $\pi$, 風速 $u, v, w$ を予報変数とする場合}
+
+水平鉛直 2 次元大気の状態を温位 $\theta$, 無次元圧力 $\pi$, 風速 $u,
+v, w$, 密度 $\rho$ で表現する場合, 基礎方程式系は以下のようになる. 連続
+の式 \Deqref{equations:continue} と状態方程式 \Deqref{equations:rho} を
+用いることで得られる圧力方程式を利用する.  Klemp and Willhelmson
+(1978)では, この基礎方程式を用いている.
+%
+\begin{description}
+%
+ \item[運動方程式]~
+%
+\begin{eqnarray}
+&& \DD{u}{t} + {{c_{p}}_{d}} \theta_{v} \DP{\pi}{x} = Turb.u 
+  \Deqlab{equations:u-w-pi-theta:u} \\
+&& \DD{v}{t} + {{c_{p}}_{d}} \theta_{v} \DP{\pi}{y} = Turb.v
+  \Deqlab{equations:u-w-pi-theta:u} \\
+&& \DD{w}{t} + {{c_{p}}_{d}} \theta_{v} \DP{\pi}{z} = -g + Turb.w
+  \Deqlab{equations:u-w-pi-theta:w} 
+\end{eqnarray}
+%
+ \item[圧力方程式]~
+%
+\begin{eqnarray}
+\DD{\pi}{t}
+ =  \frac{{C_{s}}^{2}}{ {c_{p}}_{d}\theta_{v} }
+ \left\{
+  - \Ddiv \Dvect{u}
+  + \Dinv{\theta}\DD{\theta}{t} 
+  - \Dinv{f}
+  \left(
+     \sum \DP{f}{q_{v}} \DD{q_{v}}{t}
+   + \sum \DP{f}{q_{c}} \DD{q_{c}}{t}
+   + \sum \DP{f}{q_{r}} \DD{q_{r}}{t}
+  \right)
+ \right\}
+  \Deqlab{equations:u-w-pi-theta:continue}
+\end{eqnarray}
+%
+ \item[状態方程式]~
+%
+\begin{eqnarray}
+ \rho = \frac{p_{0} \pi^{{c_{v}}_{d}/R_{d}}}{R_{d} \theta_{v}}
+  \Deqlab{equations:u-w-pi-theta:rho}
+\end{eqnarray}
+%
+ \item[熱の式]~
+%
+\begin{eqnarray}
+ \DD{\theta}{t} = Q + Turb.\theta
+  \Deqlab{equations:u-w-pi-theta:theta}
+\end{eqnarray}
+%
+ \item[水蒸気および水物質混合比の式]~
+%
+\begin{eqnarray}
+&& \DD{q_{v}}{t} = Src.q_{v} + Turb.q_{v}
+  \Deqlab{equations:u-w-pi-theta:qv} \\
+&& \DD{q_{x}}{t} = Src.q_{c} + Turb.q_{c}
+  \Deqlab{equations:u-w-pi-theta:qc} \\
+&& \DD{q_{x}}{t} = Src.q_{r} + Fall.q_{x} + Turb.q_{r}
+  \Deqlab{equations:u-w-pi-theta:qr}
+\end{eqnarray}
+%
+\end{description}
+%
+ただし, エクスナー関数 $\pi$ は, 
+%
+\begin{eqnarray}
+\pi \equiv \frac{T}{\theta} 
+ = \left( \frac{p}{p_{0}} \right)^{R_{d}/{c_{p}}_{d}} 
+  \Deqlab{equations:pi}
+\end{eqnarray}
+%
+であり, 音速 $C_{s}$ は
+%
+\begin{eqnarray}
+ {C_{s}}^{2} 
+  \equiv  \frac{{c_{p}}_{d}}{{c_{v}}_{d}} R_{d} \pi \theta_{v}
+  =  \frac{{c_{p}}_{d}}{{c_{v}}_{d}} R_{d} \pi 
+  \left( \frac{\theta}{f} \right)
+\end{eqnarray}
+%
+である. 
+
+運動方程式の圧力勾配は, 温位とエクスナー関数を用いることで得られる. 
+%
+\begin{eqnarray}
+ \Dinv{\rho} dp 
+  &=& \frac{R_{d}  \pi (\theta/f)}{p} 
+  d \left( 
+     p_{0} \pi^{{c_{p}}_{d}/R_{d}}
+    \right)
+  \nonumber \\
+ &=& \frac{R_{d}  \pi (\theta/f) }{p} 
+  \left(
+  \frac{p_{0} {c_{p}}_{d}}{R_{d}} \pi^{{c_{p}}_{d}/R - 1} 
+  \right)
+  d\pi
+  \nonumber \\
+ &=& \frac{R_{d}  \pi (\theta/f) }{p} 
+  \left(
+   \frac{{c_{p}}_{d}}{R_{d}} p \pi^{-1} 
+  \right)d\pi
+  \nonumber \\
+ &=& {c_{p}}_{d} (\theta/f)   d\pi
+  \nonumber \\
+ &=& {c_{p}}_{d} \theta_{v}   d\pi
+\end{eqnarray}
+%
+
+
+圧力方程式は密度の式と連続の式を組み合わせることで得られる. 
+まず密度を $\rho= \rho(\theta, \pi, q_{v}, q_{x})$ として  
+$\rho$ の全微分を計算する. 
+%
+\begin{eqnarray}
+ d\rho 
+  &=&d \left[
+      \frac{p_{0} \pi^{c_{v/R_{d}}}}{R_{d} \theta_{v}} 
+     \right]
+  \nonumber \\
+  &=&d \left[
+      \frac{p_{0} \pi^{c_{v/R_{d}}}}{R_{d} (\theta/f)} 
+     \right]
+  \nonumber \\
+ &=& 
+  \frac{p_{0}}{R_{d} (\theta/f) } 
+  \pi^{(c_{v/R_{d}}-1)} 
+  \frac{{c_{v}}_{d}}{R_{d}}
+  d\pi
+  -
+      \frac{p_{0} \pi^{c_{v/R_{d}}} f}{R_{d}}
+       \frac{d\theta}{\theta^{2}}
+\nonumber \\
+  &&+ 
+      \frac{p_{0} \pi^{c_{v/R_{d}}} }{R_{d} \theta} 
+      \left( 
+      \sum \DP{f}{q_{v}} dq_{v}
+      + \sum \DP{f}{q_{c}} dq_{c}
+      + \sum \DP{f}{q_{r}} dq_{r}
+      \right)
+\nonumber \\
+ &=& 
+  {c_{p}}_{d} (\theta/f)
+  \left( \frac{{c_{v}}_{d}}{{c_{p}}_{d} R_{d} \pi (\theta/f) } \right)
+  \left(\frac{p_{0} \pi^{c_{v/R_{d}}} }{R_{d} (\theta/f)} \right)
+  d\pi
+  -
+      \frac{p_{0} \pi^{c_{v/R_{d}}} }{R_{d} (\theta/f)}
+       \frac{d\theta}{\theta}
+\nonumber \\
+  &&+ 
+   \Dinv{f}
+   \left(
+    \frac{p_{0} \pi^{c_{v/R_{d}}} }{R_{d} (\theta / f)} 
+   \right)
+   \left(
+    \sum \DP{f}{q_{v}} dq_{v}
+    + \sum \DP{f}{q_{c}} dq_{c}
+    + \sum \DP{f}{q_{r}} dq_{r}
+   \right)
+\nonumber \\
+ &=& 
+    \frac{ {c_{p}}_{d} \rho (\theta/f)}{{C_{s}}^{2} } d\pi
+  - \frac{\rho}{\theta} d\theta
+  + \rho \Dinv{f} 
+  \left( 
+   \sum \DP{f}{q_{v}} dq_{v}
+   + \sum \DP{f}{q_{c}} dq_{c}
+   + \sum \DP{f}{q_{r}} dq_{r}
+  \right)
+\nonumber \\
+ &=& 
+    \frac{ {c_{p}}_{d} \rho \theta_{v}}{{C_{s}}^{2} } d\pi
+  - \frac{\rho}{\theta} d\theta
+  + \rho \Dinv{f} 
+  \left( 
+   \sum \DP{f}{q_{v}} dq_{v}
+   + \sum \DP{f}{q_{c}} dq_{c}
+   + \sum \DP{f}{q_{r}} dq_{r}
+  \right)
+\Deqlab{pressure:theta-pi:drho}
+\end{eqnarray}
+%
+となる. \Deqref{pressure:theta-pi:drho} 式を圧力の式として整理すると, 
+%
+\begin{eqnarray}
+\DD{\pi}{t}
+ = 
+ \frac{{C_{s}}^{2} }{{c_{p}}_{d} \theta_{v} }
+ \left\{
+   \Dinv{\rho} \DD{\rho}{t}
+  + \Dinv{\theta}\DD{\theta}{t} 
+  - \Dinv{f}
+  \left(
+   \sum \DP{f}{q_{v}} dq_{v}
+   + \sum \DP{f}{q_{c}} dq_{c}
+   + \sum \DP{f}{q_{r}} dq_{r}
+  \right)
+\right\}
+\Deqlab{pressure:theta-p:p}
+\end{eqnarray}
+%
+となり, 連続の式を用いると, 
+%
+\begin{eqnarray}
+\DD{\pi}{t}
+ = \frac{{C_{s}}^{2} }{{c_{p}}_{d} \theta_{v} }
+ \left\{
+  - \Ddiv \Dvect{u} 
+  + \Dinv{\theta}\DD{\theta}{t} 
+  - \Dinv{f} 
+  \left(
+   \sum \DP{f}{q_{v}} dq_{v}
+   + \sum \DP{f}{q_{c}} dq_{c}
+   + \sum \DP{f}{q_{r}} dq_{r}
+  \right)
+\right\}
+\Deqlab{pressure:theta-p:p}
+\end{eqnarray}
+%
+となり, 圧力方程式が得られる. 

@@ -1,0 +1,605 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%表題  3 次元非静力学モデル deepconv -- 数理モデル
+%
+%履歴   2003-07-25 高橋 こう子   新規作成
+%       2003-09-03 高橋 こう子   骨子完成
+%       2003-09-08 高橋 こう子   参考文献追加
+%       2003-09-09 高橋 こう子   Appendix 追加
+%       2003-11-17 高橋 こう子   修正
+%       2003-11-22 高橋 こう子   運動エネルギーの式修正
+%       2004-07-25 小高正嗣      2 次元乾燥大気版へ再構成
+%       2004-11-30 小高正嗣      
+%       2005-01-31 杉山耕一朗
+%       2005-08-25 小高正嗣	 熱力学の式に散逸加熱項を追加
+%       2005-08-26 小高正嗣	 熱力学の式に基本場の拡散項を追加
+%       2006-03-10 杉山耕一朗
+%       2006-03-12 杉山耕一朗
+%       2011-03-01 山下達也      地表面フラックス・放射に関する記述を追加
+%       2012-04-18 小高正嗣      3 次元化
+%       2012/12/05 小高正嗣      圧力方程式に熱膨張項を追加
+%       2013/01/28 小高正嗣      乱流拡散項の表現を修正
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\chapter{座標系}
+
+\chapter{基礎方程式系}
+
+水平方向の座標変数を $x, y$, 鉛直方向の座標変数を $z$ と表し, 時間方向
+の変数は $t$ と表す.
+
+
+%--------------------------------------------------------------------
+\section{運動方程式・圧力方程式・熱の式・混合比の保存式}
+
+力学的な枠組みは, 準圧縮方程式系(Klemp and Wilhelmson,1978)を用いる. こ
+の方程式系では, 予報変数を水平一様な基本場とそこからのずれに分離し, 方
+程式の線形化を行っている. 方程式中の変数は付録 D に示す.
+
+以下に準圧縮方程式系の時間発展方程式を一覧する. 密度の式では乾燥成分と
+湿潤成分の分子量の差を考慮するが, 熱の式では考慮しない. また圧力方程式
+では非断熱加熱による大気の膨張と, 凝縮に伴う圧力変化を無視している.
+ 
+%
+\begin{description}
+
+ \item[運動方程式]
+%
+\begin{eqnarray}
+\DP{u}{t} 
+  &=&
+  - \left( 
+       (\bar{u} + u) \DP{u}{x} + (\bar{v} + v) \DP{u}{y} + w \DP{u}{z})  
+    \right) 
+  - w \DP{\bar{u}}{z} 
+  \nonumber \\ 
+&&  - {c_{p}}_{d} \bar{\theta_{v}} \DP{\pi}{x} 
+  + Turb.u  + Turb.\bar{u}
+\\
+%%
+\DP{v}{t} 
+  &=&
+  - \left( 
+       (\bar{u} + u) \DP{v}{x} + (\bar{v} + v) \DP{v}{y} + w \DP{v}{z} 
+    \right) 
+  - w \DP{\bar{v}}{z} \nonumber \\ 
+  &&- {c_{p}}_{d} \bar{\theta_{v}} \DP{\pi}{y} 
+  + Turb.v + Turb.\bar{v}
+\\
+%%
+\DP{w}{t} 
+  &=&
+  - \left( 
+     (\bar{u} + u) \DP{w}{x} + (\bar{v} + v) \DP{w}{y} + w \DP{w}{z} 
+    \right)
+  - {c_{p}}_{d} \bar{\theta_{v}} \DP{\pi}{z}
+  + Turb.w  
+\nonumber \\
+&& + \left(
+   \frac{\theta}{\bar{\theta}}
+   + \frac{\sum q_{v}/M_{v}}{1/M_{d} + \sum  \bar{q_{v}}/M_{v}}
+   - \frac{\sum q_{v} + \sum q_{c} + \sum q_{r}}
+          {1 + \sum \bar{q_{v}}}
+ \right) g
+\end{eqnarray}
+
+\item[圧力方程式]
+%
+\begin{eqnarray}
+%
+\DP{\pi}{t} 
+&=& 
+- \left\{
+   \frac{\overline{{C_{s}}^{2}}}{{c_{p}}_{d} \bar{\theta_{v}}}
+   \left( \DP{u}{x} + \DP{v}{y} \right)
+%
+   + 
+   \frac{\overline{{C_{s}}^{2}}}{{c_{p}}_{d}  \bar{\rho} \bar{\theta_{v}}^{2}}
+   \DP{\bar{\rho} \bar{\theta_{v}} w}{z}
+  \right\} \nonumber \\
+%- \frac{\overline{{C_{s}}^{2}}}{{c_{p}}_{d}  \bar{\rho} \bar{\theta_{v}}^{2}}
+%  \DP{}{x_{j}}(\bar{\rho} \bar{\theta_{v}} u_{j}) \nonumber \\
+&&
+- \left(
+       (\bar{u} + u) \DP{\pi}{x} + (\bar{v} + v) \DP{\pi}{y} + w \DP{\pi}{z} 
+  \right)
+  + \frac{R_{d} \pi}{{c_{v}}_{d}} \left(\DP{u}{x} + \DP{v}{y} +
+				   \DP{w}{z}\right)
+ \nonumber \\
+&&
++ 
+\frac{\overline{C_{s}^{2}}}{c_{p_{d}}\overline{\theta _{v}}}
+   \left\{
+     \frac{\dot{\theta}}{\overline{\theta}}
+     - \left(
+         \frac{\sum \dot{q}_{v} + \sum \dot{q}_{c} + \sum \dot{q}_{r}}
+            {1 + \sum \overline{q_{v}}}.         
+       - \frac{\sum \dot{q_{v}}/M_{v}}{1/M_{d} + \sum \overline{q_{v}}/M_{v}}
+     \right)
+   \right\}.
+\end{eqnarray}
+
+\item[熱の式]
+%
+\begin{eqnarray}
+\DP{\theta}{t} 
+ &=& 
+ - \left( (\bar{u} + u) \DP{\theta}{x} + (\bar{v} + v) \DP{\theta}{v} + w \DP{\theta}{z} \right)
+ - w\DP{\bar{\theta}}{x} 
+ + \Dinv{\bar{\pi}} \left(Q_{cnd} + Q_{rad} + Q_{dis}\right)
+ \nonumber \\
+&&
+ + Turb.\bar{\theta}
+ + Turb.\theta  
+\Deqlab{def_theta}
+\end{eqnarray}
+
+
+\item[混合比の保存式]
+\begin{eqnarray}
+\DP{q_{v}}{t} 
+&=&
+  - \left( (\bar{u} + u) \DP{q_{v}}{x} + (\bar{v} + v) \DP{q_{v}}{y} + w \DP{q_{v}}{z} \right)
+  - w\DP{\bar{q_{v}}}{x} \nonumber \\
+&& + Src.q_{v}  + Turb.q_{v} + Turb.\bar{q_{v}}, 
+\Deqlab{def_qv}
+\\
+%
+\DP{q_{c}}{t} 
+&=& 
+- \left( (\bar{u} + u) \DP{q_{c}}{x} + (\bar{v} + v) \DP{q_{c}}{y} + w \DP{q_{c}}{z} \right)
+\nonumber \\
+&&
++ Src.q_{c} + Turb.q_{c}
+\Deqlab{def_qc}
+\\
+%
+\DP{q_{r}}{t} 
+&=&
+  - \left( (\bar{u} + u) \DP{q_{c}}{x} + (\bar{v} + v) \DP{q_{r}}{y} + w
+     \DP{q_{c}}{z} \right) \nonumber \\
+&&  + Src.q_{r} + Fall.q_{r} + Turb.q_{r}
+\Deqlab{def_qr}
+%
+\end{eqnarray}
+%
+\end{description}
+
+ただし, $\bar{~}$ の付いた変数は水平一様な基本場であることを示し, 
+上付き添え字 $c$ は個々の凝縮成分を示す. 
+%
+\begin{description}
+
+\item[エクスナー関数 $\pi$]
+%
+ \begin{equation}
+  \pi \equiv \left(\frac{p}{p_{0}}\right)^{R_{d}/{c_{p}}_{d}}
+  \Deqlab{エクスナー関数の定義}
+ \end{equation}
+%
+
+\item[温位 $\theta$]
+%
+ \begin{eqnarray}
+  \theta \equiv T \left(\frac{p_{0}}{p}\right)^{R_{d}/{c_{p}}_{d}}
+         = \frac{T}{\pi}
+  \Deqlab{温位の定義}
+ \end{eqnarray}
+%
+
+\item[密度 $\rho$]
+%
+ \begin{eqnarray}
+  \rho 
+   &=& \frac{p}{R_{d}T} 
+   \left(
+    \frac{1/{M_{d}}}
+    {1/M_{d} + \sum{{q_{v}}/{M_{v}}}} \right)
+   \left( 1 + \sum q_{v} + \sum q_{c} + \sum q_{r} \right) 
+   \nonumber \\
+  &=&
+   \frac{p}{R_{d}T_{v} }    
+  = 
+   \frac{p_{0} \pi^{{c_{v}}_{d}/R_{d}}}{R_{d} \theta_{v}}
+ \Deqlab{密度の定義}
+\end{eqnarray}
+
+\item[仮温位 $\theta_{v}$]
+%
+\begin{eqnarray}
+ \theta_{v} = 
+  \frac{\theta}{
+   \left(     \frac{1/M_{d}}
+    {1/M_{d} + \sum{{q_{v}}/{M_{v}}}} \right)
+   \left( 1 + \sum q_{v} + \sum q_{c}  + \sum q_{r} \right) }
+\end{eqnarray}
+
+\item[音波速度 ${C_{s}}^{2}$] 
+%
+\begin{eqnarray}
+&& {C_{s}}^{2}
+ = \frac{{c_{p}}_{d}}{{c_{v}}_{d}} R_{d}  \pi \theta_{v}
+\end{eqnarray}
+%
+\end{description}
+
+
+%--------------------------------------------------------------------
+%\pagebreak
+
+\section{雲微物理過程のパラメタリゼーション}
+
+方程式系に含まれる凝縮による加熱項 $Q_{cnd}$, 生成項 $Src$, 
+落下項 $Fall$ の評価は, 
+中島(1998)で用いられた Kessler (1969) のパラメタリゼーションに従う. 
+
+暖かい雨のバルク法のパラメタリゼーションでは, 気相と凝縮相を\Dtabref
+{Kessler (1969) のカテゴリー}に記載した 3 つのカテゴリーに分ける. 3 つ
+のカテゴリー間で生じる微物理素過程を\Dtabref{Kessler (1969) の雲微物理過程}
+に示す. これらの量は全て正の値として定義される. なお, 水蒸気が直接雨水
+に凝結する過程は無視する.
+%
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{lll}\\ \hline
+記号 & 意味 & 内容                \\ \hline
+$q_{v}$   &   気相の混合比   &  気体の状態で大気中に存在する水. \\
+$q_{c}$   &   雲水混合比     &  落下速度がゼロな液体の粒子. \\
+          &                  &  実際の大気中の雲粒に対応する.\\
+          &                  &  通常 100 $\mu$m 以下の微小な流体粒子である.  \\
+$q_{r}$   &   雨水混合比     &  有意な落下速度を持つ液体の粒子. \\
+          &                  &  実際の大気中の雨粒に対応する. \\ \hline
+\end{tabular}
+\caption{Kessler (1969) のパラメタリゼーションにおけるカテゴリー.}
+\Dtablab{Kessler (1969) のカテゴリー}
+\end{center}
+\end{table}
+%
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{ll}\\ \hline
+記号 & 内容                \\ \hline
+$CN_{vc}$  & 凝結による水蒸気から雲水への変換 (condensation). \\
+$EV_{cv}$  & 蒸発による雲水から水蒸気への変換 (evaporation). \\
+$EV_{rv}$  & 蒸発による雨水から水蒸気への変換 (evaporation). \\
+$CN_{cr}$  & 併合成長による雲水から雨水への変換 (autocondensation). \\
+           & 併合や水蒸気拡散により, 雲粒子が雨粒の大きさにまで成長する \\
+$CL_{cr}$  & 衝突併合による雲水から雨水への変換 (collection). \\ 
+           & 大水滴が小水滴を衝突併合する. \\
+$PR_{r}$   & 雨水の重力落下に伴う雨水混合比の変化率 (Precipitation). \\ \hline
+\end{tabular}
+\caption{Kessler (1969) のパラメタリゼーションにおける雲微物理素過程}
+\Dtablab{Kessler (1969) の雲微物理過程}
+\end{center}
+\end{table}
+
+この微物理素過程を用いて \Deqref{def_qv} -- \Deqref{def_qr} 式を書き直すと, 
+以下のようになる. 
+%
+\begin{eqnarray}
+\DP{\theta}{t} 
+ &=& 
+ - \left( (\bar{u} + u) \DP{\theta}{x} + (\bar{v} + v) \DP{\theta}{y} + w \DP{\theta}{z} \right)
+ - w\DP{\bar{\theta}}{x} 
+ + \frac{L}{{c_{p}}_{d} \bar{\pi}} \left( CN_{vc} - EV_{cv} - EV_{rv} \right)
+\nonumber \\
+&& + \Dinv{\bar{\pi}} \left(Q_{rad} + Q_{dis}\right)
+ + Turb.\bar{\theta}
+ + Turb.\theta  
+\\
+\DP{q_{v}}{t} 
+&=&
+  - \left( (\bar{u} + u) \DP{q_{v}}{x} + (\bar{v} + v) \DP{q_{v}}{y} + w \DP{q_{v}}{z} \right)
+  - w\DP{\bar{q_{v}}}{x} 
+  - \left( CN_{vc} - EV_{cv} - EV_{rv} \right)
+\nonumber \\
+&& 
+  + Turb.q_{v} + Turb.\bar{q_{v}}, 
+\Deqlab{def_qv2}
+\\
+%
+\DP{q_{c}}{t} 
+&=& 
+  - \left( (\bar{u} + u) \DP{q_{c}}{x} +  (\bar{v} + v) \DP{q_{c}}{y} + w \DP{q_{c}}{z} \right)
+  + ( CN_{vc} - EV_{cv} - CN_{cr} - CL_{cr})  
+  \nonumber \\
+& & + Turb.q_{c}, 
+\Deqlab{def_qc2}
+\\
+%
+\DP{q_{r}}{t} 
+&=&
+  - \left( (\bar{u} + u) \DP{q_{c}}{x} + (\bar{v} + v) \DP{q_{c}}{y} + w \DP{q_{c}}{z} \right)
+  + (CN_{cr} + CL_{cr} - EV_{rv} ) + PR_{r} \nonumber \\
+& & + Turb.q_{r}
+\Deqlab{def_qr2}
+%
+\end{eqnarray}
+%
+ここで, 
+$\gamma = L_{v}/ ({c_{p}}_{d} \pi)$ であり, 
+$L_{v}$ は水の蒸発の潜熱[J K$^{-1}$ kg$^{-1}$], 
+${c_{p}}_{d}$ は乾燥大気の定圧比熱[J K kg$^{-1}$], 
+$\pi$ はエクスナー関数である. 
+
+
+微物理素過程は以下のように定式化する. 
+
+\begin{description}
+
+ \item[水蒸気と雲水の間の変換: $-CN_{vc} + EV_{cv}$]~\\
+%
+	    雲水は粒が小さく, 水蒸気との間で瞬間的に飽和調節が起こるもの
+	    とする. すなわち, 移流などの項を計算した後の温度と水蒸気量が
+	    過飽和状態となっている場合には, ちょうど飽和になる量の水蒸気
+	    を凝縮させる. 一方, 移流などの項を計算した後に, 雲水が存在す
+	    るにも拘わらず未飽和になっている場所では, ちょうど飽和になる
+	    量の雲水を蒸発させる. 	    
+
+ \item[雲水の併合成長: $CN_{cr}$] ~\\
+%
+	    Kessler (1969) に従って, 以下のように与える.
+%
+	    \begin{eqnarray}
+	     && CN_{cr} = ( q_{c} - q_{c0} ) / \tau _{ac}
+	      \Deqlab{def_CNcr}
+	    \end{eqnarray}
+%
+ \item[雲水の衝突併合: $CL_{cr}$] ~\\
+%
+	    Kessler (1969) に従って, 以下で定式化する. 
+%
+	    \begin{eqnarray}
+	     && CL_{cr} = 2.2  q_{c} (\bar{\rho} q_{r})^{0.875} .
+	      \Deqlab{def_CLcr}
+	    \end{eqnarray}
+%
+ \item[雨水の蒸発: $EV_{rv}$]~\\
+%
+	    \begin{eqnarray}
+	     EV_{rv} = 
+	      4.85 \times 10^{-2} (q_{vsw} - q_{v}) (\bar{\rho} q_{r})^{0.65}
+	    \end{eqnarray}
+%
+\item[雨水のフラックス: $PR_{r}$ ]~\\
+%
+	    雨水の重力落下による混合比の変化率は, 
+%
+	    \begin{eqnarray}
+	     PR_{r} = \Dinv{\bar{\rho}} \DP{}{z}(\bar{\rho} U_{r} q_{r}). 
+	      \Deqlab{teishiki:def_PRr}
+	    \end{eqnarray}
+%
+	    であり, 雨水の終端落下速度 $U_{r}$ [m s$^{-1}$] は
+%
+	    \begin{eqnarray}
+	     U_{r} = 12.2 (q_{r})^{0.125} 
+	    \end{eqnarray}
+%
+	    で与える. 
+
+\end{description}
+
+
+%--------------------------------------------------------------------
+%\pagebreak
+
+\section{放射加熱項の表現}
+
+放射加熱項 $Q_{rad}$ は正味の上向き放射フラックス $F_{net}$ を用いて
+以下のように表される.
+\[
+  Q_{rad} = - \frac{1}{\overline{\rho}c_{p_{d}}}\DD{F_{net}}{z}
+\]
+
+本モデルでは $F_{net}$ は陽に計算せず, $Q_{rad}$ は高度のみに依存する
+パラメタとして与える.  
+与えることができる $Q_{rad}$ の一例として, 中島(1994)の表式を
+以下に示す. 
+
+$Q_{rad}$~を
+%%
+%%
+\begin{equation}
+\Deqlab{housha}
+Q_{rad} \equiv \frac{1}{\pi}Q_R + Q_N
+\end{equation}
+%%
+%%
+と表現する.~ここで$Q_R$~は,
+%%
+%%
+\begin{equation}
+\Deqlab{QR}
+Q_R(z) = \left \{
+\begin{array}{lll}
+0 & [\mathrm{\mathrm{K/day}}] & z > 15000~[\mathrm{\mathrm{m}}] \\
+2(15000 - z)/5000 & [\mathrm{K/day}] & 10000~[\mathrm{m}]< z <
+ 15000~[\mathrm{m}
+]\\
+2 & [\mathrm{K/day}] & z < 10000~[\mathrm{m}]
+\end{array}
+\right.
+\end{equation}
+%%
+%%
+であり,~高度によって変化する水平一様な冷却を表している.~また,~$Q_N$~は
+ニュートン
+冷却であり,
+%%
+%%
+\begin{equation}
+\Deqlab{QN}
+Q_N = \frac{\theta'_{MeanX}}{D_N}
+\end{equation}
+%%
+%%
+である.~ここで$\theta'_{MeanX}$~は温位の擾乱成分を$x$~方向に平均した値で,~%
+$D_N = 1/5~[1/\mathrm{day}]$~は$Q_N$~の強度である.~この項は,~モデル全体
+の温度が
+基本場から
+大きく離れないようにする項である.
+
+
+%--------------------------------------------------------------------
+%\pagebreak
+
+\section{乱流混合のパラメタリゼーション}
+
+\subsection{運動方程式中の拡散項} 
+Klemp and Wilhelmson (1978) および CReSS (坪木と榊原, 2001) と同様に,
+1.5 次のクロージャーを用いることで粘性拡散項は以下のように書ける.
+%
+ \begin{eqnarray}
+  Turb.{u_{i}} 
+   &=& - \DP{}{x_{j}} \overline{(u_{i}^{\prime} u_{j}^{\prime})}
+   \nonumber \\
+  &=& - \frac{1}{\overline{\rho}}\DP{}{x_{j}}
+       \left[
+          - \overline{\rho}K_{m} \left(\DP{u_{i}}{x_{j}}
+	  	        + \DP{u_{j}}{x_{i}}\right)
+	  + \frac{2}{3} \overline{\rho}\delta_{ij} E
+       \right].
+ \end{eqnarray}
+ ここで $K_{m}$ は運動量に対する乱流拡散係数であり,  $E$ は
+ サブグリッドスケールの乱流運動エネルギー
+ \begin{eqnarray}
+  E = \frac{1}{2}
+      \overline{(u^{\prime})^{2} + v^{\prime})^{2} + (w^{\prime})^{2}}
+      = \frac{{K_{m}}^{2}}{C_{m}^{2} l^{2}}
+ \end{eqnarray}
+ である.
+
+\subsection{熱力学の式の拡散項}
+Klemp and Wilhelmson (1978) および CReSS (坪木と榊原, 2001) と同様に,
+1.5 次のクロージャーを用いることで温位の粘性拡散項は以下のように書ける.
+%
+ \begin{eqnarray}
+  Turb.{\theta} 
+   &=& - \DP{}{x_{j}} \overline{u_{i}^{\prime} \theta^{\prime}}
+   \nonumber \\
+   &=& \frac{1}{\overline{\rho}}\DP{}{x_{j}} 
+          \left(\overline{\rho}K_{h}\DP{\theta}{x_{j}}\right)
+  .
+ \end{eqnarray}
+ここで $K_{h}$ は温位に対する乱流拡散係数である. 
+
+\subsection{乱流拡散係数の式}
+
+Klemp and Wilhelmson (1978) および CReSS (坪木と榊原, 2001) と同様に,
+1.5 次のクロージャーを用いることで, 乱流拡散係数の時間発展方程式は以
+下のように書ける.
+%
+\begin{eqnarray}
+ \DP{K_{m}}{t}
+  &=& 
+   - \left( 
+      (\bar{u} + u) \DP{K_{m}}{x} + (\bar{v} + v) \DP{K_{m}}{y} + w \DP{K_{m}}{z}
+     \right)
+   - \frac{3 g C_{m}^{2} l^{2}}{ 2 \overline{\theta_{v}}} 
+      \left(\DP{\theta_{el}}{z} \right)
+\nonumber \\
+  && 
+  + \left( C_{m}^{2} l^{2} \right) \left\{ 
+       \left( \DP{u}{x} \right)^{2}
+     + \left( \DP{v}{y} \right)^{2}
+     + \left( \DP{w}{z} \right)^{2}
+    \right\}
+\nonumber \\
+  &&
+  +  \frac{ C_{m}^{2} l^{2} }{2}\left\{
+     \left( \DP{(\bar{u} + u)}{z} + \DP{w}{x}\right)^{2}
+   + \left( \DP{w}{y} + \DP{(\bar{v} + v)}{z}\right)^{2}
+   + \left( \DP{v}{x} + \DP{u}{y}\right)^{2}
+     \right\}
+\nonumber \\
+  &&
+  - \frac{K_{m}}{3}
+     \left( \DP{u}{x} + \DP{v}{y} + \DP{w}{z} \right) 
+   + \Dinv{2}
+       \left(\DP[2]{K_{m}^{2}}{x} + \DP[2]{K_{m}^{2}}{y} + \DP[2]{K_{m}^{2}}{z}
+       \right)
+\nonumber \\
+   && 
+   + \left(\DP{K_{m}}{x}\right)^{2}
+   + \left(\DP{K_{m}}{y}\right)^{2}
+   + \left(\DP{K_{m}}{z}\right)^{2}
+   - \Dinv{2 l^{2}} K_{m}^{2}
+\Deqlab{kiso:TurbE}
+\end{eqnarray}
+%
+ここで $C_{\varepsilon} = C_{m} = 0.2$, 混合距離 $l =
+\mbox{Min}(\Delta z, \mbox{Min}(\Delta x, \Delta y))$ とする. ただし
+$\Delta x, \Delta y, \Delta z$ はそれぞれ $x$, $y$, $z$ 方向の格子間隔
+である.  $\theta_{el}$ は以下のように定義する
+%
+\begin{eqnarray}
+ \theta_{el} &=& \overline{ \theta_{v}} + \theta_{v}^{'} \;\;\; (for \;\; q_{c} = 0)\\
+%
+ \theta_{el} 
+  &=& \overline{\theta_{v}} + \theta_{v}^{'} + \frac{ \sum L
+  q_{v}}{{c_p}_{d} \bar{\pi}}  
+   \;\;\; (for \;\; q_{c} > 0)
+\end{eqnarray}
+%
+ただし, 
+%
+\begin{eqnarray}
+ \overline{\theta_{v}} + \theta_{v}^{'}   &=& 
+    \bar{\theta_{v}} 
+    \left\{
+     1 + \frac{\theta}{\bar{\theta}}
+     + \frac{\sum q_{v}/M_{v}}{1/M_{d} + \sum  \bar{q_{v}}/M_{v}}
+     - \frac{\sum q_{v} + \sum q_{c} + \sum q_{r}}
+     {1 + \sum \bar{q_{v}}}
+    \right\}
+\end{eqnarray}
+%
+である.
+
+
+\subsection{散逸加熱項の表現}
+
+散逸加熱項 $Q_{dis}$ は, 乱流運動エ
+ネルギーの散逸項をもとに, 以下のように与える.
+\begin{equation}
+  Q_{dis} = \frac{1}{\overline{c_{p}}}\frac{C_{\varepsilon}}{l}
+            \frac{K_{m}^{3}}{(C_{m}l)^{3}}.
+\end{equation}
+ここで $l =
+\mbox{Min}(\Delta z, \mbox{Min}(\Delta x, \Delta y))$ である.
+
+\subsection{地表面フラックスの表現}
+
+本モデルでは, 地表面からの運動量,~熱,~水蒸気のフラックスの表現として, 
+中島~(1994)~による単純なバルク法の定式化を採用している. 
+以下では, 地球大気に対する単純なバルク法の表式を示す. 
+
+地表面からの運動量,~熱,~水蒸気のフラックスをそれぞれ $F_{u}$, 
+$F_{\theta}$, $F_{q_v}$ とすると, 
+\begin{eqnarray}
+F_{u} &=& -C_D V_{sfc} \rho u_{z=0}, \\
+F_{v} &=& -C_D V_{sfc} \rho v_{z=0}, \\
+F_{\theta}    &=& -C_D V_{sfc} \rho (T_{z=0} - T_{sfc}), \\
+F_{q_v}       &=& -C_D V_{sfc} \rho (q_{vz=0} - q_{sfc}) \nonumber \\
+              &=& -C_D V_{sfc} \rho \left(q_{vz=0} -
+ \frac{M_v}{M_d}\frac{e_{sfc}}{p_{sfc}}
+               \right).
+\end{eqnarray}
+ここで,~$C_D = 0.0015$~はバルク係数,~$e$ は飽和蒸気圧であり,~下付き添え
+字``$_{z=
+0}$''~は大気最下層の値を意味し,~下付き添え
+字``$_{sfc}$''~で地表面の値を表す.~また,~地表面風速$V_{sfc}$ は
+\[
+V_{sfc} = \sqrt{(\bar{u} + u)^2 + (\bar{v} + v)^2 + {v_0}^2}
+\]
+で表される. ここで $v_03$ [m/s] は風速の最低値であり, 風が吹いていなく
+ても日射による加熱や蒸発といった現実的な現象が起きることを保証するため
+のものである.
+
+
+
+%--------------------------------------------------------------------
+
+

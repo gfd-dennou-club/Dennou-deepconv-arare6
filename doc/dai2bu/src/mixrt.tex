@@ -1,0 +1,202 @@
+% 表題; バルク法の離散化
+%
+% 履歴: 2005/09/20 杉山耕一朗
+%       2006/03/12 杉山耕一朗
+
+\section{凝縮成分の混合比の保存式の離散化}
+
+時間方向の離散化にはリープフロッグ法を用いる.
+移流を安定して解くために数値粘性項
+$Diff$ を追加している. 
+また, $CN_{vc}, EV_{cv}$ 項は湿潤飽和調節法より決めるため, 
+ここではそれらの項を含めない. 
+%
+\begin{eqnarray}
+%
+%
+\end{eqnarray}
+%
+であり, それぞれ, 
+%
+\begin{eqnarray}
+\end{eqnarray}
+%
+
+
+\Deqref{risan:time-div_qv} -- \Deqref{risan:time-div_qr} 式の
+それぞれの項を書き下す. ここで $\theta$, $q_{v}$, $q_{c}$, $q_{r}$ をまとめて 
+$\phi$ で表すことにする. 移流項は以下のようになる. 
+%
+\begin{eqnarray}
+ \left[ Adv.\phi \right]_{i,k}^{t} = 
+     \left[ [w]_{i,k(w)} \left[ \DP{(\bar{\phi})}{z} \right]_{i,k(w)} \right]_{i,k}.
+\end{eqnarray}
+%
+粘性拡散項は CReSS と同様に 1.5 次のクロージャーを用いると以下のように書
+ける.  
+%
+\begin{eqnarray}
+\left[Turb.{\phi} \right]_{i,k}^{t - \Delta t} &=& 
+   \left[ \DP{}{x} \left(
+         \left[ K_{h} \right]_{i(u),k}
+         \left[ \DP{\phi}{x} \right]_{i(u),k}
+   \right) \right]_{i,k}^{t - \Delta t}
+\nonumber \\
+&&
+     + \left[ \DP{}{z}\left(
+       \left[ K_{h} \right]_{i,k(w)}
+       \left[ \DP{(\phi + \overline{\phi})}{z} \right]_{i,k(w)}
+     \right) \right]_{i,k}^{t - \Delta t}.
+ \end{eqnarray}
+%
+数値粘性項は以下のように書ける.   
+%
+\begin{eqnarray}
+ \left[ Diff.{\phi} \right]_{i,k}^{t - \Delta t} =  
+     \nu_{h} \left[ \DP{}{x} \left(\DP{\phi}{x}\right)_{i(u),k}
+	     \right]_{i,k
+}^{t - \Delta t}
+   + \nu_{v} \left[ \DP{}{z} \left(\DP{\phi}{z}\right)_{i,k(w)}
+	     \right]_{i,k
+}^{t - \Delta t}.
+\end{eqnarray}
+%
+さらに雲微物理素過程を具体的に離散化する. 飽和混合比 $q_{vsw}$ は 
+Tetens の式を用いる. 
+%
+ \begin{eqnarray}
+&&  \left[ q_{vsw}  \right]_{i,k}^{t}
+   = 
+   \left[
+    \varepsilon \frac{610.78}{(\bar{p} + p)}
+    \exp\left( 17.269 \frac{\Pi ( \bar{\theta} + \theta ) - 273.16}
+	 {\Pi (\bar{\theta} + \theta) -	 35.86}\right)
+    \right]_{i,k}^{t}. \\
+&& \hspace{1em} \varepsilon = 0.622. 
+ \end{eqnarray}
+%
+雲水から雨水への変換を表す $CN_{cr}$, $CL_{cr}$ は以下のようになる. 
+%
+ \begin{eqnarray}
+  && \left[ CN_{cr} \right]_{i,k}^{t} 
+   = \left[ k_{1} q_{c} - a \right]_{i,k}^{t}, \\ 
+  && \left[ CL_{cr} \right]_{i,k}^{t}
+   = \left[ k_{2}  q_{c} q_{r}^{0.875} \right]_{i,k}^{t}.\\
+  && \hspace{1em} k_{1} = 0.001, \hspace{2em} a = 0.001, \hspace{2em}
+   k_{2} = 2.2 . \nonumber
+ \end{eqnarray}
+%
+雨水の蒸発を表す $EV_{rv}$ は以下のようになる. 
+%
+ \begin{eqnarray}
+&&  \left[ EV_{rv} \right]_{i,k}^{t} = 
+   \left[
+    \Dinv{\bar{\rho}} \frac{(1 - q_{v}/q_{vsw}) C(\bar{\rho}
+    q_{r})^{0.525}}{5.4 \times 10^{5} + 2.55 \times 10^{6}
+    /(\bar{p} + p) q_{vsw}}
+   \right]_{i,k}^{t}. \\
+&&  \hspace{1em} C = 1.6 + 124.9(\bar{\rho} q_{r})^{0.2046}. 
+ \end{eqnarray}
+%
+降水による雨水フラックスを表す $PR_{r}$ は以下のように書ける
+	    \footnote{Klemp and Wilhelmson (1978) では,
+	    $(\rho_{0}/\bar{\rho})^{1/2}$ となっている. Klemp and
+	    Wilhelmson (1978) が誤っているのだろうか?}. 
+%
+ \begin{eqnarray}
+&&  \left[ PR_{r} \right]_{i,k}^{t} 
+   = \left[
+      \Dinv{[\bar{\rho}]_{i,k(w)}} 
+      \left[
+       \DP{}{z}(\bar{\rho} U_{r} q_{r})
+      \right]_{i,k(w)}
+     \right]_{i,k}^{t}. \\
+&& \hspace{1em}  \left[ U_{r} \right]_{i,k}^{t} 
+   = 
+   \left[
+    36.34 (\bar{\rho} q_{r})^{0.1346} \left(\frac{\rho_{0}}{\bar{\rho}}\right)^{-1/2}
+   \right]_{i,k}^{t}. \nonumber
+ \end{eqnarray}
+%
+ただし, $\rho_{0}$ は基本場の地上面での密度である.
+ 
+
+水蒸気と雲水の間の変換を表す $-CN_{vc} + EV_{cv}$ は, 陽に定式化を与える
+のではなく, 次節で述べる湿潤飽和調節法を用いて評価する. 
+
+
+
+\subsection{湿潤飽和調節法}
+
+Klemp and Wilhelmson (1983), CReSS ユーザーマニュアル(坪木と榊原, 2001)
+では, 水蒸気と雲水の間の変換を表す $-CN_{vc} + EV_{cv}$ は, 
+Soong and Ogura (1973) において開発された
+湿潤飽和調節法を用いる. 
+この方法は $dS=0$ の断熱線と, $\mu_{水蒸気} = \mu_{水}$ の
+平衡条件($\mu$ は化学ポテンシャル)の交わる温度・圧力・組成を
+反復的に求める数値解法である. 
+以下ではそのやり方を解説する. 
+
+
+湿潤飽和調節法を用いる場合, 
+まず始めに \Deqref{risan:time-div_theta} -- \Deqref{risan:time-div_qr}
+式から求まる量に $*$ を添付し, $[\theta]^{*}$, 
+$[q_{v}]^{*}$, $[q_{c}]^{*}$, $[q_{r}]^{*}$ とする. 
+水に対する過飽和混合比
+%
+\begin{eqnarray}
+ \Delta q_{c} = MAX\{0, [q_{v}]^{*} - q_{vsw}([\theta]^{*})\}  
+\end{eqnarray}
+%
+が $\Delta q_{c} > 0$, もしくは雲粒混合比が $q_{c}^{*} > 0$ なら
+ば, 次式を用いて暫定的に $\theta$, $q_{v}$, $q_{c}$ を求める. 
+%
+\begin{eqnarray}
+ \left[ \theta \right]^{t + \Delta t} 
+  &=& 
+  \theta^{*} + 
+  \frac
+  { \gamma ( [q_{v}]^{*} -  q_{vsw}([\theta]^{*})) }
+  { 1 + \gamma \DP{q_{vsw}([\theta]^{*})}{\theta} }
+  \nonumber \\
+  &=& 
+  \theta^{*} + 
+  \frac
+  { \gamma ( [q_{v}]^{*} -  q_{vsw}([\theta]^{*})) }
+  { 1 + \gamma q_{vsw} \frac{4097.93 \Pi}{\left\{ \Pi (\bar{\theta} + \theta ) - 35.86\right\}^{2}}},
+\Deqlab{moistajst_theta1}
+  \\
+ \left[ q_{v} \right]^{t + \Delta t}
+  &=& [q_{v}]^{*} + \frac{[\theta]^{*} - [\theta]^{t + \Delta t}}{\gamma},
+\Deqlab{moistajst_qv1}
+  \\
+ \left[ q_{c} \right]^{t + \Delta t}
+  &=& [q_{v}]^{*} + [q_{c}]^{*} - [q_{v}]^{t + \Delta t} .
+\Deqlab{moistajst_qc1}
+\end{eqnarray}
+%
+ただし, $\gamma = L_{v}/(c_{p} \Pi)$ である. 
+もしも $[q_c]^{t + \Delta t} > 0$ ならば, 暫定的に得られた値を $*$ 付き
+のものに置き換え, \Deqref{moistajst_theta1} -- \Deqref{moistajst_qc1} 式
+の値が収束するまで繰り返し適用する. 普通, 高々数回繰り返せば収束し, 
+調整後の値が得られるそうである. 
+
+もしも $q_{c}^{t + \Delta t} < 0$ の場合には, 
+%
+\begin{eqnarray}
+&& \left[ \theta \right]^{t + \Delta t} = 
+  [\theta]^{*}  - \gamma [q_{c}]^{*},
+  \Deqlab{moistajst_theta2}
+  \\
+ && \left[ q_{v} \right]^{t + \Delta t},
+  = [q_{v}]^{*} + [q_{c}]^{*}
+  \Deqlab{moistajst_qv2}
+  \\
+ && \left[ q_{c} \right]^{t + \Delta t} 
+  = 0
+ \Deqlab{moistajst_qc2}
+\end{eqnarray}
+%
+とし, 繰り返しを中止する. 
+
+

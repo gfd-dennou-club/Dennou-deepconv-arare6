@@ -1,0 +1,108 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  2 次元非静力学モデル -- 離散モデル  付録 B
+%
+% 履歴  2004/11/24 小高正嗣 作成開始
+%       2005/04/13  小高正嗣
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+
+\chapter{音波減衰項について}
+\Dchaplab{appendix-b}
+
+
+本モデルで用いている時間方向の離散化方法(時間分割法)は, Klemp and
+Wilhelmson (1978) によって最初に提案された方法である. この方法を用いる
+と, 音速および移流に対する CFL 条件をそれぞれ満たしている場合でも計算
+不安定を起こす場合がある. この影響は短い時間間隔で積分するステップ数 
+$2\Delta t/\Delta \tau$ を増加させていくにつれ大きくなる (Skamarock
+and Klemp, 1992, 図 1 を参照).  Skamarock and Klemp (1992) はこの計算
+不安定を回避するため, 音波を選択的に減衰させるフィルターとして運動方程
+式に音波減衰項を導入することを提案した.
+
+音波減衰項は速度場の発散に対する拡散として作用する.
+このことは音波減衰項を含む線形化された基礎方程式
+\begin{eqnarray}
+ \DP{u}{t} &=& - \overline{c}_{p}\overline{\theta}_{v}
+                 \DP{\pi}{x} + \alpha\DP{D}{x} , \\
+ \DP{w}{t} &=& - \overline{c}_{p}\overline{\theta}_{v}
+                 \DP{\pi}{z} + \alpha\DP{D}{z} 
+               + g\frac{\theta}{\overline{\theta}_{v}}, \\
+ \DP{\pi}{t} &=& - \frac{\overline{c}^{2}}{\overline{c}_{p}
+                 \overline{\rho}\overline{\theta}_{v}^{2}}
+                 \left[\DP{\overline{\rho}\overline{\theta}_{v}u}{x} +
+                       \DP{\overline{\rho}\overline{\theta}_{v}w}{z}
+                 \right], \\
+ \DP{\theta}{t} &=& -w\DP{\overline{\theta}_{v}}{z}, \\
+ D &=& \DP{u}{x}+\DP{w}{z} \nonumber
+\end{eqnarray}
+から発散方程式
+\begin{eqnarray}
+ \DP{D}{t} &=& - \overline{c}_{p}\overline{\theta}_{v}\Dlapla \pi   
+               + g\DP{}{z}\left(\frac{\theta}{\overline{\theta}_{v}}\right)
+             + \alpha \Dlapla D, \Deqlab{音波減衰項を含む線形発散方程式}\\
+ \Dlapla &=& \DP[2]{}{x} + \DP[2]{}{z} \nonumber
+\end{eqnarray}
+を求めることで理解することができる. 
+
+音波減衰項は速度場の発散に対する拡散なので, 重力波成分も拡散させる可能
+性が考えられる. しかし Skamarock and Klemp (1992) は線形化された基礎方
+程式の分散関係を用いて, 音波減衰項の重力波成分への影響は小さいことを示
+している. 以下では Skamarock and Klemp (1992) における議論の概要を示す. 
+簡単のため圧力方程式に現れる基本場の量は定数とし, 全ての変数を 
+$u=\hat{u}e^{i(kx+lz -\omega t)}$ のような解を持つと仮定して分散関係を
+求めると,
+\begin{equation}
+  \omega ^{4} + i\alpha (k^{2}+l^{2})\omega ^{3}  - 
+  [\overline{c}^{2}(k^{2}+l^{2}) + N^{2}] \omega ^{2}
+  - i\alpha k^{2}N^{2}\omega + \overline{c}^{2}k^{2}N^{2}=0, 
+\end{equation}
+となる. ここで $N^{2} = \frac{g}{\overline{\theta}_{v}}\DP{
+\overline{\theta}_{v}}{z}$ である. 純粋な内部重力波の分散関係式
+\[
+ \omega ^{2} = \frac{N^{2}k^{2}}{k^{2}+l^{2}},
+\]
+を $\alpha$ を含む項に代入すると $\alpha $ を含む項は互いに打ち消しあ
+うことから, 音波減衰項の重力波成分への影響は小さいであろうと予想される. 
+実際に, $\epsilon \equiv \alpha \sqrt{k^{2}+l^{2}}/\overline{c}$ が小
+さいと仮定して $\omega$ を $\epsilon$ の巾で展開して音波減衰項の影響を
+評価すると, 音波減衰項は重力波成分を減衰させる方向にはたらき, その減衰
+率は非常に小さいことがわかる(Skamarock and Klemp, 1992, 図 5 参照).
+
+音波減衰項の係数 $\alpha$ の値を決めるにあたり, 考慮しなければならない
+ことが 2 つある. 1 つは音波減衰項そのものが計算不安定の原因とならない
+ようすることであり, もう 1 つは音波減衰項の重力波成分への影響が大きく
+ならないようすることである. 前者は\Deqref{音波減衰項を含む線形発散方程
+式}に示したように, 音波減衰項が発散方程式の拡散項となることから要請さ
+れる.  音波減衰項の時間積分は前進差分を用いて行われるので
+(\Deqref{uwpi:u_sabun}, \Deqref{uwpi:w_sabun}を参照), 計算不安定を起こ
+さないためには拡散項を前進差分で時間積分する場合の安定性条件
+\begin{equation}
+ \frac{\alpha \Delta \tau}{\mbox{Min}(\Delta x^{2}, \Delta z^{2})} \leq \frac{1}{2}
+ \Deqlab{音波減衰項係数の条件1}
+\end{equation}
+を満たさなければならない. 後者は前段落で紹介した Skamarock and Klemp
+(1992) の議論で用いた $\epsilon$ が小さいという仮定から要請される
+\footnote{この条件に関する議論は Skamarock and Klemp (1992) ではなされて
+いない}. $\epsilon$ の最大値は
+\begin{eqnarray*}
+  \mbox{Max}(\epsilon) 
+    &=& \frac{2\alpha}{\mbox{Min}(\Delta x, \Delta z)\overline{c}} \nonumber \\
+    &=& \frac{2\alpha \Delta \tau}{\mbox{Min}(\Delta x^{2}, \Delta z^{2})}
+        \left/
+        \frac{\overline{c}\Delta \tau}{\mbox{Min}(\Delta x, \Delta z)}
+        \right.
+\end{eqnarray*}
+と与えられるので, $\mbox{Max}(\epsilon) \leq 1$ とするためには
+\begin{equation}
+    \frac{\alpha \Delta \tau}{\mbox{Min}(\Delta x^{2}, \Delta z^{2})}
+    \leq \frac{1}{2}
+        \frac{\overline{c}\Delta \tau}{\mbox{Min}(\Delta x, \Delta z)}
+  \Deqlab{音波減衰項係数の条件2}
+\end{equation}
+でなければならない.\Deqref{音波減衰項係数の条件2}右辺に現れる音速に対
+するクーラン数は 1 より小さい値とするので, \Deqref{音波減衰項係数の条
+件2}の条件を考慮すれば\Deqref{音波減衰項係数の条件1}は自動的に満たされ
+ることになる.
+

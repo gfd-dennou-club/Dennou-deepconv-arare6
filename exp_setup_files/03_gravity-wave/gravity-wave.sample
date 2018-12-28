@@ -1,0 +1,138 @@
+!= Configuration file for deepconv/arare
+!
+! Authors::   SUGIYAMA Ko-ichiro, ODAKA Masatsugu
+! Version::   $Id: gravity-wave.conf,v 1.1 2014/07/08 01:19:00 sugiyama Exp $
+! Tag Name::  $Name:  $
+! Copyright:: Copyright (C) GFD Dennou Club, 2006. All rights reserved.
+! License::   See COPYRIGHT[link:COPYRIGHT]
+!
+!
+!== History
+!
+! * 2006/09/20 (Masataugu ODAKA): Update
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+
+
+&deepconv_main_nml
+/    
+
+!!!
+!!!入出力ファイルに関する設定
+!!!
+&fileset_nml
+  FileInstitution = "sugiyama@gfd-dennou.org"   !ファイルを最終的に変更した人, 組織. 
+/
+
+&restartfileio_nml
+  InitialFile = "igw-SK1994_init.04.nc",
+  OutputFile  = "igw-SK1994_res.04.nc"
+/
+
+
+!!!
+!!!積分時間に関する設定
+!!!
+&timeset_nml
+  DelTimeLong  = 12.0d0       !長いタイムステップ
+  DelTimeShort =  2.0d0      !短いタイムステップ(音波関連項)
+  RestartTime  = 0.0d0
+  IntegPeriod  = 3000.0d0    !積分時間 
+  DelTimeOutput = 600.0d0     !出力時間間隔
+/
+
+!!!
+!!!格子点数に関する設定
+!!!
+&gridset_nml
+  xdim  = 300                ! X 方向刻み点数
+  ydim  = 1                  ! Y 方向刻み点数
+  zdim  = 10                 ! Z 方向刻み点数
+  ncmax = 1                  ! 化学種の数
+  Xmg   = 5
+  Ymg   = 5
+  Zmg   = 5
+/
+
+&axesset_nml
+  Xmax  = 3.0d5             ! X 座標の終点
+  Ymax  = 1.0d3              ! X 座標の終点
+  Zmax  = 1.0d4             ! Z 座標の終点
+/
+
+!!!
+!!!実験パラメタ(物理・化学)の設定
+!!!
+&constants_nml
+  Grav       = 9.8d0,          !重力             [m/s]
+  PressBasis = 1.0d5,          !(温位の)基準圧力 [Pa]
+  TempSfc      = 300.0d0,      !地表面温度       [K]
+  PressSfc     = 1.0d5,        !地表面圧力       [Pa]
+  SpcDrySymbol(1) = 'N2-g',    !乾燥成分の化学種名
+  SpcDryMolFr(1)  = 1.0d0,     !乾燥成分の存在度
+/
+
+&composition_nml
+  SpcWetSymbol(1)  = 'H2O-g',  !湿潤成分
+  SpcWetMolFr(1)   = 0.0d0,  !湿潤成分の存在度(モル比)
+/
+
+!!!
+!!!減衰係数の設定
+!!!
+&damping_nml
+  EFTime = 3.0d2             !スポンジ層の減衰係数の e-folding time
+  DepthH = 0.0d0             !スポンジ層の厚さ(水平方向)
+  DepthV = 0.0d0             !スポンジ層の厚さ(鉛直方向)
+/
+
+&dynamics_nml
+  FlagAdvection = "Center4"
+  FlagAcousticmode = "Center2"
+  FactorDExnerDtAdv = 0.0d0
+  FactorDExnerDtExpnd = 0.0d0
+!!  AlphaNDiff = 1.0d-3  !数値拡散項の係数
+!! NDiffRatio = 1.0d0   !速度に対する粘性を上げる場合は数字を 1 以上にする. 
+/
+
+!
+! データ出力の全体設定
+!
+&gtool_historyauto_nml
+!  AllOutput = .true.
+  FilePrefix = "igw-SK1994.04_"
+  IntValue = 12.0,              ! 出力間隔の数値
+  IntUnit = 'sec',            ! 出力間隔の単位
+/
+!
+! データ出力の個別設定
+!
+&gtool_historyauto_nml
+!  Name = 'PTemp, VelX, VelY, VelZ, Exner, Km',   ! 出力変数
+  Name = 'PTemp',                                ! 出力変数
+  IntUnit = 'sec',                               ! 出力間隔の単位
+/
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+!!!
+!!! 初期値を作るための情報. 
+!!!   初期値作成ルーチンでのみ使う変数をまとめる
+!!!
+&initialdata_nml
+  FlagBasic = "SK1994", 
+  FlagDisturbPTemp = "SK1994XZ", 
+  FlagDisturbWind  = "Zonal", 
+/
+
+&initialdata_disturb_SK1994_nml
+  PTempMax     = 1.0d-2,      !温位擾乱の最大値
+  Xc           = 1.0d5,       !擾乱の中心位置(水平方向) [m]
+  Xr           = 5.0d3,       !擾乱の半径(水平方向) [m]
+  Yc           = 1.0d5,       !擾乱の中心位置(水平方向) [m]
+  Yr           = 5.0d3,       !擾乱の半径(水平方向) [m]
+/
+
+&initialdata_disturb_zonal_nml
+  VelX0 = 20.0d0,
+  VelY0 =  0.0d0
+/

@@ -1,0 +1,335 @@
+#= CREDITS of deepconv/arare
+#
+# Authors:: SUGIYAMA Ko-ichiro, ODAKA Masatsugu
+# Version:: $Id: CREDITS,v 1.7 2014/02/20 17:25:07 sugiyama Exp $
+# Tag Name: $Name:  $
+# Copyright:: Copyright (C) GFD Dennou Club, 2006. All rights reserved.
+# License:: See COPYRIGHT[link:COPYRIGHT]
+#
+########################################################################
+#
+=begin TOPLINK
+[((<English|URL:CREDITS.htm.en>)) |
+((<Japanese|URL:CREDITS.htm>))]
+[((<GFD Dennou Club|URL:http://www.gfd-dennou.org>)) |
+((<deepconv Project|URL:http://www.gfd-dennou.org/library/deepconv>))]
+[((<deepconv Reference Manual|URL:doc/index.htm>))]
+=end TOPLINK
+
+=begin JA
+
+= 使用上の注意とライセンス規定
+
+# * 2012/05/07  (小高 正嗣) 更新
+# * 2011/02/24  (山下 達也) 更新
+# * 2008/08/06  (小高 正嗣) 更新
+# * 2007/04/24  (小高 正嗣) 新規作成
+
+=end JA
+=begin EN
+
+= Precautionary statement and Licence terms
+
+# * 2012/05/07  (Masatsugu Odaka) update
+# * 2011/02/24  (Tatsuya Yamashita) update
+# * 2008/08/06  (Masatsugu Odaka) update
+# * 2007/04/24  (Masatsugu Odaka) Initial release
+
+=end EN
+
+=begin JA
+== ライセンス規定
+
+((<COPYRIGHT|URL:./COPYRIGHT>))を御一読ください. 
+=end JA
+=begin EN
+
+== Licence
+
+Please see ((<COPYRIGHT|URL:./COPYRIGHT>)).
+
+=end EN 
+
+
+=begin JA
+
+== 使用上の注意
+
+deepconv は研究・教育の場で用いられることを前提としております.
+地球流体電脳倶楽部(deepconv 開発グループ)の活動を妨げるような利用の仕方
+でない限り, 自由に使用・改変・再配布してかまいません. 
+
+プログラム・解説文など, deepconv の資源を利用する際には, 
+全ての面にわたって「教育的」であることに注意してください. 
+プログラムの動作はあくまでも「無保証」です.  
+使用する際には各自その結果の正しさを確認してから用いてください.  
+
+deepconv を利用して得られた成果を論文や web 等にて発表する際には, 
+その論文等にて deepconv を利用あるいは参考にした旨を記し, 
+参考文献にあげて頂きますようお願いします.
+
+
+: 引用例 (和文)
+
+
+    杉山耕一朗, 小高正嗣, 山下達也, 中島健介, 林祥介, deepconv 開発グループ, 2013:  
+    非静力学モデル deepconv, 
+    http://www.gfd-dennou.org/library/deepconv/, 地球流体電脳倶楽部. 
+
+
+: 引用例 (英文)
+
+    Sugiyama, K., Odaka, M., Yamashita, T., Nakajima, K., Hayashi, Y.-Y., 
+    deepconv Development Group, 2013: 
+    Non-hydrostatic model deepconv, 
+    http://www.gfd-dennou.org/library/deepconv/, GFD Dennou Club.
+
+=end JA
+
+=begin EN
+
+== About Citation
+
+When you publish your scientific/technological work in which deepconv is used, 
+please refer to our work in the following way:
+
+
+: Example
+
+    Sugiyama, K., Odaka, M., Yamashita, T., Nakajima, K., Hayashi, Y.-Y., 
+    deepconv Development Group, 2011: 
+    Non-hydrostatic model deepconv, 
+    http://www.gfd-dennou.org/library/deepconv/, GFD Dennou Club.
+
+=end EN
+
+
+=begin JA
+
+== 開発グループメンバー
+
+=== 2013 年度
+
+:プログラム製作
+  杉山 耕一朗, 小高 正嗣, 山下 達也
+
+:プログラム製作協力
+  安藤 紘基, 高橋 芳幸, 西澤 誠也, 中島 健介, 林 祥介
+
+:解説文書作成
+  杉山 耕一朗, 小高 正嗣, 山下 達也
+
+=== 2012 年度
+
+:プログラム製作
+  杉山耕一朗, 小高正嗣, 山下 達也
+
+:プログラム製作協力
+  川畑 拓也, 高橋 由美子, 黒田 美紀, 高橋 芳幸, 西澤 誠也, 中島 健介, 林 祥介
+
+:解説文書作成
+  杉山耕一朗, 小高正嗣, 山下 達也
+
+=== 2011 年度
+
+* 林 祥介
+* 石渡 正樹
+* 黒田 美紀
+* 中島 健介
+* 西澤 誠也
+* 小高 正嗣
+* 杉山 耕一朗
+* 高橋 芳幸
+* 山下 達也
+
+
+=== 2010 年度
+
+* 林 祥介
+* 中島 健介
+* 小高 正嗣
+* 杉山 耕一朗
+* 山下 達也
+* 今関 翔
+
+=== 2009 年度
+
+* 林 祥介
+* 中島 健介
+* 小高 正嗣
+* 杉山 耕一朗
+* 山下 達也
+
+=== 2008 年度
+
+* 林 祥介
+* 中島 健介
+* 小高 正嗣
+* 杉山 耕一朗
+* 山下 達也
+
+=== 2007 年度
+
+* 林 祥介
+* 中島 健介
+* 小高 正嗣
+* 杉山 耕一朗
+
+=== 2006 年度
+
+* 林 祥介
+* 中島 健介
+* 小高 正嗣
+* 杉山 耕一朗
+
+=== 2005 年度
+
+* 林 祥介
+* 北守 太一
+* 中島 健介
+* 小高 正嗣
+* 杉山 耕一朗
+
+=== 2004 年度
+
+* 林 祥介
+* 北守 太一
+* 中島 健介
+* 小高 正嗣
+* 杉山 耕一朗
+
+=== 2003 年度
+
+* 林 祥介
+* 北守 太一
+* 中島 健介
+* 小高 正嗣
+* 杉山 耕一朗
+* 高橋こう子
+
+=== 2002 年度
+
+* 林 祥介
+* 中島 健介
+* 小高 正嗣
+* 杉山 耕一朗
+* 高橋こう子
+
+
+=end JA
+
+=begin EN
+
+== Development Group members
+
+#The development group members in each fiscal year are recorded in
+#alphabetical order.
+
+== FY 2013
+
+:Programming
+  SUGIYAMA Ko-ichiro, ODAKA Masatsugu
+
+:Programming Advice
+  YAMASHITA Tatsuya, Ando Hiroki, TAKAHASHI Yoshiyuki, NISHIZAWA Seiya, Nakajima Kensuke, HAYASHI Yoshi-Yuki
+
+:Documentations
+  SUGIYAMA Ko-ichiro, ODAKA Masatsugu
+
+== FY 2012
+
+:Programming
+  SUGIYAMA Ko-ichiro, ODAKA Masatsugu  
+
+:Programming Advice
+  YAMASHITA Tatsuya, KURODA Miki, Kawabata Takuya, Takahashi Yumiko, TAKAHASHI Yoshiyuki, NISHIZAWA Seiya, Nakajima Kensuke, HAYASHI Yoshi-Yuki
+
+:Documentations
+  SUGIYAMA Ko-ichiro, ODAKA Masatsugu
+
+== FY 2011
+
+* HAYASHI Yoshi-Yuki
+* ISHIWATARI Masaki
+* KURODA Miki
+* NAKAJIMA Kensuke
+* NISHIZAWA Seiya
+* ODAKA Masatsugu
+* SUGIYAMA Ko-ichiro
+* TAKAHASHI Yoshiyuki
+* YAMASHITA Tatsuya
+
+
+=== FY 2010
+
+* HAYASHI Yoshi-Yuki
+* NAKAJIMA Kensuke
+* ODAKA Masatsugu
+* SUGIYAMA Ko-ichiro
+* YAMASHITA Tatsuya
+* IMASEKI Sho
+
+=== FY 2009
+
+* HAYASHI Yoshi-Yuki
+* NAKAJIMA Kensuke
+* ODAKA Masatsugu
+* SUGIYAMA Ko-ichiro
+* YAMASHITA Tatsuya
+
+=== FY 2008
+
+* HAYASHI Yoshi-Yuki
+* NAKAJIMA Kensuke
+* ODAKA Masatsugu
+* SUGIYAMA Ko-ichiro
+* YAMASHITA Tatsuya
+
+=== FY 2007
+
+* HAYASHI Yoshi-Yuki
+* NAKAJIMA Kensuke
+* ODAKA Masatsugu
+* SUGIYAMA Ko-ichiro
+
+=== FY 2006
+
+* HAYASHI Yoshi-Yuki
+* NAKAJIMA Kensuke
+* ODAKA Masatsugu
+* SUGIYAMA Ko-ichiro
+
+=== FY 2005
+
+* HAYASHI Yoshi-Yuki
+* KITAMORI Taichi
+* NAKAJIMA Kensuke
+* ODAKA Masatsugu
+* SUGIYAMA Ko-ichiro
+
+=== FY 2004
+
+* HAYASHI Yoshi-Yuki
+* KITAMORI Taichi
+* NAKAJIMA Kensuke
+* ODAKA Masatsugu
+* SUGIYAMA Ko-ichiro
+
+=== FY 2003
+
+* HAYASHI Yoshi-Yuki
+* KITAMORI Taichi
+* NAKAJIMA Kensuke
+* ODAKA Masatsugu
+* SUGIYAMA Ko-ichiro
+* TAKAHSHI Kouko
+
+=== FY 2002 
+
+* HAYASHI Yoshi-Yuki
+* NAKAJIMA Kensuke
+* ODAKA Masatsugu
+* SUGIYAMA Ko-ichiro
+* TAKAHSHI Kouko
+
+=end EN

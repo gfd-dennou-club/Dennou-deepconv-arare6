@@ -1,0 +1,168 @@
+% 表題: 物性値の計算法
+%
+% 履歴: 2006/03/13 杉山耕一朗
+
+\chapter{化学物性値の計算法}
+
+
+\section{相平衡条件}
+
+\subsection{飽和蒸気圧}
+
+飽和蒸気圧は, Antoine の式より求める. 
+%
+\begin{eqnarray}
+ \ln p^{*}= (A - B / (C + T - T_{0})) * \log(10.0) + \ln(133.322)
+\end{eqnarray}
+%
+ここで, $p^{*}$ は飽和蒸気圧, $T$ は温度, $T_{0} = 273.15$ である. 
+$A, B, C$ は Antoine 係数である. それらの値は化学便覧改訂 4 版から得る. 
+化学便覧改訂 4 版では, 圧力の単位が mmHg, 温度の単位が $^{\circ}$C であ
+るので, 単位の換算項が付加されている. 
+%
+\begin{table}[h]
+\caption{水, アンモニアの Antoine 係数}
+\begin{center}
+\begin{tabular}{llll} 
+ & A & B & C \\ \hline
+ H$_{2}$O(l) & 7.9186968 & 1636.909 &  224.92 \\
+ H$_{2}$O(s) & 8.184254  & 1791.3   &  238.1 \\
+ NH$_{3}$(s) &  9.96382 &  1617.907  &  272.55 \\
+\end{tabular}
+\end{center}
+\end{table}
+
+任意の温度が与えられた場合, 凝縮量は飽和蒸気圧と分圧の差として見積もるこ
+とができる. 
+
+\subsection{圧平衡定数}
+
+硫化アンモニウムの生成反応 
+%
+\begin{eqnarray}
+ {\rm NH_{3}} + {\rm H_{2}S} \rightarrow {\rm NH_{4}SH}
+\end{eqnarray}
+%
+の圧平衡定数は, 
+%
+\begin{eqnarray}
+ K_{p} 
+  = \ln(p_{\rm NH_{3}} \cdot p_{\rm H_{2}S}) 
+  = 61.781 - \frac{10834}{T}  - \ln{10^{2}}
+\end{eqnarray}
+%
+である. 圧平衡定数を用いることで, 任意の温度に対する
+アンモニアと硫化水素のモル比の積を求めることができる. 
+
+
+\section{生成のエンタルピー変化}
+
+\subsection{潜熱}
+
+飽和蒸気圧と潜熱はクラウジウス・クラペイロンの式, 
+%
+\begin{eqnarray}
+\DD{p_{v}}{T} =  \frac{p_{v} L_{v}}{R T^{2}}
+\end{eqnarray}
+%
+で関係づけられる. この式を $L_{v}$ の式としてまとめなおすことで, 
+潜熱は以下のように与えられる. 
+%
+\begin{eqnarray}
+ L_{v} = \DD{\ln p_{v}}{T} {R_{v} T^{2}}
+\end{eqnarray}
+%
+但し $R_{v}$ は凝縮成分に対する気体定数である. 
+Antoine の式を代入すると, 
+%
+\begin{eqnarray}
+ L_{v} = \left\{
+	  \frac{B \ln(10.0)}{ (C + T - T_{0})^{2} }
+	 \right\} R_{v} T^{2}
+\end{eqnarray}
+%
+である. 
+
+
+
+\subsection{反応熱}
+
+硫化アンモニウムの生成反応 
+%
+\begin{eqnarray}
+ {\rm NH_{3}} + {\rm H_{2}S} \rightarrow {\rm NH_{4}SH}
+  \Deqlab{react_NH4SH}
+\end{eqnarray}
+%
+において, NH$_4$SH のエントロピーと NH$_3$ と H$_2$S の
+エントロピーの差が, 反応に伴うエントロピー変化に対応する. 
+
+NH$_4$SH のモルエントロピーは, 
+%
+\begin{eqnarray}
+ s_{\rm NH_4SH} 
+  &=& - \DP{\mu_{\rm NH_4SH}}{T}            \nonumber \\
+  &=& - \DP{}{T} 
+   \left( 
+    \mu_{\rm NH_3}^{\circ} + \mu_{\rm H_2S}^{\circ} + RT K_{p}
+    - RT \ln {p_{0}}^{2}
+   \right)            \nonumber \\
+  &=& s_{\rm NH_3}^{\circ} + s_{\rm H_2S}^{\circ}  
+      - RT \DP{K_{p}}{T} - R K_{p} 
+      +  R\ln {p_{0}}^{2}
+  \Deqlab{react_NH4SH_left}
+\end{eqnarray}
+%
+である. ここで 
+ $\mu_{\rm NH_3}^{\circ}$, $\mu_{\rm H_2S}^{\circ}$ は
+ NH${}_{3}$ と N${}_{2}$S の標準化学ポテンシャル,  
+ $s_{\rm NH_3}^{\circ}$, $s_{\rm H_2S}^{\circ}$ はそれに
+ 対応するエントロピー, 
+ $K_{p}$ は \Deqref{react_NH4SH} の反応式の
+圧平衡定数である. NH$_3$ と H$_2$S のモルエントロピーの和は, 
+%
+\begin{eqnarray}
+ s_{\rm NH_3}  + s_{\rm H_2S} 
+  &=&  s_{\rm NH_3}^{\circ}  + s_{\rm H_2S}^{\circ}
+       - R\ln (p_{\rm NH_3}\cdot p_{\rm H_2S}) + R\ln p_{0}^{2} \nonumber \\
+  &=&  s_{\rm NH_3}^{\circ}  + s_{\rm H_2S}^{\circ}
+       - R\ln K_{p} + R\ln p_{0}^{2}
+%  &=& - \DP{\mu_{\rm NH_3} + \mu_{\rm H_2S}}{T}            \nonumber \\
+%  &=& - \DP{}{T} 
+%   \left( 
+%    \mu^{\circ}_{\rm NH_3} + \mu^{\circ}_{\rm H_2S} 
+%    + RT \ln( p_{\rm NH_3} p_{\rm H_2S}) - RT \ln {p_{0}}^{2}
+%   \right)            \nonumber \\
+%  &=& - \DP{}{T} 
+%   \left( 
+%    \mu^{\circ}_{\rm NH_3} + \mu^{\circ}_{\rm H_2S} 
+%    + RT K_{p} - RT \ln {p_{0}}^{2}
+%   \right)            \nonumber \\
+% &=& s_{\rm NH_3} + s_{\rm H_2S}   - R K_{p} 
+%    - RT \ln {p_{0}}^{2}
+  \Deqlab{react_NH4SH_right}
+\end{eqnarray}
+%
+\Deqref{react_NH4SH_left} と \Deqref{react_NH4SH_right} の差
+%
+\begin{eqnarray}
+ \Delta s
+  = RT \DP{K_{p}}{T} 
+  \Deqlab{react_NH4SH_DeltaS}
+\end{eqnarray}
+%
+が反応のエントロピー変化に相当する. モル当たりの反応熱は, 
+%
+\begin{eqnarray}
+ L_{\rm NH_4SH} = T \Delta s = RT^{2} \DP{K_{p}}{T} 
+\end{eqnarray}
+%
+である. NH$_4$SH 生成反応の圧平衡定数を代入すると, 
+%
+\begin{eqnarray}
+ L_{\rm NH_4SH} =  \frac{10834}{T^2} {R T^{2}} =  10834 R
+\end{eqnarray}
+%
+である. 
+
+

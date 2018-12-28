@@ -1,0 +1,40 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv -- 離散モデル
+%       時間フィルター
+%
+% 履歴: 2005-01-25 杉山耕一朗
+%       2012/04/23 小高正嗣
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{時間フィルター}
+
+リープフロッグ法を用いたことによって生じる計算モードの増幅を抑制するた
+め, Asselin (1972) の時間フィルターを長い時間刻みで 1 ステップ計算する
+毎に(実際には短い時間刻みの計算を $N_{\tau}\equiv 2\Delta t/\Delta
+\tau$ ステップ計算する毎に)適用する.
+
+たとえば\Deqref{uwpi:u_sabun}を用いて $ u^{t + \Delta t}_{i(u),k}$
+を計算する場合, 以下のように時間フィルターを適用する. 
+\begin{eqnarray}
+ u^{*}_{i(u),j,k}
+  &=&  u^{\tau + (N_{\tau}-1)\Delta \tau}_{i(u),j,k} 
+    -   \left[
+  \bar{c_{p}} \bar{\theta}_{v} \Delta \tau
+  \left\{
+   \DP{\pi^{\tau + (N_{\tau}-1)\Delta \tau}}{x} 
+   - \DP{(\alpha Div)^{\tau + (N_{\tau}-1)\Delta \tau}}{x} 
+  \right\}
+ \right]_{i(u),j,k} \nonumber \\ 
+ &&  + 
+   \left[F_{u}\right]_{i(u),j,k}^{t} \Delta \tau, \nonumber \\
+ u^{t+\Delta t}_{i(u),j,k} &=&
+    (1-2 \gamma)u^{t}_{i(u),j,k} + 
+    \gamma (u^{*}_{i(u),j,k} + u^{t -\Delta t}_{i(u),j,k})
+  \Deqlab{uwpi:timefilter}
+\end{eqnarray}
+
+ここで $\gamma$ はフィルターの係数であり, その値は 0.05 を用い
+る. \Deqref{uwpi:w_sabun}, \Deqref{uwpi:pi_sabun}の計算に対しても同様
+に時間フィルターを適用する.

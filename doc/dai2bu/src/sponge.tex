@@ -1,0 +1,92 @@
+% 表題: スポンジ層
+%
+% 履歴: 2006/03/17 杉山耕一朗
+
+\section{スポンジ層}
+
+境界面付近での波の反射を抑えるために, 基礎方程式の付加的な項を付け加える. 
+%
+\begin{eqnarray}
+ \DP{\phi}{t} = -{\rm Adv}.\phi + \cdots + \gamma_{h}(x) (\phi - \phi_{e})
+  + \gamma_{v}(z) (\phi - \phi_{e})
+\end{eqnarray}
+%
+ただし, $\phi$ は任意の予報変数であり, $\phi_{e}$ は客観解析値等の既知の
+値である. この項は1 つ前のタイムステップ $t - \Delta t$ で計算され, 
+小さいタイムステップで扱われる予報変数に対しても, 
+移流項や数値粘性項と同様に $2 \Delta t$ の大きなタイムステップ間の値とし
+て評価される。具体的には, 
+%
+\begin{eqnarray}
+ && [\pi]^{t + \Delta t} = 2 \Delta t 
+  \left\{
+    [{\rm Adv}.\pi]^{t} 
+  + \cdots 
+  + \left\{
+     \gamma_{h}(x)  + \gamma_{v}(z)
+    \right\} (\pi - \bar{\pi})^{t - \Delta t}
+  \right\}
+\\
+ && [u]^{t + \Delta t} = 2 \Delta t 
+  \left\{
+    [{\rm Adv}.u]^{t} 
+  + \cdots 
+  + \left\{
+     \gamma_{h}(x)  + \gamma_{v}(z)
+    \right\} [u]^{t - \Delta t}
+  \right\}
+\\
+ && [w]^{t + \Delta t} = 2 \Delta t 
+  \left\{
+    [{\rm Adv}.w]^{t} 
+  + \cdots 
+  + \left\{
+     \gamma_{h}(x)  + \gamma_{v}(z)
+    \right\} [w]^{t - \Delta t}
+  \right\}
+\\
+ && [\theta]^{t + \Delta t} = 2 \Delta t 
+  \left\{
+   [{\rm Adv}.\theta]^{t} 
+   + \cdots 
+   + \left\{
+      \gamma_{h}(x)  + \gamma_{v}(z)
+     \right\} [\theta]^{t - \Delta t}
+  \right\}
+\end{eqnarray}
+%
+とする. 但し $\bar{\pi}$ はエクスナー関数の基本場である. 
+
+$\gamma_{h}, \gamma_{v}$ はそれぞれ水平方向には各境界面に向かって, 鉛直
+方向には上境界面に向かって小さくなる減衰係数である. これらの減衰係数は, 
+水平方向には吸収層の厚みを $d_{h}$ とし, $x$ の範囲を $0 \leq x \leq
+x_{max}$ とすれば, 
+%
+\begin{eqnarray}
+ && \gamma_{h} = \alpha_{h} \left( 1 - \frac{x}{d_{h}}\right)^{3}
+  \hspace{5em} (x <  d_{h}), 
+\nonumber \\
+ && \gamma_{h} = 0  \hspace{10em} ( d_{h} \leq x \leq  x_{max} - d_{h}), 
+\nonumber \\
+ && \gamma_{h} = \alpha_{h} \left( 1 - \frac{(x_{max} - x)}{d_{h}}\right)^{3}
+ \;\; (x > x_{max} - d_{h}),
+\end{eqnarray}
+%
+であり, 鉛直方向には吸収層の厚さを $d_{v}$ とし, $z$ の範囲を 
+$0 \leq z \leq z_{max}$ とすれば, 
+%
+\begin{eqnarray}
+ && \gamma_{v} = 0  \hspace{12em} ( z \leq  z_{max} - d_{v}), 
+\nonumber \\
+ && \gamma_{v} = \alpha_{v} \left
+			     ( 1 - \cos{\frac{\pi (z - z_{max} - d_{v})}{d_{v}}}
+			    \right)^{3}
+ \;\; (z > z_{max} - d_{v}),
+\end{eqnarray}
+%
+である. ここで, $\alpha_h, \alpha_v$ はそれぞれ水平・鉛直方向の減衰定数
+である. $\alpha_h, \alpha_v$ は時間の逆数の次元を持ち, それらの逆数
+$1/\alpha_{h}, 1/\alpha_{v}$ は e-folding time と呼ばれる. 
+e-folding time は通常 100 -- 300 s に設定する. 
+また吸収層の厚み $d_{h}, d_{v}$ はそれぞれ, 水平方向には数格子分, 
+鉛直方向には上面から1/3 程度設定すれば良い. 

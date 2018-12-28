@@ -1,0 +1,223 @@
+% 表題 準圧縮方程式系のエネルギー方程式の導出
+%
+% 履歴: 2011/12/26  小高正嗣(deepconv/arare5 定式化マニュアルに取り込み)
+% 履歴: 2011/12/19  黒田美紀(追記)
+% 履歴: 2011/11/30  黒田美紀(追記)
+% 履歴: 2011/11/29  黒田美紀(修正 and 追記)
+% 履歴: 2011/11/28  黒田美紀(追記)
+% 履歴: 2011/11/26  黒田美紀(追記 ((A.9) の変形から))
+% 履歴: 2011/11/25  黒田美紀 (新規作成(北守修論の付録のトレース))
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%             本文 Start                 %%%%%%%%
+
+準圧縮方定式におけるエネルギー方程式を導出する. ただしここでは乾燥大気
+を想定し, 凝結に関する項を無視する. 
+
+乾燥大気の場合, 準圧縮方程式の連続の式は
+\begin{eqnarray}
+  \DP{\rho}{t} + \Ddiv{\overline{\rho}\Dvect{u}} = 0
+  \Deqlab{乾燥大気の連続の式}
+\end{eqnarray}
+である. この式より任意のスカラー量 $\phi$ に対し
+\begin{eqnarray}
+  \overline{\rho} \DD{\phi}{t}
+  = \DP{\overline{\rho} \phi}{t}
+   + \Ddiv{ (\overline{\rho} \phi \Dvect{u})}
+   + \phi \DP{\rho}{t}
+  \Deqlab{スカラーの保存則}
+\end{eqnarray}
+が成り立つ. この式から準圧縮方程式では$\phi$の時間微分を
+フラックス形式で書くことができないことがわかる%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\footnote{
+  $\partial \phi/\partial t + \Dvect{u} \cdot \nabla \phi = 0$ が
+  成り立たないということ. }%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+.
+
+水平方向の運動方程式\Deqref{quasi-equations:u-w-pi-theta:u},
+鉛直方向の運動方程式\Deqref{quasi-equations:u-w-pi-theta:w}より, 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+  \DP{\overline{\rho}K}{t} + \Ddiv{(\overline{\rho}K\Dvect{u})}
+ = - c_{p} \overline{\theta} \overline{\rho} \Dvect{u} \cdot \Dgrad{\Pi}
+   + \overline{\rho}\Dvect{u}\cdot\Dvect{D}
+   + \overline{\rho} \frac{\theta}{\overline{\theta}}gw
+   - K \DP{\rho}{t}
+  \Deqlab{エネルギー方程式1}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+となる. 
+ここで$K = (u^2 + w^2)/2$, $\Dvect{D} = (D_u, D_w)$とおいた%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\footnote{
+%  個人的めも: 導出をどこかに書いておきたいなー. }%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+. 
+以降では式\Deqref{エネルギー方程式1}の右辺第一項と右辺第三項を変形していく. 
+
+まず式\Deqref{エネルギー方程式1}の右辺第三項は以下のように変形される. 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+ \overline{\rho} \frac{\theta}{\overline{\theta}}gw
+  &= \overline{\rho} \frac{\theta}{\overline{\theta}} g \DD{z}{t}
+      \nonumber \\
+  &= \overline{\rho} \frac{\theta}{\overline{\theta}} \DD{(gz)}{t}
+      \nonumber \\
+  &= \overline{\rho}
+      \left \{\frac{1}{\overline{\theta}} \DD{(\theta gz)}{t}
+       - \frac{gz}{\overline{\theta}} \DD{\theta}{t}
+      \right\} \nonumber \\
+  &= \frac{\overline{\rho}}{\overline{\theta}} \DD{(\theta gz)}{t}
+      - \frac{gz}{\overline{\theta}}
+       \left\{ \DP{\overline{\rho}\theta}{t}
+               + \nabla \cdot (\overline{\rho}\theta \Dvect{u})
+               + \theta \DP{\rho}{t}
+        \right\} . 
+ \Deqlab{A67} 
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+式\Deqref{A67}の右辺第二項を変形する. 
+熱力学の式\Deqref{quasi-equations:u-w-pi-theta:theta}は, 
+凝結がない場合, 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+ \DP{\theta}{t}
+  = - \Dvect{u} \cdot \nabla \theta - w \DP{\overline{\theta}}{z}
+    + Q + D_{\theta}
+  \Deqlab{凝結のない熱力学の式}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+と表される. 両辺に $\overline{\rho}$ をかけて, 
+式\Deqref{乾燥大気の連続の式}を用いて変形すると, 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+ \DP{\overline{\rho} \theta}{t}
+  &= - \overline{\rho}\Dvect{u} \cdot \nabla \theta - \overline{\rho} w \DP{\overline{\theta}}{z}
+    + Q + D_{\theta}
+     \nonumber \\
+  &= -\nabla \cdot (\overline{\rho} \theta \Dvect{u}) + \theta \nabla \cdot (\overline{\rho}\Dvect{u})
+     - \overline{\rho} w \DP{\overline{\theta}}{z}
+     + \overline{\rho} (Q + D_{\theta})
+     \nonumber　\\
+  &= -\nabla \cdot (\overline{\rho} \theta \Dvect{u}) - \theta \DP{\rho}{t}
+     - \overline{\rho} w \DP{\overline{\theta}}{z}
+     + \overline{\rho} (Q + D_{\theta})
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+となる. また式\Deqref{A67}の右辺第一項は, 式\Deqref{スカラーの保存則}より, 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+ \overline{\rho} \frac{d}{dt} 
+  \left(\frac{\theta gz}{\overline{\theta}}\right)
+ = \frac{\partial}{\partial t}\left(\frac {\overline{\rho}\theta gz}{\overline{\theta}}\right)
+  + \nabla \cdot \left(\frac{\overline{\rho}\theta gz}{\overline{\theta}}\Dvect{u}\right)
+  + \frac{\theta gz}{\overline{\theta}}\DP{\rho}{t}
+ \tag{A.9-2}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+となる. よって式\Deqref{エネルギー方程式1}の右辺第三項は, 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+ \overline{\rho} \frac{\theta}{\overline{\theta}}gw
+  = \frac{\partial}{\partial t}\left(\frac{\overline{\rho}\theta gz}{\overline{\theta}}\right)
+   + \nabla \cdot \left(\frac{\overline{\rho}\theta gz}{\overline{\theta}} \Dvect{u}\right)
+   + \frac{\theta gz}{\overline{\theta}}\DP{\rho}{t}
+   + \frac{\overline{\rho} gz}{\overline{\theta}} \left\{ w\DP{\overline{\theta}}{z}
+    - Q -D_{\theta}\right\}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+と変形される. 
+
+式\Deqref{エネルギー方程式1}の右辺第一項は以下のように変形される. 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+ -c_p \overline{\theta}\overline{\rho}\Dvect{u} \cdot \nabla \Pi
+  = -\nabla \cdot (c_p \overline{\theta}\overline{\rho} \Pi \Dvect{u})
+   + c_p \Pi \nabla \cdot (\overline{\theta}\overline{\rho}\Dvect{u}) . 
+  \Deqlab{A71}
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+凝結がないときの圧力方程式\Deqref{quasi-equations:u-w-pi-theta:continue}
+は, 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{equation}
+ \DP{\Pi}{t}
+ = -\frac{\overline{C_{s}^{2}}}{c_p \overline{\rho}\overline{\theta}^2}
+     \nabla \cdot (\overline{\rho}\overline{\theta}\Dvect{u})
+\end{equation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+と表される. よって式\Deqref{A71}は, 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{eqnarray}
+ -c_p \overline{\theta}\overline{\rho}\Dvect{u} \cdot \nabla \Pi
+  &=& -\nabla \cdot (c_p \overline{\theta}\overline{\rho} \Pi \Dvect{u})
+      - c_p \Pi \frac{c_p \overline{\rho}\overline{\theta}^2}{\overline{c}^2} \DP{\Pi}{t} \nonumber \\
+  &=& -\nabla \cdot (c_p \overline{\theta}\overline{\rho} \Pi \Dvect{u})
+       -\frac{\partial}{\partial t} \left\{\frac{\overline{\rho}}{2}
+        \left(\frac{c_p \overline{\theta}\Pi}{\overline{c}}\right)^2 \right\}
+\end{eqnarray}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+と書き換えられる. 
+
+したがって, 式\Deqref{エネルギー方程式1}は, 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+ \frac{\partial}{\partial t}&(\overline{\rho}K) + \nabla \cdot (\overline{\rho} K \Dvect{u})
+  = -\nabla \cdot (c_p \overline{\theta}\overline{\theta} \Pi \Dvect{u})
+     -\frac{\partial}{\partial t} \left\{\frac{\overline{\rho}}{2}
+      \left(\frac{c_p \overline{\theta}\Pi}{\overline{c}}\right)^2 \right\}
+     + \overline{\rho} \Dvect{u} \cdot \Dvect{D} \nonumber \\
+    &+  \frac{\partial}{\partial t}\left(\frac{\overline{\rho}\theta gz}{\overline{\theta}}\right)
+      + \nabla \cdot \left(\frac{\overline{\rho}\theta gz}{\overline{\theta}} \Dvect{u}\right)
+      + \frac{\theta gz}{\overline{\theta}}\DP{\rho}{t}
+      + \frac{\overline{\rho} gz}{\overline{\theta}} \left\{ w\DP{\overline{\theta}}{z}
+      - Q - D_{\theta}\right\} - K \DP{\rho}{t}
+ \nonumber
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+となり, これをさらに整理すると, 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+% \split
+ \frac{\partial}{\partial t}\left[\overline{\rho}
+  \left\{K - \frac{\theta}{\overline{\theta}}gz
+         + \frac{1}{2}\left(\frac{c_p \overline{\theta}\Pi}{\overline{c}}\right)^2\right\}\right]
+  + \nabla \cdot \left\{\overline{\rho}\left(K - \frac{\theta}{\overline{\theta}}
+                                             + c_p \overline{\theta}\Pi \right) \Dvect{u} \right\} \nonumber \\
+ = \overline{\rho} \Dvect{u} \cdot \Dvect{D}
+      + \frac{\overline{\rho} gz}{\overline{\theta}} \left\{ w\DP{\overline{\theta}}{z}
+      - Q -D_{\theta}\right\}
+   - \left(K - \frac{\theta}{\overline{\theta}}gz\right) \DP{\rho}{t}
+\end{align} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+となる. この両辺を全領域で積分し, 境界面を出入りする流れはないとすれば, 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{align}
+ &  \DP{}{t} \int \overline{\rho}
+     \left\{K - \frac{\theta}{\overline{\theta}} gz 
+       + \frac{1}{2} \left( \frac{c_p \overline{\theta}\Pi}
+             {\overline{c}} \right)^2\right\} dV
+    \nonumber \\
+ &= \int \overline{\rho}\Dvect{u}\cdot\Dvect{D} dV 
+   + \int \frac{\overline{\rho}wgz}{\overline{\theta}} \DP{\overline{\theta}}{z} dV
+   - \int \frac{\overline{\rho}gz}{\overline{\theta}} Q dV
+   - \int \frac{\overline{\rho}gz}{\overline{\theta}} D_{\theta} dV
+    \nonumber \\
+ & \hspace{1em} 
+   - \int \left(K - \frac{\theta}{\overline{\theta}} gz \right) \DP{\rho}{t} dV
+\end{align}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+となる. これが準圧縮方程式のエネルギー方程式である.
+左辺は全エネルギーの時間変化であり, $\{ \quad \}$ 内の第一項, 第二項, 第三項は
+それぞれ運動エネルギー, 浮力による位置エネルギー, 弾性エネルギーである. 
+
+右辺第一項, 第二項, 第三項, 第四項はそれぞれ運動量の拡散, 基本場の鉛直温
+位勾配, 非断熱加熱(放射, 散逸), 熱の拡散によるエネルギー変化率である.
+右辺最後の項は準圧縮方程式の場合スカラー量の時間微分がフラックス形式で
+書けないことによることにより現れる.  この項の存在により準圧縮方程式では
+強制項がない場合でもエネルギーが保存しない.
+
+
+% ここで本文おしまい

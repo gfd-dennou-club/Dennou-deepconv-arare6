@@ -1,0 +1,1162 @@
+!= 化学関連データを保管したモジュール
+!
+! Authors::   SUGIYAMA Ko-ichiro
+! Version::   $Id: chemdata.f90,v 1.5 2014/07/08 00:49:41 sugiyama Exp $ 
+! Tag Name::  $Name:  $
+! Copyright:: Copyright (C) GFD Dennou Club, 2006. All rights reserved.
+! License::   See COPYRIGHT[link:../../COPYRIGHT]
+!
+!== Overview 
+!
+!諸々の化学種の物性データを保管するモジュール
+!
+!   * 命名則
+!     "化学種名-相"
+!
+!全ての物質において与える必要がある物性値
+!   * 相 ('Gas' => 気相, 'Liq' => 液相, 'Sol' => 固相)
+!   * 分子量
+!   * 分子を構成する元素とその個数
+!
+!気相に対して必ず与える必要のある物性値
+!   * 基準状態のエントロピー
+!   * 基準状態のエンタルピー
+!   * 比熱の温度依存性
+!
+!液相・固相に対して必ず与える必要のある物性値
+!   * 飽和蒸気圧の温度依存性
+!   * Antoine の式の係数
+!
+!== Error Handling
+!
+!== Known Bugs
+!
+!== Note
+!
+!   * 原子番号は 20 までしか定義していない. 
+!   * 分子はよく出てくるものしか定義していない. 
+!   * 分子は主要元素 7 つから成るものとする. (H, He, C, N, O, S)
+!
+!== References
+!
+!   * 元素の質量は化学便覧改訂 4 版(丸善)より
+!
+!== TODO
+!   * 化学便覧のチェック.  CO2 の物性値 (蒸気圧, Antoine の式)
+
+
+module ChemData
+  !
+  !諸々の化学種の物性データを保管するモジュール
+  !
+  !   * 命名則
+  !     "化学種名-相"
+  !
+  !全ての物質において与える必要がある物性値
+  !   * 相 ('Gas' => 気相, 'Liq' => 液相, 'Sol' => 固相)
+  !   * 分子量
+  !   * 分子を構成する元素とその個数
+  !
+  !気相に対して必ず与える必要のある物性値
+  !   * 基準状態のエントロピー
+  !   * 基準状態のエンタルピー
+  !   * 比熱の温度依存性
+  !
+  !液相・固相に対して必ず与える必要のある物性値
+  !   * 飽和蒸気圧の温度依存性
+  !   * Antoine の式の係数
+  !
+
+  save
+  
+  !変数一覧
+  real(8), parameter :: TempRef  = 298.15d0                   !標準温度 [K]
+  real(8), parameter :: Temp0C   = 273.15d0                   !0 度での温度 [K]
+  real(8), parameter :: PressRef = 1.0d5                      !標準圧力 [Pa]
+  real(8), parameter :: GasRUniv = 8.314d0                    !普遍気体定数
+  integer, parameter :: ChemData_AtmNum  = 6                  !元素の数
+  integer, parameter :: ChemData_SpcNum  = 16                 !化学種の数
+  integer, parameter :: ChemData_DataNum = 16                 !データ数
+  character(2)       :: ChemData_AtmSymbol(ChemData_AtmNum)   !原子記号
+  real(8)            :: ChemData_AtmWt(ChemData_AtmNum)       !原子量 [kg/mol]
+  character(20)      :: ChemData_SpcSymbol(ChemData_SpcNum)   !分子記号
+  character(3)       :: ChemData_Phase(ChemData_SpcNum)       !相
+  real(8)            :: ChemData_MolWt(ChemData_SpcNum)       !分子量 [kg/mol]
+  real(8)            :: ChemData_GasR(ChemData_SpcNum)        !気体定数[J/K kg]
+  real(8)            :: ChemData_SpcFormula(ChemData_SpcNum,ChemData_AtmNum) 
+                                            !分子を構成する元素の個数
+  real(8)            :: ChemData_Entropy(ChemData_SpcNum)  
+                                            !基準エントロピー[J/K mol]
+  real(8)            :: ChemData_Enthalpy(ChemData_SpcNum)
+                                            !基準エンタルピー[J/K mol]
+  real(8)            :: ChemData_CpPerMol(ChemData_SpcNum, ChemData_DataNum)   
+                                            !比熱(モル当量) [J/K mol]
+  real(8)            :: ChemData_Cp(ChemData_SpcNum, ChemData_DataNum)
+                                            !比熱(単位質量) [J/K kg]
+  real(8)            :: ChemData_Cp_Temp(ChemData_SpcNum, ChemData_DataNum)
+                                            !比熱データに対応する温度[K]
+  real(8)            :: ChemData_CpPerMolRef(ChemData_SpcNum)
+                                            !標準状態の比熱(モル当量) [J/K mol]
+  real(8)            :: ChemData_CpRef(ChemData_SpcNum)
+                                            !標準状態の比熱(単位質量) [J/K kg]
+  real(8)            :: ChemData_CvPerMolRef(ChemData_SpcNum)
+                                            !標準状態の比熱(モル当量) [J/K mol]
+  real(8)            :: ChemData_CvRef(ChemData_SpcNum)
+                                            !標準状態の比熱(単位質量) [J/K kg]
+  real(8)            :: ChemData_SVapPress(ChemData_SpcNum, ChemData_DataNum)  
+                                            ! 飽和蒸気圧 [Pa]
+  real(8)            :: ChemData_SVapPress_Temp(ChemData_SpcNum, ChemData_DataNum)
+                                            !飽和蒸気圧データに対応する温度 [K]
+  real(8)            :: ChemData_SVapPress_AntoineA(ChemData_SpcNum) 
+                                            !Antoine 式の A 係数
+  real(8)            :: ChemData_SVapPress_AntoineB(ChemData_SpcNum) 
+                                            !Antoine 式の B 係数
+  real(8)            :: ChemData_SVapPress_AntoineC(ChemData_SpcNum) 
+                                            !Antoine 式の C 係数
+  real(8)            :: ChemData_SVapPress_AntoineUnit(ChemData_SpcNum) 
+                                            !Antoine 式の単位変換用の係数
+  real(8)            :: ChemData_SVapPress_AMPA(ChemData_SpcNum) 
+                                            !Antoine 式の A 係数
+  real(8)            :: ChemData_SVapPress_AMPB(ChemData_SpcNum) 
+                                            !Antoine 式の B 係数
+  real(8)            :: ChemData_SVapPress_AMPC(ChemData_SpcNum) 
+                                            !Antoine 式の C 係数
+  real(8)            :: ChemData_SVapPress_AMPD(ChemData_SpcNum) 
+                                            !Antoine 式の C 係数
+  real(8)            :: ChemData_SVapPress_AMPE(ChemData_SpcNum) 
+                                            !Antoine 式の単位変換用の係数
+
+contains
+
+  subroutine ChemData_Init
+    !
+    ! 物質の名前に対して番号付けを行い, その番号に対して
+    ! 諸々の物性値を割り当てる
+    !
+
+    !暗黙の型宣言禁止
+    implicit none
+    
+    !内部変数
+    integer        :: SNum, ANum1, ANum2, ANum3, RNum
+    character(2)   :: AtmSymbol
+    character(20)  :: SpcSymbol
+
+    !-------------------------------------------------------------
+    ! 元素, 分子名を配列に格納. 
+    !-------------------------------------------------------------
+    !原子記号 
+    ChemData_AtmSymbol = (/ &
+      & "H ",               & ! #1
+      & "He",               & ! #2
+      & "C ",               & ! #3
+      & "N ",               & ! #4
+      & "O ",               & ! #5
+      & "S "                & ! #6
+      & /)
+
+    !原子量 (kg/mol). 
+    ChemData_AtmWt = (/                       &
+      & 1.00794d-3,      & ! #1
+      & 4.002602d-3,     & ! #2
+      & 12.0107d-3,      & ! #3
+      & 14.00674d-3,     & ! #4
+      & 15.9994d-3,      & ! #5
+      & 32.066d-3        & ! #6
+      /) 
+
+    !分子
+    ChemData_SpcSymbol = (/ &
+      & "N2-g   ",  &              !#01
+      & "H2-g   ",  &              !#02
+      & "He-g   ",  &              !#03
+      & "He-g   ",  &              !#04
+      & "H2O-g  ",  &              !#05
+      & "H2O-l  ",  &              !#06
+      & "H2O-s  ",  &              !#07
+      & "NH3-g  ",  &              !#08
+      & "NH3-s  ",  &              !#09
+      & "H2S-g  ",  &              !#10
+      & "NH4SH-s",  &              !#11
+      & "CO2-g  ",  &              !#12
+      & "CO2-s  ",  &              !#13
+      & "CH4-g  ",  &              !#14
+      & "CH4-l  ",  &              !#15
+      & "CH4-s  "   &              !#16
+      & /)
+
+    !-------------------------------------------------------------
+    ! それぞれの元素, 分子に対応する物性値を格納
+    !-------------------------------------------------------------
+    !初期化
+    ChemData_MolWt       = 0.0d0
+    ChemData_GasR        = 0.0d0 
+    ChemData_Entropy     = 0.0d0
+    ChemData_Enthalpy    = 0.0d0
+    ChemData_SpcFormula  = 0.0d0
+    ChemData_CpPerMol    = 0.0d0
+    ChemData_Cp          = 0.0d0
+    ChemData_Cp_Temp     = 0.0d0
+    ChemData_CpPerMolRef = 0.0d0
+    ChemData_CpRef       = 0.0d0
+    ChemData_CvPerMolRef = 0.0d0
+    ChemData_CvRef       = 0.0d0
+    ChemData_SVapPress   = 0.0d0
+    ChemData_SVapPress_Temp     = 0.0d0
+    ChemData_SVapPress_AntoineA = 0.0d0
+    ChemData_SVapPress_AntoineB = 0.0d0
+    ChemData_SVapPress_AntoineC = 0.0d0
+    ChemData_SVapPress_AntoineUnit = 0.0d0
+    ChemData_SVapPress_AMPA = 0.0d0
+    ChemData_SVapPress_AMPB = 0.0d0
+    ChemData_SVapPress_AMPC = 0.0d0
+    ChemData_SVapPress_AMPD = 0.0d0
+    ChemData_SVapPress_AMPE = 0.0d0
+    SNum = 0
+    RNum = 0
+    ANum1 = 0
+    ANum2 = 0
+    ANum3 = 0
+
+    !!=============================================================
+    !! N2-g に関する物性
+    !!=============================================================
+    SpcSymbol = 'N2-g'
+    SNum  = ChemData_SearchSpc( SpcSymbol )
+    AtmSymbol = 'N'
+    ANum1 = ChemData_SearchAtm( AtmSymbol )
+
+    !相
+    ChemData_Phase(SNum) = 'Gas'
+
+    !基準状態でのエントロピー. 
+    ChemData_Entropy(SNum) = 191.609d0
+
+    !基準状態でのエンタルピー
+    ! JANAF Chemical Webbook にも載っていないので, 0.0 を入れておく. 
+    ChemData_Enthalpy(SNum) = 0.0d0   
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 2.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+     
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+
+    !単位モル当たりの定圧比熱 [J/K mol]. 温度依存性を考慮
+    ChemData_CpPerMol(SNum,1:9) = (/ &
+      & 29.104d0, 29.107d0, 29.111d0, 29.124d0, 29.125d0, &
+      & 29.165d0, 29.249d0, 29.387d0, 29.58d0 /)
+
+    !単位質量当たりの定圧比熱 [J/K kg]. 温度依存性を考慮
+    ChemData_Cp(SNum,:) = &
+      & ChemData_CpPerMol(SNum,:) / ChemData_MolWt(SNum)
+
+    !定圧比熱の温度依存性
+    ChemData_Cp_temp(SNum,1:9) = (/ &
+      & 100.0d0,  200.0d0,  250.0d0,  298.15d0, 300.0d0,  &
+      & 350.0d0,  400.0d0,  450.0d0,  500.0d0 /)
+
+    !基準状態の配列要素の番号を求める
+    RNum = ChemData_SearchRef(ChemData_Cp_temp(SNum,:))
+
+    !基準状態での単位モル当たりの定圧比熱 [J/K mol]. 
+    ChemData_CpPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum)
+       
+    !基準状態での単位質量当たりの定圧比熱 [J/K kg]. 
+    ChemData_CpRef(SNum) = ChemData_Cp(SNum, RNum)
+
+    !基準状態での単位モル当たりの定積比熱 [J/K mol]. 
+    ChemData_CvPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum) - GasRUniv
+    
+    !基準状態での単位質量当たりの定積比熱 [J/K kg]. 
+    ChemData_CvRef(SNum) = &
+      & ChemData_CvPerMolRef(SNum) / ChemData_MolWt(SNum)
+
+
+    !!=============================================================
+    !! H2-g に関する物性
+    !!=============================================================
+    SpcSymbol = 'H2-g'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'H'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Gas'
+
+    !基準状態でのエントロピー 
+    ChemData_Entropy(SNum) = 130.68d0
+
+    !基準状態でのエンタルピー, 載っていなかったの 0.0
+    ChemData_Enthalpy(SNum) = 0.0d0
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 2.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+     
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+    
+    !単位モル当たりの定圧比熱 [J/K mol]. 温度依存性を考慮
+    ChemData_CpPerMol(SNum,1:12) = (/ &
+      & 20.65d0, 21.15d0, 22.46d0, 23.85d0, 25.18d0, &
+      & 26.32d0, 27.17d0, 27.61d0, 28.03d0, 28.34d0, &
+      & 28.57d0, 28.59d0 /)
+
+    !単位質量当たりの定圧比熱 [J/K kg]. 温度依存性を考慮
+    ChemData_Cp(SNum,:) = &
+      & ChemData_CpPerMol(SNum,:) / ChemData_MolWt(SNum)
+
+    !定圧比熱の温度依存性
+    ChemData_Cp_temp(SNum,1:12) = (/ &
+      & 50.0d0,    75.0d0, 100.0d0, 125.0d0, 150.0d0, &
+      & 175.0d0,  200.0d0, 225.0d0, 250.0d0, 275.0d0, &
+      & 298.15d0, 300.0d0 /)
+
+    !基準状態の配列要素の番号を求める
+    RNum = ChemData_SearchRef(ChemData_Cp_temp(SNum,:))
+
+    !基準状態での単位モル当たりの定圧比熱 [J/K mol]. 
+    ChemData_CpPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum)
+        
+    !基準状態での単位質量当たりの定圧比熱 [J/K kg]. 
+    ChemData_CpRef(SNum) = ChemData_Cp(SNum, RNum)
+
+    !基準状態での単位モル当たりの定積比熱 [J/K mol]. 
+    ChemData_CvPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum) - GasRUniv
+    
+    !基準状態での単位質量当たりの定積比熱 [J/K kg]. 
+    ChemData_CvRef(SNum) = &
+      & ChemData_CvPerMolRef(SNum) / ChemData_MolWt(SNum)
+
+
+    !!=============================================================
+    !! CO2-g に関する物性
+    !!=============================================================
+    SpcSymbol = 'CO2-g'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'C'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'O'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Gas'
+
+    !基準状態でのエントロピー 
+    ChemData_Entropy(SNum) =  213.785d0
+
+    !基準状態でのエンタルピー
+    ChemData_Enthalpy(SNum) = -393510.0d0
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 1.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 2.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+     
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+    
+    !単位モル当たりの定圧比熱 [J/K mol]. 温度依存性を考慮
+    ChemData_CpPerMol(SNum,1:5) = (/ &
+      & 34.46d0, 32.3d0, 37.53d0, 41.44d0, 44.68d0 /)
+    
+    !単位質量当たりの定圧比熱 [J/K kg]. 温度依存性を考慮
+    ChemData_Cp(SNum,:) = &
+      & ChemData_CpPerMol(SNum,:) / ChemData_MolWt(SNum)
+
+    !定圧比熱の温度依存性
+    ChemData_Cp_temp(SNum,1:5) = (/ &
+      & 200.0d0, 298.15d0, 300.0d0, 400.0d0, 500.0d0 /)
+
+    !基準状態の配列要素の番号を求める
+    RNum = ChemData_SearchRef(ChemData_Cp_temp(SNum,:))
+
+    !基準状態での単位モル当たりの定圧比熱 [J/K mol]. 
+    ChemData_CpPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum)
+        
+    !基準状態での単位質量当たりの定圧比熱 [J/K kg]. 
+    ChemData_CpRef(SNum) = ChemData_Cp(SNum, RNum)
+
+    !基準状態での単位モル当たりの定積比熱 [J/K mol]. 
+    ChemData_CvPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum) - GasRUniv
+    
+    !基準状態での単位質量当たりの定積比熱 [J/K kg]. 
+    ChemData_CvRef(SNum) = &
+      & ChemData_CvPerMolRef(SNum) / ChemData_MolWt(SNum)
+
+
+    !!=============================================================
+    !! CO2-s に関する物性
+    !!=============================================================
+    SpcSymbol = 'CO2-s'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'C'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'O'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Sol'
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 1.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 2.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+     
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+    
+    !Antoine の式の係数 (化学工学会, 1999)
+    !2008/06/09 山下 達也 追加 
+    ChemData_SvapPress_AntoineA(SNum) =  27.4d0
+    ChemData_SvapPress_AntoineB(SNum) =  3103d0 
+    ChemData_SvapPress_AntoineC(SNum) =  -0.16d0
+    ChemData_SvapPress_AntoineUnit(SNum) = dlog(133.322d0)
+
+    !!=============================================================
+    !! He-g に関する物性
+    !!=============================================================
+    SpcSymbol = 'He-g'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'He'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Gas'
+
+    !基準状態でのエントロピー 
+    ChemData_Entropy(SNum) = 154.845d0
+
+    !基準状態でのエンタルピー
+    ChemData_Enthalpy(SNum) = 0.0d0
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 1.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+     
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+    
+    !単位モル当たりの定圧比熱 [J/K mol]. 温度依存性を考慮
+    ChemData_CpPerMol(SNum,1:12) = 20.786d0
+
+    !単位質量当たりの定圧比熱 [J/K kg]. 温度依存性を考慮
+    ChemData_Cp(SNum,:) = &
+      & ChemData_CpPerMol(SNum,:) / ChemData_MolWt(SNum)
+
+    !定圧比熱の温度依存性
+    ChemData_Cp_temp(SNum,1:12) = (/ &
+      & 50.0d0,    75.0d0, 100.0d0, 125.0d0, 150.0d0, &
+      & 175.0d0,  200.0d0, 225.0d0, 250.0d0, 275.0d0, &
+      & 298.15d0, 300.0d0 /)
+
+    !基準状態の配列要素の番号を求める
+    RNum = ChemData_SearchRef(ChemData_Cp_temp(SNum,:))
+
+    !基準状態での単位モル当たりの定圧比熱 [J/K mol]. 
+    ChemData_CpPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum)
+        
+    !基準状態での単位質量当たりの定圧比熱 [J/K kg]. 
+    ChemData_CpRef(SNum) = ChemData_Cp(SNum, RNum)
+
+    !基準状態での単位モル当たりの定積比熱 [J/K mol]. 
+    ChemData_CvPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum) - GasRUniv
+    
+    !基準状態での単位質量当たりの定積比熱 [J/K kg]. 
+    ChemData_CvRef(SNum) = &
+      & ChemData_CvPerMolRef(SNum) / ChemData_MolWt(SNum)
+
+
+    !!=============================================================
+    !! H2O-g に関する物性
+    !!=============================================================
+    SpcSymbol = 'H2O-g'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'H'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'O'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Gas'
+
+    !基準状態でのエントロピー 
+    ChemData_Entropy(SNum) = 188.834d0
+
+    !基準状態でのエンタルピー
+    ChemData_Enthalpy(SNum) = -2241826.0d0
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 2.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 1.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+    
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+
+    !単位モル当たりの定圧比熱 [J/K mol]. 温度依存性を考慮
+    ChemData_CpPerMol(SNum,1:11) = (/ &
+      & 33.299d0, 33.349d0, 33.590d0, 33.596d0, 34.262d0, &
+      & 35.266d0, 36.325d0, 37.495d0, 38.721d0, 39.987d0, 41.268d0 /) 
+    
+    !単位質量当たりの定圧比熱 [J/K kg]. 温度依存性を考慮
+    ChemData_Cp(SNum,:) = &
+      & ChemData_CpPerMol(SNum,:) / ChemData_MolWt(SNum)
+    
+    !定圧比熱データに対応する温度
+    ChemData_Cp_temp(SNum,1:11) = (/ &
+      & 100.0d0,  200.0d0,  298.15d0, 300.0d0,  400.0d0, &
+      & 500.0d0,  600.0d0,  700.0d0,  800.0d0,  900.0d0,  1000.0d0 /)
+    
+    !基準状態での定圧比熱
+    RNum  = ChemData_SearchRef(ChemData_Cp_temp(SNum,:))
+
+    !単位モル当たりの定圧比熱 [J/K mol].
+    ChemData_CpPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum)
+        
+    !単位質量当たりの定圧比熱 [J/K kg]. 
+    ChemData_CpRef(SNum) = ChemData_Cp(SNum, RNum)
+
+    !単位モル当たりの定積比熱 [J/K mol]. 
+    ChemData_CvPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum) - GasRUniv
+    
+    !単位質量当たりの定積比熱 [J/K kg]. 
+    ChemData_CvRef(SNum) = &
+      & ChemData_CvPerMolRef(SNum) / ChemData_MolWt(SNum)
+
+    !!=============================================================
+    !! H2O-l に関する物性
+    !!=============================================================
+    SpcSymbol = 'H2O-l'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'H'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'O'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Liq'
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 2.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 1.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+    
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+
+    !飽和蒸気圧 [Pa]
+    ChemData_SvapPress(SNum,1:16) = (/ &
+      & 610.749769736842d0, 1227.63236842105d0, 2337.94105263158d0, &
+      & 4243.25101973684d0, 7376.72664473684d0, 12338.9851973684d0, &
+      & 19923.6947368421d0, 31166.7700657895d0, 47364.1046052632d0, &
+      & 70110.2338815789d0, 101325d0,           143268.217105263d0, &
+      & 198530.338815789d0, 270111.118421053d0, 361356.947368421d0, &
+      & 475974.1875d0 /)
+
+    !飽和蒸気圧のデータに対応する温度
+    ChemData_SvapPress_Temp(SNum,1:16) = (/ &
+      & 273.15d0, 283.15d0, 293.15d0, 303.15d0, 313.15d0, &
+      & 323.15d0, 333.15d0, 343.15d0, 353.15d0, 363.15d0, &
+      & 373.15d0, 383.15d0, 393.15d0, 403.15d0, 413.15d0, &
+      & 423.15d0 /)
+
+    !Antoine の式の係数
+    ChemData_SvapPress_AntoineA(SNum) =  7.9186968d0
+    ChemData_SvapPress_AntoineB(SNum) =  1636.909d0
+    ChemData_SvapPress_AntoineC(SNum) =  224.92d0
+    ChemData_SvapPress_AntoineUnit(SNum) = dlog(133.322d0)
+
+    !AMP 式の係数
+    ChemData_SvapPress_AMPA(SNum) = -2313.0338d0
+    ChemData_SvapPress_AMPB(SNum) = -164.03307d0
+    ChemData_SvapPress_AMPC(SNum) =  38.053682d0
+    ChemData_SvapPress_AMPD(SNum) = -0.13844344d0    
+    ChemData_SvapPress_AMPE(SNum) =  7.4465367d-5
+
+
+    !!=============================================================
+    !! H2O-s に関する物性
+    !!=============================================================
+    SpcSymbol = 'H2O-s'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'H'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'O'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Sol'
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 2.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 1.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+    
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+
+    !飽和蒸気圧 [Pa]
+    ChemData_SvapPress(SNum,1:15) = (/ &
+      & 181.451743421053d0, 198.650328947368d0, 217.582105263158d0, &
+      & 237.980427631579d0, 259.978618421053d0, 284.109967105263d0, &
+      & 310.107828947368d0, 338.23884868421d0,  368.636348684211d0,  &
+      & 401.700296052632d0, 437.297368421053d0, 475.694210526316d0, &
+      & 517.290789473684d0, 562.220427631579d0, 610.483125d0 /)
+
+    !飽和蒸気圧のデータに対応する温度
+    ChemData_SvapPress_Temp(SNum,1:15) = (/ &
+      & 259.15d0, 260.15d0, 261.15d0, 262.15d0, 263.15d0, &
+      & 264.15d0, 265.15d0, 266.15d0, 267.15d0, 268.15d0, &
+      & 269.15d0, 270.15d0, 271.15d0, 272.15d0, 273.15d0  /)
+
+    !Antoine の式の係数
+    ChemData_SvapPress_AntoineA(SNum) =  8.184254d0
+    ChemData_SvapPress_AntoineB(SNum) =  1791.3d0
+    ChemData_SvapPress_AntoineC(SNum) =  238.1d0
+    ChemData_SvapPress_AntoineUnit(SNum) = dlog(133.322d0)
+
+    !AMP 式の係数
+    ChemData_SvapPress_AMPA(SNum) = -5631.1206d0
+    ChemData_SvapPress_AMPB(SNum) = -8.363602d0
+    ChemData_SvapPress_AMPC(SNum) =  8.2312d0
+    ChemData_SvapPress_AMPD(SNum) = -0.03861449d0
+    ChemData_SvapPress_AMPE(SNum) =  2.77494d-5
+
+
+    !!=============================================================
+    !! NH3-g に関する物性
+    !!=============================================================
+    SpcSymbol = 'NH3-g'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'H'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'N'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+    
+    !相
+    ChemData_Phase(SNum) = 'Gas'
+
+    !基準状態でのエントロピー 
+    ChemData_Entropy(SNum) = 192.774d0
+
+    !基準状態でのエンタルピー
+    ChemData_Enthalpy(SNum) = -45898.0d0
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 3.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 1.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+    
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+
+    !単位モル当たりの定圧比熱 [J/K mol]. 温度依存性を考慮
+    ChemData_CpPerMol(SNum,1:11) = (/ &
+      & 33.284d0, 33.757d0, 35.652d0, 35.701d0, 38.716d0, &
+      & 42.048d0, 45.293d0, 48.354d0, 51.235d0, 53.948d0, 56.491d0 /) 
+    
+    !単位質量当たりの定圧比熱 [J/K kg]. 温度依存性を考慮
+    ChemData_Cp(SNum,:) = &
+      & ChemData_CpPerMol(SNum,:) / ChemData_MolWt(SNum)
+    
+    !定圧比熱データに対応する温度
+    ChemData_Cp_temp(SNum,1:11) = (/ &
+      & 100.0d0,  200.0d0,  298.15d0, 300.0d0,  400.0d0, &
+      & 500.0d0,  600.0d0,  700.0d0,  800.0d0,  900.0d0,  1000.0d0 /)
+    
+    !基準状態での定圧比熱
+    RNum  = ChemData_SearchRef(ChemData_Cp_temp(SNum,:))
+
+    !単位モル当たりの定圧比熱 [J/K mol].
+    ChemData_CpPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum)
+        
+    !単位質量当たりの定圧比熱 [J/K kg]. 
+    ChemData_CpRef(SNum) = ChemData_Cp(SNum, RNum)
+
+    !単位モル当たりの定積比熱 [J/K mol]. 
+    ChemData_CvPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum) - GasRUniv
+    
+    !単位質量当たりの定積比熱 [J/K kg]. 
+    ChemData_CvRef(SNum) = &
+      & ChemData_CvPerMolRef(SNum) / ChemData_MolWt(SNum)
+
+
+    !!=============================================================
+    !! NH3-s に関する物性
+    !!=============================================================
+    SpcSymbol = 'NH3-s'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'H'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'N'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+    
+    !相
+    ChemData_Phase(SNum) = 'Sol'
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 3.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 1.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+    
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+
+    !飽和蒸気圧 [Pa]
+    ChemData_SvapPress(SNum,1:4) = (/ &
+      & 1333.22368421053d0, 2666.44736842105d0, 7999.34210526316d0, &
+      & 13332.2368421053d0 /)
+
+    !飽和蒸気圧のデータに対応する温度
+    ChemData_SvapPress_Temp(SNum,1:4) = (/ &
+      & 181.09d0, 187.37d0, 198.25d0, 203.76d0 /)
+
+    !Antoine の式の係数
+    ChemData_SvapPress_AntoineA(SNum) =  9.96382d0
+    ChemData_SvapPress_AntoineB(SNum) =  1617.907d0 
+    ChemData_SvapPress_AntoineC(SNum) =  272.55d0
+    ChemData_SvapPress_AntoineUnit(SNum) = dlog(133.322d0)
+    
+    !AMP 式の係数
+    ChemData_SvapPress_AMPA(SNum) = -4122.0d0
+    ChemData_SvapPress_AMPB(SNum) = 41.67871d0
+    ChemData_SvapPress_AMPC(SNum) = -1.8163d0
+    ChemData_SvapPress_AMPD(SNum) = 0.0d0
+    ChemData_SvapPress_AMPE(SNum) = 0.0d0
+ 
+    !!=============================================================
+    !! CH4-g に関する物性
+    !!=============================================================
+    SpcSymbol = 'CH4-g'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'C'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'H'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Gas'
+
+    !基準状態でのエントロピー 
+    ChemData_Entropy(SNum) = 186.251d0
+
+    !基準状態でのエンタルピー
+    ChemData_Enthalpy(SNum) = -74873.0d0
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 1.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 4.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+    
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+
+    !単位モル当たりの定圧比熱 [J/K mol]. 温度依存性を考慮
+    ChemData_CpPerMol(SNum,1:14) = (/ &
+      & 33.258d0, 33.473d0, 34.216d0, 35.639d0, 35.708d0, &
+      & 37.874d0, 40.500d0, 43.374d0, 46.342d0, 52.227d0, &
+      & 57.794d0, 62.932d0, 67.601d0, 71.795d0 /)
+    
+    !単位質量当たりの定圧比熱 [J/K kg]. 温度依存性を考慮
+    ChemData_Cp(SNum,:) = &
+      & ChemData_CpPerMol(SNum,:) / ChemData_MolWt(SNum)
+    
+    !定圧比熱データに対応する温度
+    ChemData_Cp_temp(SNum,1:14) = (/ &
+      & 100.0d0,  200.0d0,  250.0d0,  298.15d0, 300.0d0,  &
+      & 350.0d0,  400.0d0,  450.0d0,  500.0d0,  600.0d0,  &
+      & 700.0d0,  800.0d0,  900.0d0,  1000.0d0 /)
+    
+    !基準状態での定圧比熱
+    RNum  = ChemData_SearchRef(ChemData_Cp_temp(SNum,:))
+
+    !単位モル当たりの定圧比熱 [J/K mol].
+    ChemData_CpPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum)
+        
+    !単位質量当たりの定圧比熱 [J/K kg]. 
+    ChemData_CpRef(SNum) = ChemData_Cp(SNum, RNum)
+
+    !単位モル当たりの定積比熱 [J/K mol]. 
+    ChemData_CvPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum) - GasRUniv
+    
+    !単位質量当たりの定積比熱 [J/K kg]. 
+    ChemData_CvRef(SNum) = &
+      & ChemData_CvPerMolRef(SNum) / ChemData_MolWt(SNum)
+
+    !!=============================================================
+    !! CH4-l に関する物性
+    !!=============================================================
+    SpcSymbol = 'CH4-l'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'C'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'H'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Liq'
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 1.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 4.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+    
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+
+    !飽和蒸気圧 [Pa]
+    ChemData_SvapPress(SNum,1:2) = (/ 97.6d0, 111.66d0 /)
+
+    !飽和蒸気圧のデータに対応する温度
+    ChemData_SvapPress_Temp(SNum,1:2) = (/ 26664.474d0, 101325.0d0 /)
+
+    !Antoine の式の係数
+    ChemData_SvapPress_AntoineA(SNum) =  6.61184d0
+    ChemData_SvapPress_AntoineB(SNum) =  389.93d0
+    ChemData_SvapPress_AntoineC(SNum) =  266.0d0
+    ChemData_SvapPress_AntoineUnit(SNum) = dlog(133.322d0)
+
+    !!=============================================================
+    !! CH4-s に関する物性
+    !!=============================================================
+    SpcSymbol = 'CH4-s'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'C'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'H'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Sol'
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 1.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 4.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+    
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+
+    !飽和蒸気圧 [Pa]
+    ChemData_SvapPress(SNum,1:3) = (/  77.64d0, 81.38d0, 88.09d0 /)
+
+    !飽和蒸気圧のデータに対応する温度
+    ChemData_SvapPress_Temp(SNum,1:3) = (/ 1333.224d0, 2666.447d0, 7999.342d0 /)
+
+    !Antoine の式の係数
+    ChemData_SvapPress_AntoineA(SNum) =  7.6954d0
+    ChemData_SvapPress_AntoineB(SNum) =  532.2d0
+    ChemData_SvapPress_AntoineC(SNum) =  275.0d0
+    ChemData_SvapPress_AntoineUnit(SNum) = dlog(133.322d0)
+
+    !!=============================================================
+    !! H2S-g に関する物性
+    !!=============================================================
+    SpcSymbol = 'H2S-g'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'H'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'S'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Gas'
+
+    !基準状態でのエントロピー 
+    ChemData_Entropy(SNum) = 205.757d0
+
+    !基準状態でのエンタルピー
+    ChemData_Enthalpy(SNum) = -20502.0d0
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 2.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 1.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+    
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+
+    !単位モル当たりの定圧比熱 [J/K mol]. 温度依存性を考慮
+    ChemData_CpPerMol(SNum,1:11) = (/ &
+      & 33.259d0, 33.38d0, 34.192d0, 34.208d0, 35.581d0, &
+      & 37.192d0, 38.936d0, 40.74d0, 42.518d0, 44.212d0, 45.786d0 /)
+    
+    !単位質量当たりの定圧比熱 [J/K kg]. 温度依存性を考慮
+    ChemData_Cp(SNum,:) = &
+      & ChemData_CpPerMol(SNum,:) / ChemData_MolWt(SNum)
+    
+    !定圧比熱データに対応する温度
+    ChemData_Cp_temp(SNum,1:11) = (/ &
+      & 100.0d0,  200.0d0,  298.15d0, 300.0d0,  400.0d0, &
+      & 500.0d0,  600.0d0,  700.0d0,  800.0d0,  900.0d0,  1000.0d0 /)
+    
+    !基準状態での定圧比熱
+    RNum  = ChemData_SearchRef(ChemData_Cp_temp(SNum,:))
+
+    !単位モル当たりの定圧比熱 [J/K mol].
+    ChemData_CpPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum)
+        
+    !単位質量当たりの定圧比熱 [J/K kg]. 
+    ChemData_CpRef(SNum) = ChemData_Cp(SNum, RNum)
+
+    !単位モル当たりの定積比熱 [J/K mol]. 
+    ChemData_CvPerMolRef(SNum) = ChemData_CpPerMol(SNum, RNum) - GasRUniv
+    
+    !単位質量当たりの定積比熱 [J/K kg]. 
+    ChemData_CvRef(SNum) = &
+      & ChemData_CvPerMolRef(SNum) / ChemData_MolWt(SNum)
+    
+    !!=============================================================
+    !! NH4SH-s に関する物性
+    !!=============================================================
+    SpcSymbol = 'NH4SH-s'
+    SNum  = ChemData_SearchSpc( SpcSymbol)
+    AtmSymbol = 'H'
+    ANum1 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'N'
+    ANum2 = ChemData_SearchAtm( AtmSymbol)
+    AtmSymbol = 'S'
+    ANum3 = ChemData_SearchAtm( AtmSymbol)
+
+    !相
+    ChemData_Phase(SNum) = 'Sol'
+
+    !分子を構成する元素
+    ChemData_SpcFormula(SNum,ANum1) = 5.0d0
+    ChemData_SpcFormula(SNum,ANum2) = 1.0d0
+    ChemData_SpcFormula(SNum,ANum3) = 1.0d0
+
+    !分子量 [kg/mol]
+    ChemData_MolWt(SNum) = &
+      & dot_product(ChemData_AtmWt, ChemData_SpcFormula(SNum,:))
+    
+    !気体定数
+    ChemData_GasR(SNum) = GasRUniv / ChemData_MolWt(SNum)
+
+    !飽和蒸気圧 [Pa]
+    ChemData_SvapPress(SNum,1:9) = (/ &
+      & 133.322368421053d0, 666.611842105263d0, 1333.22368421053d0, &
+      & 2666.44736842105d0, 7999.34210526316d0, 13332.2368421053d0, &
+      & 26664.4736842105d0, 53328.9473684211d0, 101325d0           /)   
+    
+    !飽和蒸気圧のデータに対応する温度
+    ChemData_SvapPress_Temp(SNum,1:9) = (/ &
+      & 222.05d0, 237.15d0, 244.45d0, 252.35d0, &
+      & 266.15d0, 273.15d0, 283.65d0, 294.95d0, 306.45d0 /)
+    
+    !Antoine の式の係数 (JANAF Chemical WebBook より)
+    !但し, 計算コードとの整合性より C 係数は 273.15 [K] 加えてある.
+    ChemData_SvapPress_AntoineA(SNum) =  6.09146d0
+    ChemData_SvapPress_AntoineB(SNum) =  1598.378 
+    ChemData_SvapPress_AntoineC(SNum) =  -43.805d0 + Temp0C
+    ChemData_SvapPress_AntoineUnit(SNum) = dlog(1.0d5)
+    
+  end subroutine ChemData_Init
+
+!!!
+!!! 検索エンジン等の関数
+!!!
+
+!!!-----------------------------------------------------------------!!!
+  function ChemData_SearchSpc(var)
+    !
+    ! 名前の検索エンジン
+    !
+
+    !暗黙の型宣言禁止
+    implicit none
+
+    !入出力変数
+    integer                   :: ChemData_SearchSpc
+    character(20), intent(in) :: var
+    
+    !内部変数
+    integer                  :: i
+
+    !初期化
+    ChemData_SearchSpc = 0
+
+    !探査
+    Search: do i = 1, ChemData_SpcNum
+      
+      if (trim(ChemData_SpcSymbol(i)) == trim(var)) then 
+        ChemData_SearchSpc = i
+        exit Search
+      end if
+    end do Search
+    
+  end function ChemData_SearchSpc
+
+
+!!!-----------------------------------------------------------------!!!
+  function ChemData_SearchAtm(var)
+    !
+    ! 名前の検索エンジン
+    !
+
+    !暗黙の型宣言禁止
+    implicit none
+
+    !入出力変数
+    integer                  :: ChemData_SearchAtm
+    character(2), intent(in) :: var
+
+    !内部変数
+    integer                  :: i
+
+    !初期化
+    ChemData_SearchAtm = 0
+
+    !探査
+    Search: do i = 1, ChemData_AtmNum
+      if (trim(ChemData_AtmSymbol(i)) == trim(var)) then 
+
+        ChemData_SearchAtm = i
+        exit Search
+      end if
+    end do Search
+    
+  end function ChemData_SearchAtm
+  
+
+!!!-----------------------------------------------------------------!!!
+  function ChemData_SearchRef( array )
+    !
+    ! 名前の検索エンジン
+    !
+
+    !暗黙の型宣言禁止
+    implicit none
+
+    !入出力変数
+    integer                  :: ChemData_SearchRef
+    real(8), intent(in)      :: array(:)
+    
+    !内部変数
+    integer                  :: i
+
+    !初期化
+    ChemData_SearchRef = 0
+    
+    !探査
+    Search: do i = 1, size(array,1)
+      if (array(i) == TempRef) then 
+        ChemData_SearchRef = i
+        exit Search
+      end if
+    end do Search
+    
+  end function ChemData_SearchRef
+  
+
+!!!-----------------------------------------------------------------!!!
+  function ChemData_SpcID( SpcNum, SpcSymbol )
+    !
+    ! 文字として与えられた化学種名から, その化学種の配列添え字を得る
+    ! 配列の大きさを引数として与える必要があることに注意.
+    !
+
+    !暗黙の型宣言禁止
+    implicit none
+
+    !入出力変数
+    integer, intent(in)       :: SpcNum
+    character(20), intent(in) :: SpcSymbol(SpcNum)
+    integer                   :: ChemData_SpcID(SpcNum)
+    
+    !内部変数
+    integer                  :: i, j
+
+    !初期化
+    ChemData_SpcID = 0
+
+!    write(*,*) SpcNum, SpcSymbol(SpcNum)
+
+    !探査
+    do i = 1, size(SpcSymbol,1)
+      Search: do j = 1, size(ChemData_SpcSymbol,1)
+        if (ChemData_SpcSymbol(j) == SpcSymbol(i)) then 
+          ChemData_SpcID(i) = j
+          exit Search
+        end if
+      end do Search
+    end do
+
+  end function ChemData_SpcID
+  
+!!!-----------------------------------------------------------------!!!
+  function ChemData_OneSpcID( SpcSymbol )
+    !
+    ! 文字として与えられた化学種名から, その化学種の配列添え字を得る
+    ! 配列の大きさを引数として与える必要があることに注意.
+    !
+
+    !暗黙の型宣言禁止
+    implicit none
+
+    !入出力変数
+    integer                   :: ChemData_OneSpcID
+    character(20), intent(in) :: SpcSymbol
+    
+    !内部変数
+    integer                  :: j
+
+    !初期化
+    ChemData_OneSpcID = 0
+
+    !探査
+    Search: do j = 1, size(ChemData_SpcSymbol,1)
+      if (ChemData_SpcSymbol(j) == SpcSymbol) then 
+        ChemData_OneSpcID = j
+        exit Search
+      end if
+    end do Search
+
+  end function ChemData_OneSpcID
+  
+end module ChemData

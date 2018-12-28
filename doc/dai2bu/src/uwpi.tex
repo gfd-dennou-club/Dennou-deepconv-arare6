@@ -1,0 +1,973 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 表題  3 次元非静力学モデル deepconv -- 離散モデル
+%       時間方向の離散化
+%  
+% 履歴  2004/08/14  杉山耕一朗: 作成開始
+%       2004/09/21  小高正嗣, 北守太一
+%       2005/04/13  小高正嗣
+%       2012/04/20  小高正嗣  : 3D 化
+%       2012/12/05  小高正嗣  : 圧力方程式に熱膨張項を追加
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{時間方向の離散化}
+
+\section{運動方程式と圧力方程式}
+
+空間離散化された運動方程式\Deqref{空間離散化された x 方向運動方程式},
+\Deqref{空間離散化された z 方向運動方程式}と圧力方程式\Deqref{空間離散
+  化された圧力方程式}を時間方向に離散化する. 音波に関連する項は短いタイ
+ムステップ $\Delta \tau$ で離散化し, その他の項は長いタイムステップ
+$\Delta t$ で離散化する. 音波に関連する項の離散化には HE-VI 法を採用し,
+$u$ の式は前進差分, $w, \pi$ の式は後退差分(クランク・ニコルソン法)で離
+散化する. その他の項の離散化にはリープフロッグ法を用いる. 離散化した式
+の計算はまず $u$ の式から行う. 得られた $\tau +\Delta \tau$ の $u$ を用
+いて $\pi$ を計算し, $u, \pi$ を用いて $w$ を計算する.
+
+
+運動方程式の各項のうち, 音波に関係しない項を $F_u, F_v, F_w, F_{\pi}$
+としてまとめると, 運動方程式と圧力方程式は以下のように書ける.
+%
+\begin{eqnarray}
+&& \DP{u_{i(u),j,k}}{t} = 
+- \left[
+   \bar{c_{p}} \bar{\theta}_{v} \DP{\pi}{x}
+\right]_{i(u),j,k} 
++ \left[ \alpha \DP{  Div }{x}
+\right]_{i(u),j,k} 
+  + [F_{u}]_{i(u),j,k}^{t},
+  \Deqlab{uwpi:u}\\
+&& \DP{v_{i,j(v),k}}{t} = 
+- \left[
+   \bar{c_{p}} \bar{\theta}_{v} \DP{\pi}{y}
+  \right]_{i,j(v),k} 
++ \left[  \alpha \DP{ Div }{y}
+  \right]_{i,j(v),k} 
+  + [F_{v}]_{i,j(v),k}^{t},
+  \Deqlab{uwpi:v}\\
+&& \DP{w_{i,j,k(w)}}{t} = 
+- \left[
+   \bar{c_{p}} \bar{\theta}_{v} \DP{\pi}{z}
+   \right]_{i,j,k(w)} 
++  \left[
+    \alpha\DP{ Div}{z}
+   \right]_{i,j,k(w)} 
+  + [F_{w}]_{i,j,k(w)}^{t},
+  \Deqlab{uwpi:w}\\
+&& \DP{\pi_{i,j,k}}{t}  
+  + \left[\frac{\bar{c}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \DP{(\bar{\rho} \bar{\theta}_{v} w)}{z}\right]_{i,j,k}
+  = 
+  -  \left[\frac{\bar{c}^{2}}{\bar{c_{p}} \bar{\theta}_{v}}
+       \left( \DP{u}{x} + \DP{v}{y}\right) 
+     \right]_{i,j,k} + [F_{\pi}]_{i,j,k}^{t}.
+  \Deqlab{uwpi:pi}
+\end{eqnarray}
+%
+ただし $u, v, w$ の式には音波減衰項 $\alpha Div$ を加えてある
+(Skamarock and Klemp, 1992). 音波に関連しない項 $F_{u}, F_{v}, F_{w}, F_{\pi}$ は,
+%
+\begin{eqnarray}
+  \left[F_{u}\right]_{i(u),j,k}^{t} &=&
+    \left[{\rm Adv}.{u}\right]_{i(u),j,k}^{t}
+   + \left[{\rm Turb}.{u}\right]_{i(u),j,k}^{t - \Delta t}
+   + \left[{\rm Diff}.{u}\right]_{i(u),j,k}^{t - \Delta t},
+  \Deqlab{uwpi:Fu} \\
+  \left[F_{v}\right]_{i,j(v),k}^{t} &=&  
+    \left[{\rm Adv}.{v}\right]_{i,j(v),k}^{t}
+   + \left[{\rm Turb}.{v}\right]_{i,j(v),k}^{t - \Delta t}
+   + \left[{\rm Diff}.{v}\right]_{i,j(v),k}^{t - \Delta t},
+  \Deqlab{uwpi:Fv} \\
+  \left[F_{w}\right]_{i,j,k(w)}^{t} &=&
+    \left[{\rm Adv}.{w}\right]_{i,j,k(w)}^{t}
+   + [{\rm Buoy}]_{i,j,k(w)}^{t}
+   + \left[{\rm Turb}.{w}\right]_{i,j,k(w)}^{t - \Delta t}
+  \nonumber \\
+  && + \left[{\rm Diff}.{w} \right]_{i,j,k(w)}^{t - \Delta t},
+   \Deqlab{uwpi:Fw}
+\end{eqnarray}
+\begin{eqnarray}
+  [F_{\pi}]^{t}_{i,j,k} 
+&=& 
+ \left[{\rm Adv}.{\pi}\right]_{i,j,k}^{t}
+ + \left[{\rm Diff}.{\pi}\right]_{i,j,k}^{t - \Delta t}
+  + \frac{R_{d} \pi}{{c_{v}}_{d}} \left(\DP{u}{x} + \DP{v}{y} +
+				   \DP{w}{z}\right)
+ \nonumber \\
+&&
++ \frac{\overline{c}_{i,j,k}^{2}}{{c_{p}}_{d}
+        [\overline{\theta_{v}}]_{i,j,k}}
+   \left\{
+    \frac{1}{[\overline{T}]_{i,j,k}}([Q_{cond}]_{i,j,k}^{t} +
+       [Q_{rad}]_{i,j,k}^{t} + [Q_{dis}]_{i,j,k}^{t})\right. \nonumber \\
+&& \left.- \left(
+     \frac{\sum [\dot{q}_{v}]_{i,j,k}^{t} + \sum [\dot{q}_{c}]_{i,j,k}^{t} + \sum [\dot{r}_{v}]_{i,j,k}^{t}}{1 + \sum [\overline{q_{v}}]_{i,j,k}}
+    - 
+    \frac{\sum [\dot{q}_{v}]_{i,j,k}^{t}/M_{v}}{1/M_{d} + \sum [\overline{q_{v}}]_{i,j,k}/M_{v}}
+    \right)
+   \right\}
+\nonumber \\
+\end{eqnarray}
+
+
+%
+である. これらの項は時刻 $t$ で評価することにする. 但し, 中心差分でリー
+プフロッグ法を用いるため, 数値粘性項 Diff を追加してある.
+
+\subsection{音波に関連する項の時間方向の離散化}
+
+\subsubsection{水平方向の運動方程式の離散化}
+
+\Deqref{uwpi:u}, \Deqref{uwpi:v}を時間方向に離散化すると以下のようになる. 
+%
+\begin{eqnarray}
+ u^{\tau + \Delta \tau}_{i(u),j,k}
+  &=&  u^{\tau}_{i(u),j,k}
+  -   
+  \left[
+   \bar{c_{p}} \bar{\theta}_{v} \Delta \tau
+   \DP{\pi^{\tau}}{x} 
+   \right]_{i(u),j,k}
+   + 
+   \left[ \DP{(\alpha Div)^{\tau}}{x}  \right]_{i(u),j,k} \Delta \tau
+  + 
+     F_{u,i(u),j,k}^{t} \Delta \tau, 
+\nonumber \\
+  \Deqlab{uwpi:u_sabun} \\
+%
+ v^{\tau + \Delta \tau}_{i,j(v),k}
+  &=&  v^{\tau}_{i,j(v),k}
+  -   \left[
+       \bar{c_{p}} \bar{\theta}_{v} \Delta \tau
+       \DP{\pi^{\tau}}{y} 
+      \right]_{i,j(v),k}
+  +   \left[
+       \DP{(\alpha Div)^{\tau}}{y} 
+      \right]_{i,j(v),k} \Delta \tau
+  + 
+     F_{v,i,j(v),k}^{t} \Delta \tau, 
+\nonumber \\
+  \Deqlab{uwpi:v_sabun} 
+\end{eqnarray}
+%
+
+\subsubsection{鉛直方向の運動方程式と圧力方程式の離散化}
+
+HE-VI 法を用いるので, $w$ と $\pi$ の式を連立して解く.  $w$ の式におい
+て音波減衰項は前進差分, 圧力項は後退差分で離散化する.  $\pi$ の式にお
+いて水平微分項は\Deqref{uwpi:u_sabun}で求めた $u^{\tau +\Delta \tau}$ 
+を用いて離散化し, 鉛直微分項は後退差分で離散化する.
+%
+\begin{eqnarray}
+ w^{\tau + \Delta \tau} 
+  =  w^{\tau}
+  - \bar{c_{p}} \bar{\theta}_{v} \Delta \tau
+  \left\{
+   \beta \DP{\pi^{\tau + \Delta \tau}}{z} 
+   + (1 - \beta) \DP{\pi^{\tau}}{z} 
+  \right\}
+  + \DP{(\alpha Div)^{\tau}}{z} \Delta \tau
+  + F_{w}^{t} \Delta \tau.
+ \Deqlab{uwpi:w_sabun}
+\end{eqnarray}
+%
+\begin{eqnarray}
+% \frac{\pi^{\tau + \Delta \tau} - \pi^{\tau}}{\Delta \tau} 
+%  + \frac{\bar{c}^{2}}{\bar{c_{p}} \bar{\rho} {\bar{\theta}_{v}}^{2}}
+%  \left\{
+%   \beta \DP{(\bar{\rho} \bar{\theta}_{v} w^{\tau + \Delta \tau})}{z}
+%   + (1 - \beta) \DP{(\bar{\rho} \bar{\theta}_{v} w^{\tau})}{z}
+%  \right\}
+%  = 
+%  -  \frac{\bar{c}^{2}}{\bar{c_{p}} \bar{\theta}_{v}} \DP{u^{\tau +
+%  \Delta \tau}}{x}, 
+%  \nonumber \\
+%
+ \pi^{\tau + \Delta \tau} 
+ + \beta \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+   \DP{(\bar{\rho} \bar{\theta}_{v} w^{\tau + \Delta \tau})}{z}
+  &=& 
+  \pi^{\tau}
+  - (1 - \beta) \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+    \DP{(\bar{\rho} \bar{\theta}_{v} w^{\tau})}{z}
+  \nonumber \\
+  &&
+  -  \frac{\bar{c}^{2} \Delta \tau}{\bar{c_{p}} \bar{\theta}_{v}}
+      \left( \DP{u^{\tau + \Delta \tau}}{x} + \DP{v^{\tau + \Delta \tau}}{y}
+      \right) + F_{\pi}^{t}\Delta \tau.
+ \nonumber \\ 
+ \Deqlab{uwpi:pi_sabun}
+\end{eqnarray}
+%
+ここでは簡単のため格子点位置を表す添字は省略した. 
+%
+\Deqref{uwpi:pi_sabun} 式に \Deqref{uwpi:w_sabun} を代入して $w^{\tau +
+\Delta \tau}$ を消去する. 
+%
+\begin{eqnarray}
+ \pi^{\tau + \Delta \tau} 
+  &-& 
+  \beta^{2} 
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} 
+  \bar{\theta}_{v}^{2}}
+  \DP{}{z}
+  \left\{
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \left(
+     \DP{\pi^{\tau + \Delta \tau}}{z} 
+   \right)
+\right\}
+  \nonumber \\
+ &=& 
+  \pi^{\tau}
+  -(1 - \beta) 
+ \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+   \DP{(\bar{\rho} \bar{\theta}_{v} w^{\tau})}{z}
+  -  \frac{\bar{c}^{2} \Delta \tau}{\bar{c_{p}} \bar{\theta}_{v}} 
+  \left(\DP{u^{\tau + \Delta \tau}}{x} + \DP{v^{\tau + \Delta \tau}}{y}
+  \right)
+  + F_{\pi}^{t}\Delta \tau
+  \nonumber \\
+ &&- \beta  \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+   \left[
+    \DP{}{z}
+    \bar{\rho} \bar{\theta}_{v}
+   \left\{
+   w^{\tau}
+  - \bar{c_{p}} \bar{\theta}_{v} \Delta \tau
+  \left\{
+    (1 - \beta) \DP{\pi^{\tau}}{z} 
+  \right\}
+  + \DP{(\alpha Div)^{\tau}}{z} \Delta \tau
+ + F_{w}^{t} \Delta \tau   
+\right\}
+\right].
+  \nonumber \\
+\Deqlab{uwpi:sabun}
+\end{eqnarray}
+%
+%この方程式を解いて $\pi^{\tau + \Delta \tau}$ を求めるわけだが, 左辺の空
+%間微分を陽に書き下すことで, 簡単な行列式を導くことができる. 
+\Deqref{uwpi:sabun} 式左辺を空間方向に離散化し, 
+格子点位置を表す添字を付けて表すと以下のようになる
+(計算の詳細は \Dchapref{appendix-a} 参照). 
+%
+\begin{eqnarray}
+&&  \left\{
+   - \beta^{2}
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \Dinv{\Delta z^{2}} 
+  \left(
+    \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+  \right)_{k(w)}
+  \right\}
+   \pi^{\tau + \Delta \tau}_{i,j,k+1}
+\nonumber \\   
+ && \hspace{10mm}+ \left[
+  1 + \beta^{2}
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \Dinv{\Delta z^{2}} 
+   \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2} 
+   \right)_{k(w)}
+   + 
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2} 
+   \right)_{k-1(w)}
+   \right\} 
+    \right]
+ \pi^{\tau + \Delta \tau}_{i,k}
+   \nonumber \\   
+ && \hspace{10mm}+ \left\{
+   - \beta^{2}
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \Dinv{\Delta z^{2}} 
+   \left(
+    \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2} 
+       \right)_{k-1(w)}
+   \right\}
+   \pi^{\tau + \Delta \tau}_{i,j,k-1}
+   \nonumber \\
+ &&= 
+  \pi^{\tau}_{i,j,k}
+  - (1 - \beta)  
+  \left(
+   \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \left\{
+    \DP{(\bar{\rho} \bar{\theta}_{v} w^{\tau})}{z}
+  \right\}_{i,j,k}
+   -\left(
+     \frac{\bar{c}^{2} \Delta \tau}{\bar{c_{p}} \bar{\theta}_{v}} 
+    \right)_{k}
+  \left(\DP{u^{\tau + \Delta \tau}}{x} + 
+        \DP{v^{\tau + \Delta \tau}}{y}\right)_{i,j,k}
+  \nonumber \\
+ && \hspace{10mm} + \left(F_{\pi}^{t}\right)_{i,j,k}\Delta \tau
+  \nonumber \\
+ &&\hspace{2mm} - \beta  
+  \left(
+   \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+   \left[
+    \DP{}{z}
+    \left( \bar{\rho} \bar{\theta}_{v} \right)_{i,k(w)} 
+   \left\{
+   w^{\tau}_{i,j,k(w)}
+\right. \right.
+\nonumber \\
+&& \hspace{10mm} 
+\left. \left.
+  - \left( \bar{c_{p}} \bar{\theta}_{v} \right)_{i,k(w)} \Delta \tau
+  \left\{
+    (1 - \beta)  \DP{\pi^{\tau}}{z}
+  \right\}_{i,j,k(w)}
+  + \left( \DP{(\alpha Div)^{\tau}}{z} \right)_{i,j,k(w)} \Delta \tau
+  + \left( F_{w}^{t} \right)_{i,j,k(w)} \Delta \tau   
+\right\}
+\right]_{i,j,k}.
+\Deqlab{uwpi:sabun_ik}
+\nonumber \\
+\end{eqnarray}
+%
+但し平均場の量は鉛直方向にしか依存しないので $z$ 方向の添字のみ
+付けてある. 
+
+
+\subsubsection{境界条件}
+
+上下境界を固定壁とする場合, 境界条件は上部下部境界で, 
+%
+\begin{eqnarray}
+&& w(i,j,0(w)) = 0, \\
+&& w(i,j,km(w)) = 0 
+\end{eqnarray}
+%
+である.
+
+{\bf 下部境界}: \\
+
+下部境界($k(w) = 0(w)$)について考える. この時 \Deqref{uwpi:w_sabun} 式に
+添字を付けて書き下すと, 
+%
+\begin{eqnarray}
+ \beta \left(
+	\DP{\pi^{\tau + \Delta \tau}}{z}  
+       \right)_{i,j,0(w)}
+ &=&
+  - (1 - \beta) \left( \DP{\pi^{\tau}}{z} \right)_{i,j,0(w)} 
+  + \left( \Dinv{\bar{c_{p}} \bar{\theta}_{v}} 
+     \DP{(\alpha Div)^{\tau}}{z} \right)_{i,j,0(w)} 
+  + \left(\Dinv{\bar{c_{p}} \bar{\theta}_{v}} F_{w}^{t}\right)_{i,j,0(w)} 
+\nonumber \\
+  &\equiv& E_{i,j,0(w)}
+  \Deqlab{uwpi:w_sabun_kabu}
+\end{eqnarray}
+%
+となる. したがって \Deqref{uwpi:sabun_ik} 式は以下のようになる. 
+%
+\begin{eqnarray}
+&&  \left\{
+ - \beta^{2} 
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho}
+  \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z^{2}}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{1(w)}
+  \right\}
+  \pi^{\tau + \Delta \tau}_{i,j,2}
+  \nonumber \\
+&&\hspace{10mm}
++ 
+  \left\{
+  1 + \beta^{2} 
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho}
+  \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z^{2}}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{1(w)}
+  \right\} \pi^{\tau + \Delta \tau}_{i,j,1}
+ \nonumber \\
+ &=& 
+  \pi^{\tau}_{i,j,1}
+ -(1 - \beta)  
+  \left(
+   \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \left\{
+  \DP{(\bar{\rho} \bar{\theta}_{v} w^{\tau})}{z}
+  \right\}_{i,j,1}
+  + \left(F_{\pi}^{t}\right)_{i,j,1}\Delta \tau
+ \nonumber \\
+ &&
+  -  
+  \left(
+   \frac{\bar{c}^{2} \Delta \tau}{\bar{c_{p}} \bar{\theta}_{v}}
+  \right)_{1}
+  \left(
+  \DP{u^{\tau + \Delta \tau}}{x} + \DP{v^{\tau + \Delta \tau}}{y}
+  \right)_{i,j,1}
+  \nonumber \\
+ &&- \beta  
+  \left(
+   \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{1}
+   \left[
+    \DP{}{z}
+    \bar{\rho} \bar{\theta}_{v}
+   \left\{
+   w^{\tau}
+  - \bar{c_{p}} \bar{\theta}_{v} \Delta \tau
+  \left\{
+    (1 - \beta) \DP{\pi^{\tau}}{z} 
+  \right\}
+  + \DP{(\alpha Div)^{\tau}}{z}  \Delta \tau   
+  + F_{w}^{t} \Delta \tau   
+\right\}
+\right]_{i,j,1}
+\nonumber \\
+ &&- \beta
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z} 
+%\left[
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{i,j,0(w)}
+   E_{i,j,0(w)}.
+\Deqlab{uwpi:sabun_kabu}
+\end{eqnarray}
+%
+
+{\bf 上部境界}: \\
+
+上部境界($k(w) = km(w)$)について考える. この時 \Deqref{uwpi:w_sabun} 式
+を添字を付けて書き下すと, 
+%
+\begin{eqnarray}
+ \beta \left(
+	\DP{\pi^{\tau + \Delta \tau}}{z}  
+      \right)_{i,j,km(w)}
+ &=&
+  - (1 - \beta) \left( \DP{\pi^{\tau}}{z} \right)_{i,j,km(w)}
+  + \left(\Dinv{\bar{c_{p}} \bar{\theta}_{v}}
+     \DP{(\alpha Div)^{\tau}}{z} \right)_{i,j,km(w)}
+  + \left(\Dinv{\bar{c_{p}} \bar{\theta}_{v}} F_{w}^{t}\right)_{i,j,km(w)}
+\nonumber \\
+ &\equiv& E_{i,j,km(w)}
+  \Deqlab{uwpi:w_sabun_joubu}
+\end{eqnarray}
+%
+となる. したがって \Deqref{uwpi:sabun_ik} 式は以下のようになる. 
+%
+\begin{eqnarray}
+&&  \left\{
+   1 + 
+  \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{km}
+  \Dinv{\Delta z^{2}}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{km-1(w)}
+  \right\}
+    \pi^{\tau + \Delta \tau}_{i,j,km}
+  \nonumber \\
+&& + \left\{
+  - \beta^{2} 
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho}
+   \bar{\theta}_{v}^{2}} 
+  \right)_{km}
+  \Dinv{\Delta z^{2}}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{km-1(w)}
+  \right\}
+     \pi^{\tau + \Delta \tau}_{i,j,km-1}
+  \nonumber \\
+ &=& 
+  \pi^{\tau}_{i,j,km}
+-(1 - \beta)  
+  \left(
+   \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{km}
+  \left\{
+    \DP{(\bar{\rho} \bar{\theta}_{v} w^{\tau})}{z}
+  \right\}_{i,j,km}
+  + \left(F_{\pi}^{t}\right)_{i,j,km}\Delta \tau
+ \nonumber \\
+ && -  
+  \left(
+   \frac{\bar{c}^{2} \Delta \tau}{\bar{c_{p}} \bar{\theta}_{v}} 
+  \right)_{km}
+  \left(
+    \DP{u^{\tau + \Delta \tau}}{x} + \DP{v^{\tau + \Delta \tau}}{y}
+  \right)_{i,j,km}
+  \nonumber \\
+ &&- \beta  
+  \left(
+   \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{km}
+   \left[
+    \DP{}{z}
+    \bar{\rho} \bar{\theta}_{v}
+   \left\{
+   w^{\tau}
+  - \bar{c_{p}} \bar{\theta}_{v} \Delta \tau
+  \left\{
+    (1 - \beta) \DP{\pi^{\tau}}{z} 
+  \right\}
+  + \DP{(\alpha Div)^{\tau}}{z} \Delta \tau   
+  + F_{w}^{t} \Delta \tau   
+\right\}
+\right]_{i,j,km}
+\nonumber \\
+ &&+ \frac{\beta}{\Delta z}
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}  
+  \right)_{km}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{km(w)}
+   E_{i,j,km(w)}.
+\Deqlab{uwpi:sabun_joubu}
+\end{eqnarray}
+%
+
+\subsubsection{圧力方程式の時間積分方法}
+
+\Deqref{uwpi:sabun_ik}, \Deqref{uwpi:sabun_kabu},
+\Deqref{uwpi:sabun_joubu} 式を連立すると, 以下のような行列式の形式で書く
+ことができる. 
+%
+ \begin{eqnarray}
+  \left(\begin{array}{cccc}
+          A_{1} & B_{2}  &        &   0      \\ 
+          C_{1} & \ddots & \ddots &          \\
+    	        & \ddots & \ddots & B_{km}   \\
+            0   &        & C_{km-1} & A_{km} \\
+        \end{array}
+  \right)
+  \left(\begin{array}{cccc}
+          \pi_{1,1,1} & \pi_{2,1,1}  & \cdots & \pi_{im,jm,1} \\
+          \pi_{1,1,2} & \ddots       & \ddots & \vdots        \\
+          \vdots      &              & \ddots & \vdots         \\
+          \pi_{1,1,km} & \cdots & \cdots &  \pi_{im,jm,,km}     
+        \end{array}
+  \right)^{\tau + \Delta \tau}
+  \nonumber \\
+  = 
+  \left(\begin{array}{cccc}
+   D_{1,1,1} & D_{2,1,1} & \cdots & D_{im,jm,1} \\
+   D_{1,1,2} & \ddots    & \ddots & \vdots         \\
+   \vdots    &           & \ddots & \vdots     \\
+   D_{1,1,km} & \cdots & \cdots &  D_{im,jm,km}  
+  \end{array}
+  \right)^{\tau}
+  .
+ \end{eqnarray}
+%
+この連立方程式を解くことで $\pi_{i,k}$ を求める. この連立方程式の係数は以下の
+ように書ける. 
+%
+\begin{eqnarray}
+ A_{k} 
+  &=& 1 + \beta^{2}
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho}
+  \bar{\theta}_{v}^{2}} 
+  \right)_{k}
+  \Dinv{\Delta z^{2}} 
+   \left\{
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2} 
+   \right)_{k(w)}
+   + 
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2} 
+   \right)_{k-1(w)}
+   \right\} 
+   \nonumber \\   
+ && (k = 2, 3, \cdots km-1),
+  \nonumber \\
+ A_{1} 
+  &=& 1 + \beta^{2}
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z^{2}} 
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2} 
+   \right)_{1(w)},
+   \nonumber \\   
+ A_{km} 
+  &=& 1 + \beta^{2}
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{km}
+  \Dinv{\Delta z^{2}} 
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2} 
+   \right)_{km-1(w)},
+   \nonumber \\   
+ B_{k} &=&
+  - \beta^{2}
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k-1}
+  \Dinv{\Delta z^{2}} 
+  \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+  \right)_{k-1(w)},
+   \nonumber \\   
+ && (k = 2, 3, \cdots km),
+  \nonumber \\
+ C_{k} &=&
+  - \beta^{2}
+  \left(
+   \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k+1}
+  \Dinv{\Delta z^{2}} 
+   \left(
+    \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2} 
+       \right)_{k(w)},
+   \nonumber \\   
+ && (k = 1, 2, \cdots km-1),
+   \nonumber \\
+ D_{i,j,k}
+ &=& \pi^{\tau}_{i,j,k}
+   -(1 - \beta)  
+  \left(
+   \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+  \left\{
+    \DP{(\bar{\rho} \bar{\theta}_{v} w^{\tau})}{z}
+  \right\}_{i,j,k} \nonumber \\
+ & &
+   -\left(
+     \frac{\bar{c}^{2} \Delta \tau}{\bar{c_{p}} \bar{\theta}_{v}} 
+    \right)_{k}
+  \left(
+  \DP{u^{\tau + \Delta \tau}}{x} + \DP{v^{\tau + \Delta \tau}}{y} 
+  \right)_{i,jk}
+  + F_{i,j,k}
+\nonumber \\
+ && (k = 2, 3,  \cdots km-1),
+\nonumber \\
+ D_{i,j,1} &=& \pi^{\tau}_{i,j,1}
+ -(1 - \beta)  
+  \left(
+   \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \left\{
+    \DP{(\bar{\rho} \bar{\theta}_{v} w^{\tau})}{z}
+  \right\}_{i,j,1} \nonumber \\
+ & &
+  -  
+  \left(
+   \frac{\bar{c}^{2} \Delta \tau}{\bar{c_{p}} \bar{\theta}_{v}}
+  \right)_{1}
+  \left(
+  \DP{u^{\tau + \Delta \tau}}{x} + \DP{v^{\tau + \Delta \tau}}{y}
+  \right)_{i,j,1} 
+  + F_{i,j,1}
+  \nonumber \\
+ &&- \beta
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{1}
+  \Dinv{\Delta z} 
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{i,j,0(w)}
+   E_{i,j,0(w)},
+\nonumber \\
+ D_{i,j,km} &=& 
+  \pi^{\tau}_{i,j,km}
+  -(1 - \beta)  
+  \left(
+   \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{km}
+  \left\{
+   \DP{(\bar{\rho} \bar{\theta}_{v} w^{\tau})}{z}
+  \right\}_{i,j,km} \nonumber \\
+  & &
+-  
+  \left(
+   \frac{\bar{c}^{2} \Delta \tau}{\bar{c_{p}} \bar{\theta}_{v}} 
+  \right)_{km}
+  \left(
+   \DP{u^{\tau + \Delta \tau}}{x} + \DP{v^{\tau + \Delta \tau}}{y}
+  \right)_{i,j,km} 
+  + F_{i,j,km}
+  \nonumber \\
+ &&+ \beta
+  \left(
+  \frac{\bar{c}^{2}{\Delta \tau}^{2}}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}  
+  \right)_{km}
+  \Dinv{\Delta z}
+   \left(
+   \bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}
+   \right)_{km(w)}
+   E_{i,j,km(w)}.
+\nonumber 
+\end{eqnarray}
+%
+ただし, 
+%
+\begin{eqnarray}
+ E_{i,j,k(w)} \equiv 
+  - (1 - \beta) \left( \DP{\pi^{\tau}}{z} \right)_{i,j,k(w)}
+  + \left(\Dinv{\bar{c_{p}} \bar{\theta}_{v}} \DP{(\alpha Div)^{\tau}}{z} \right)_{i,j,k(w)}
+  + \left(\Dinv{\bar{c_{p}} \bar{\theta}_{v}} F_{w}^{t}\right)_{i,j,k(w)}
+  \nonumber 
+\end{eqnarray}
+%
+\begin{eqnarray}
+F_{i,j,k} 
+ &\equiv&\hspace{2mm} 
+  \left(F_{\pi}^{t}\right)_{i,j,k}\Delta \tau
+  - \beta  
+  \left(
+   \frac{\bar{c}^{2}\Delta \tau}{\bar{c_{p}} \bar{\rho} \bar{\theta}_{v}^{2}}
+  \right)_{k}
+   \left[
+    \DP{}{z}
+    \left( \bar{\rho} \bar{\theta}_{v} \right)_{i,j,k(w)} 
+   \left\{
+   w^{\tau}_{i,j,k(w)}
+\right. \right.
+\nonumber \\
+&& \hspace{10mm} 
+\left. \left.
+  - \left( \bar{c_{p}} \bar{\theta}_{v} \right)_{i,k(w)} \Delta \tau
+  \left\{
+    (1 - \beta)  \DP{\pi^{\tau}}{z}
+  \right\}_{i,k(w)}
+  + \left\{ \DP{(\alpha Div)^{\tau}}{z}  \right\}_{i,k(w)} \Delta \tau   
+  + \left( F_{w}^{t} \right)_{i,k(w)} \Delta \tau   
+\right\}
+\right]_{i,k}.
+\nonumber
+\end{eqnarray}
+%
+である. 
+
+\subsection{音波に関連しない項の時間方向の離散化}
+
+運動方程式の音波に関連しない項 \Deqref{uwpi:Fu}, \Deqref{uwpi:Fv},
+\Deqref{uwpi:Fw} 式を離散化する. 
+%
+ \begin{eqnarray*}
+  \left[F_{u}\right]_{i(u),j,k}^{t} &=&
+   - \left[ {\rm Adv}.u \right]_{i(u),j,k}^{t} 
+   + \left[{\rm Turb}.u \right]_{i(u),j,k}^{t-\Delta t}
+   + \left[{\rm Diff}.u \right]_{i(u),j,k}^{t-\Delta t}, 
+  \\
+  \left[F_{v}\right]_{i,j(v),k}^{t} &=&  
+   - \left[ {\rm Adv}.v \right]_{i,j(v),k}^{t} 
+   + \left[{\rm Turb}.v \right]_{i,j(v),k}^{t-\Delta t}
+   + \left[{\rm Diff}.v \right]_{i,j(v),k}^{t-\Delta t}, 
+  \\
+  \left[F_{w}\right]_{i,j,k(w)}^{t} &=&
+   - \left[ {\rm Adv}.w \right]_{i,j,k(w)}^{t}
+   + \left[ {\rm Turb}.w \right]_{i,j,k(w)}^{t - \Delta t}
+   + \left[ {\rm Diff}.w \right]_{i,j,k(w)}^{t - \Delta t} \nonumber \\
+&& 
+   + \left[ {\rm Buoy} \right]_{i,j,k(w)}^{t}.
+ \end{eqnarray*}
+%
+ここで, Adv は移流項, D は粘性拡散項, Buoy は浮力項, Diff は数値粘性項
+である. それぞれの項は以下のように評価する. 移流項は,
+%
+ \begin{eqnarray}
+  \left[ {\rm Adv}.{u} \right]_{i(u),j,k}^{t} &=&
+    u_{i(u),j,k}^{t} \left[\DP{u}{x}\right]_{i(u),j,k}^{t}
+   + v_{i(u),j,k}^{t} \left[\DP{u}{y}\right]_{i(u),j,k}^{t}  
+   + w_{i(u),j,k}^{t} \left[\DP{u}{z}\right]_{i(u),j,k}^{t},  \\
+  \left[ {\rm Adv}.{v} \right]_{i,j(v),k}^{t} &=&
+     u_{i,j(v),k}^{t} \left[\DP{v}{x}\right]_{i,j(v),k}^{t}
+   + v_{i,j(v),k}^{t} \left[\DP{v}{y}\right]_{i,j(v),k}^{t}  
+   + w_{i,j(v),k}^{t} \left[\DP{v}{z}\right]_{i,j(v),k}^{t},  \\
+  \left[ {\rm Adv}.{w} \right]_{i,j,k(w)}^{t} &=&
+     u_{i,j,k(w)}\left[\DP{w}{x}\right]_{i,j,k(w)}^{t}
+   + v_{i,j,k(w)}\left[\DP{w}{y}\right]_{i,j,k(w)}^{t}
+   + w_{i,j,k(w)}\left[\DP{w}{z}\right]_{i,j,k(w)}^{t}.
+ \end{eqnarray}
+%
+浮力項は,
+%
+ \begin{eqnarray}
+  [{\rm Buoy}]^{t}_{i,j,k(w)} 
+     &=& g \frac{\theta_{i,j,k(w)}^{t}}{\overline{\theta}_{i,j,k(w)}}
+     \nonumber \\
+     & &  
+        + g \frac{\sum [q_{v}]_{i,j,k(w)}^{t}/M_{v}}{1/M_{d} 
+        + \sum  [\bar{q_{v}}]_{i,j,k(w)}/M_{v}} 
+     \nonumber \\
+&&  
+    - g \frac{\sum [q_{v}]_{i,j,k(w)}^{t} 
+              + \sum [q_{c}]_{i,j,k(w)}^{t} + \sum [q_{r}]_{i,j,k(w)}^{t}}
+    {1 + \sum [\bar{q_{v}}]_{i,j,k(w)}}
+ \end{eqnarray}
+%
+粘性拡散項は, 
+%
+ \begin{eqnarray}
+&&  \left[ {\rm Turb}.{u} \right]_{i(u),j,k}^{t - \Delta t} = 
+  2 \left[ 
+      \DP{}{x}\left\{ 
+          \left( K_{m} \right)_{i,j,k} \left( \DP{u}{x} \right)_{i,j,k}
+       \right\} 
+    \right]_{i(u),j,k}^{t - \Delta t}
+\nonumber \\
+ & &\hspace{1em}
+   +\left[ \DP{}{y}\left\{
+       \left( K_{m} \right)_{i(u),j(v),k}
+       \left( \DP{v}{x} \right)_{i(u),j(v),k}
+     + \left( K_{m} \right)_{i(u),j(v),k}
+       \left( \DP{u}{y} \right)_{i(u),j(v),k}
+     \right\} \right]_{i(u),j,k}^{t - \Delta t}
+\nonumber \\
+ && \hspace{1em}
+   +\frac{1}{(\overline{\rho})_{i,j,k}}
+       \left[ \DP{}{z}\left\{
+       (\overline{\rho})_{i,j,k(w)}\left(K_{m} \right)_{i(u),j,k(w)}
+       \left( \DP{w}{x} \right)_{i(u),j,k(w)} \right. \right.
+   \nonumber \\
+ && \hspace{2em}
+   \left. \left.
+     + (\overline{\rho})_{i,j,k(w)}\left(K_{m} \right)_{i(u),j,k(w)}
+       \left( \DP{u}{z} \right)_{i(u),j,k(w)}
+     \right\} \right]_{i(u),j,k}^{t - \Delta t}
+   - \frac{2}{3 C_{m}^{2} l^{2}} 
+     \left( \DP{ K_{m}^{2} }{x} \right)_{i(u),j,k}^{t - \Delta t}
+   \\
+%
+%
+ && \left[ {\rm Turb}.{v} \right]_{i,j(v),k}^{t - \Delta t} =
+  2 \left[ 
+      \DP{}{y}\left\{ 
+          \left( K_{m} \right)_{i,j,k} \left( \DP{v}{y} \right)_{i,j,k}
+       \right\} 
+    \right]_{i,j(v),k}^{t - \Delta t}
+\nonumber \\
+ && \hspace{1em}
+   +\left[ \DP{}{x}\left\{
+       \left( K_{m} \right)_{i(u),j(v),k)}
+       \left( \DP{v}{x} \right)_{i(u),j(v),k}
+     + \left( K_{m} \right)_{i(u),j(v),k}
+       \left( \DP{u}{y} \right)_{i(u),j(v),k}
+     \right\} \right]_{i(u),j(v),k}^{t - \Delta t}
+\nonumber \\
+ && \hspace{1em}
+   +\frac{1}{(\overline{\rho})_{i,j,k}}\left[ \DP{}{z}
+       \left\{(\overline{\rho})_{i,j,k(w)}
+       \left( K_{m} \right)_{i,j(v),k(w)}
+       \left( \DP{w}{y} \right)_{i,j(v),k(w)} \right. \right. 
+  \nonumber \\
+  && \hspace{2em} \left. \left.
+     + (\overline{\rho})_{i,j,k(w)}\left( K_{m} \right)_{i,j(v),k(w)}
+       \left( \DP{v}{z} \right)_{i,j(v),k(w)}
+     \right\} \right]_{i,j(v),k}^{t - \Delta t}
+   - \frac{2}{3 C_{m}^{2} l^{2}} 
+     \left( \DP{ K_{m}^{2} }{x} \right)_{i,j(v),k}^{t - \Delta t}
+   \\
+%
+%
+ &&  \left[ {\rm Turb}.{w} \right]_{i,j,k(w)}^{t - \Delta t} =
+  \frac{2}{(\overline{\rho})_{i,j,k(w)}} \left[ 
+      \DP{}{z}\left\{ (\overline{\rho})_{i,j,k}
+          \left( K_{m} \right)_{i,j,k} \left( \DP{w}{z} \right)_{i,j,k}
+       \right\} 
+    \right]_{i,j,k(w)}^{t - \Delta t}
+\nonumber \\
+ && \hspace{1em}
+   +\left[ \DP{}{x}\left\{
+       \left( K_{m} \right)_{i(u),j,k(w)}
+       \left( \DP{w}{x} \right)_{i(u),j,k(w)}
+     + \left( K_{m} \right)_{i(u),j,k(w)}
+       \left( \DP{u}{z} \right)_{i(u),j,k(w)}
+     \right\} \right]_{i,j,k(w)}^{t - \Delta t}
+\nonumber \\
+ && \hspace{1em}
+   +\left[ \DP{}{y}\left\{
+       \left( K_{m} \right)_{i,j(v),k(w)}
+       \left( \DP{w}{y} \right)_{i,j(v),k(w)}
+     + \left( K_{m} \right)_{i,j(v),k(w)}
+       \left( \DP{v}{z} \right)_{i,j(v),k(w)}
+     \right\} \right]_{i,j,k(w)}^{t - \Delta t}
+\nonumber \\
+ && \hspace{1em}
+   - \frac{1}{(\overline{\rho})_{i,j,k(w)}}\frac{2}{3 C_{m}^{2} l^{2}} 
+     \left(\DP{ \overline{\rho}K_{m}^{2} }{z} \right)_{i,j,k(w)}^{t - \Delta t}
+ \end{eqnarray}
+%
+である. 数値粘性項は,
+%
+ \begin{eqnarray}
+&&
+  \left[ {\rm Diff}.u \right]_{i(u),j,k}^{t - \Delta t} = 
+     \nu_{h} \left\{ \DP{}{x} \left(\DP{u}{x}\right)_{i,j,k} \right\}_{i(u),j,k}^{t - \Delta t}
+   + \nu_{h} \left\{ \DP{}{y} \left(\DP{u}{y}\right)_{i(u),j(v),k} \right\}_{i(u),j,k}^{t - \Delta t}
+\nonumber \\
+ && \hspace{1em}
+   + \nu_{v} \left\{ \DP{}{z} \left(\DP{u}{z}\right)_{i(u),j,k(w)} \right\}_{i(u),j,k}^{t - \Delta t}
+   \\
+%
+%
+&&
+  \left[ {\rm Diff}.v \right]_{i,j(v),k}^{t - \Delta t} = 
+     \nu_{h} \left\{ \DP{}{x} \left(\DP{v}{x}\right)_{i(u),j(v),k} \right\}_{i,j(v),k}^{t - \Delta t}
+   + \nu_{h} \left\{ \DP{}{y} \left(\DP{v}{y}\right)_{i,j,k} \right\}_{i,j(v),k}^{t - \Delta t}
+\nonumber \\
+ && \hspace{1em}
+   + \nu_{v} \left\{ \DP{}{z} \left(\DP{v}{z}\right)_{i,j(v),k(w)} \right\}_{i,j(v),k}^{t - \Delta t}
+   \\
+%
+%
+&&
+  \left[ {\rm Diff}.w \right]_{i,k(w)}^{t - \Delta t} =
+     \nu_{h} \left\{ \DP{}{x} \left(\DP{w}{x}\right)_{i(u),j,k(w)} \right\}_{i,j,k(w)}^{t - \Delta t}
+   + \nu_{h} \left\{ \DP{}{y} \left(\DP{w}{y}\right)_{i,j(v),k(w)} \right\}_{i,j,k(w)}^{t - \Delta t}
+\nonumber \\
+ && \hspace{1em}
+   + \nu_{v} \left\{ \DP{}{z} \left(\DP{w}{z}\right)_{i,j,k} \right\}_{i,j,k(w)}^{t - \Delta t}
+ \end{eqnarray}
+%
+である. $K_{m}$ は乱流エネルギーの時間発展方程式から計算し(詳細は後述), 
+$\nu_{h}, \nu_{v}$ は以下のように定める. 
+%
+\begin{eqnarray}
+ \nu_{h} = \frac{\alpha_{h} \Delta x^{2}}{\Delta t}
+  \\
+ \nu_{v} = \frac{\alpha_{v} \Delta z^{2}}{\Delta t}
+\end{eqnarray} 
+%
+ここで $\Delta x, \Delta z$ は水平・鉛直方向の格子間隔を意味し, 
+$\alpha_{h}, \alpha_{v}$ はそれぞれ, 
+%
+\begin{eqnarray}
+  \alpha_{h}  \le \Dinv{8}, \hspace{3em}
+  \alpha_{v}  \le \Dinv{8} 
+\Deqlab{nu}
+\end{eqnarray} 
+%
+とする. 
