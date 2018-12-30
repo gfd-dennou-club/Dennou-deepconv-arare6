@@ -138,7 +138,7 @@ DCL.sgscmn(4)
 #DCL.sgscmn(10)
 
 DCL.swlset("lwnd",false)
-DCL.gropn(4)
+DCL.gropn(1)
 DCL.sgpset('lcntl', false)   # 制御文字を解釈しない
 DCL.sgpset('lfull',true)     # 全画面表示
 DCL.sgpset('lcorner',false)  # コーナーマークを書かない
@@ -180,7 +180,7 @@ prefixs.each{ |prefix2|
   DCL.uxsttl('b', ".", 1) 
   DCL.uxsttl('b', "#{prefix2}", 1) 
   
-  comm.push( "mv dcl_#{sprintf('%03d',i+1)}.png #{prefix2}_PTemp.png" )
+  comm.push( "mv dcl_#{sprintf('%04d',i+1)}.png #{prefix2}_PTemp.png" )
   i = i + 1
 
 }
