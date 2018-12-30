@@ -1,4 +1,4 @@
-#!/usr/bin/ruby -Ke
+#!/usr/bin/env ruby 
 # -*- coding: utf-8 -*-
 #
 # テストラン実行用のスクリプト
@@ -10,7 +10,7 @@ include NumRu
 # デフォルトファイル
 #
 prefix = "density-current"
-ofile  = "#{prefix}.conf"
+ofile  = "#{prefix}.sample"
 
 # 実行ファイル置き場
 bindir = "../../bin"
