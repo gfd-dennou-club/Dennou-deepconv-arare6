@@ -93,8 +93,8 @@
 &dynamics_nml
   FlagAdvection = "std"
   FlagAcousticmode = "std"
-  FactorDExnerDtAdv = 0.0d0
-  FactorDExnerDtExpnd = 0.0d0
+!  FactorDExnerDtAdv = 0.0d0
+!  FactorDExnerDtExpnd = 0.0d0
   AlphaNDiff = 0.0d0    !数値拡散項の係数
 /
 
