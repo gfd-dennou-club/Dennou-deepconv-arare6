@@ -489,7 +489,10 @@ contains
     !--------------------------------------------------------
     ! ダンピング係数   
     !
-    do k = kmin, kmax
+    pyz_SpngVelX = 0.0d0
+    xqz_SpngVelY = 0.0d0
+
+    do k = 1, nz
       if ( z_Z(k) >= ZMinMF .OR.  z_Z(k) <= ZMaxMF ) then 
         pyz_SpngVelX(:,:,k) = - z_VelXSum(k) / real( nprocs, kind=8 ) / EFTimeMF
         xqz_SpngVelY(:,:,k) = - z_VelYSum(k) / real( nprocs, kind=8 ) / EFTimeMF

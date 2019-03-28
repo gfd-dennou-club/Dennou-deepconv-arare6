@@ -268,29 +268,32 @@ program deepconv_arare
 
   integer :: s, t, tau  ! do ループ変数 ; do loop variable 
 
-  integer           :: IDTurbMethod           = 0
-  integer, parameter:: IDTurbKW1978     = 2
-  integer, parameter:: IDTurbConstKm    = 3
-  integer           :: IDRadMethod            = 0
-  integer, parameter:: IDRadHeatConst   = 1
-  integer, parameter:: IDRadHeatVary    = 2
-  integer, parameter:: IDRadHeatBalance = 3
-  integer, parameter:: IDRadSounding    = 4
-  integer, parameter:: IDRadBaker1998   = 5
-  integer           :: IDSurfaceMethod        = 0
-  integer, parameter:: IDSurfaceDiff    = 1
-  integer, parameter:: IDSurfaceBulk    = 2
-  integer, parameter:: IDSurfaceConst   = 3
-  integer, parameter:: IDSurfaceBaker1998 = 4
-  integer           :: IDCloudMethod          = 0
-  integer, parameter:: IDCloudK1969     = 1
-  integer, parameter:: IDCloudMarsCond  = 2
-  integer           :: IDDebugMethod          = 0
-  integer, parameter:: IDDebugNoTendencyLong= 1
-  integer, parameter:: IDDebugWindConst     = 2
-  integer           :: IDRestartMethod        = 0
-  integer, parameter:: IDRestartArare6        = 1
-  integer, parameter:: IDRestartArare4        = 2
+  integer            :: IDTurbMethod          = 0
+  integer, parameter :: IDTurbKW1978          = 2
+  integer, parameter :: IDTurbConstKm         = 3
+  integer            :: IDRadMethod           = 0
+  integer, parameter :: IDRadHeatConst        = 1
+  integer, parameter :: IDRadHeatVary         = 2
+  integer, parameter :: IDRadHeatBalance      = 3
+  integer, parameter :: IDRadSounding         = 4
+  integer, parameter :: IDRadBaker1998        = 5
+  integer            :: IDSurfaceMethod       = 0
+  integer, parameter :: IDSurfaceDiff         = 1
+  integer, parameter :: IDSurfaceBulk         = 2
+  integer, parameter :: IDSurfaceConst        = 3
+  integer, parameter :: IDSurfaceBaker1998    = 4
+  integer            :: IDCloudMethod         = 0
+  integer, parameter :: IDCloudK1969          = 1
+  integer, parameter :: IDCloudMarsCond       = 2
+  integer            :: IDDebugMethod         = 0
+  integer, parameter :: IDDebugNoTendencyLong = 1
+  integer, parameter :: IDDebugWindConst      = 2
+  integer            :: IDRestartMethod       = 0
+  integer, parameter :: IDRestartArare6       = 1
+  integer, parameter :: IDRestartArare4       = 2
+  integer            :: IDDampingMethod       = 0
+  integer, parameter :: IDDampingSpongeLayer         = 1
+  integer, parameter :: IDDampingSpongeLayerMeanFlow = 2
 
 
   !------------------------------------------
@@ -321,17 +324,32 @@ program deepconv_arare
     !------------------------------------------
     ! スポンジ層; sponge layer
     !
-    call SpongeLayer_forcing(                           &
-      &   pyz_VelXBl,  xqz_VelYBl,  xyr_VelZBl,         & !(in)
-      &   xyz_PTempBl, xyz_ExnerBl,                     & !(in)
-      &   pyz_DVelXDtNl,  xqz_DVelYDtNl, xyr_DVelZDtNl, & !(inout)
-      &   xyz_DPTempDtNl, xyz_DExnerDtNl                & !(inout)
-      & )
+    select case ( IDDampingMethod )
+       
+    case ( IDDampingSpongeLayer )
+       
+       call SpongeLayer_forcing(                           &
+         &   pyz_VelXBl,  xqz_VelYBl,  xyr_VelZBl,         & !(in)
+         &   xyz_PTempBl, xyz_ExnerBl,                     & !(in)
+         &   pyz_DVelXDtNl,  xqz_DVelYDtNl, xyr_DVelZDtNl, & !(inout)
+         &   xyz_DPTempDtNl, xyz_DExnerDtNl                & !(inout)
+         & )
 
-    call SpongeLayer_MeanFlow(                          &
-      &   pyz_VelXBl,  xqz_VelYBl,                      & !(in)
-      &   pyz_DVelXDtNl,  xqz_DVelYDtNl                 & !(inout)
-      & )
+    case ( IDDampingSpongeLayerMeanFlow )
+
+       call SpongeLayer_forcing(                           &
+         &   pyz_VelXBl,  xqz_VelYBl,  xyr_VelZBl,         & !(in)
+         &   xyz_PTempBl, xyz_ExnerBl,                     & !(in)
+         &   pyz_DVelXDtNl,  xqz_DVelYDtNl, xyr_DVelZDtNl, & !(inout)
+         &   xyz_DPTempDtNl, xyz_DExnerDtNl                & !(inout)
+         & )
+    
+       call SpongeLayer_MeanFlow(                       &
+         &   pyz_VelXBl,  xqz_VelYBl,                   & !(in)
+         &   pyz_DVelXDtNl,  xqz_DVelYDtNl              & !(inout)
+         & )
+
+    end select
 
     !-----------------------------------------
     ! 移流拡散.
@@ -358,7 +376,7 @@ program deepconv_arare
     ! 物理過程: 乱流
     !
     select case ( IDTurbMethod )
-      
+       
     case ( IDTurbKW1978 )
 
       ! Klemp and Wilhelmson (1978)
@@ -1079,6 +1097,7 @@ contains
     character(STRING)  :: FlagWindMethod    = ""  !速度場に関する設定
     character(STRING)  :: FlagDebugMethod   = ""  !デバッグ用のフラグ
     character(STRING)  :: FlagRestartMethod = ""  !読み込むリスタートファイルの形式
+    character(STRING)  :: FlagDampingMethod = ""  !ダンピングに関する設定
 
     NAMELIST /deepconv_main_nml / &
       & FlagTurbMethod,           &
@@ -1087,7 +1106,8 @@ contains
       & FlagSurfaceMethod,        &
       & FlagWindMethod,           &
       & FlagDebugMethod,          &
-      & FlagRestartMethod
+      & FlagRestartMethod,        &
+      & FlagDampingMethod
 
     ! デフォルト値の設定
     ! Default values settings
@@ -1120,7 +1140,10 @@ contains
     FlagRestartMethod    = "Arare6"
 !!$    FlagRestartMethod = "Arare4"
 
+    FlagDampingMethod    = "SpongeLayer"
+!!$    FlagDampingMethod    = "SpongeLayerMeanFlow"
 
+    
     call FileOpen(unit, file=namelist_filename, mode='r')
     read(unit, NML=deepconv_main_nml)
     close(unit)
@@ -1202,7 +1225,7 @@ contains
     case default
       call MessageNotify( 'E', prog_name, &
         & 'FlagDebugdMethod=<%c> is not supported.', &
-        & c1 = trim(FlagWindMethod) )
+        & c1 = trim(FlagDebugMethod) )
     end select
 
     select case ( FlagRestartMethod )
@@ -1212,6 +1235,18 @@ contains
       IDRestartMethod = IDRestartArare6
     end select
 
+    select case ( FlagDampingMethod )
+    case ( "Nothing" )
+    case ( "SpongeLayer" )
+      IDDampingMethod = IDDampingSpongeLayer
+    case ( "SpongeLayerMeanFlow" )
+      IDDampingMethod = IDDampingSpongeLayerMeanFlow
+    case default
+      call MessageNotify( 'E', prog_name, &
+        & 'FlagDampingMethod=<%c> is not supported.', &
+        & c1 = trim(FlagDampingMethod) )
+    end select
+    
     call MessageNotify( "M", "main", "FlagTurbMethod    = %c", c1=trim(FlagTurbMethod))
     call MessageNotify( "M", "main", "IDTurbMethod      = %d", i=(/IDTurbMethod/))
     call MessageNotify( "M", "main", "FlagRadMethod     = %c", c1=trim(FlagRadMethod))
@@ -1224,7 +1259,9 @@ contains
     call MessageNotify( "M", "main", "IDDebugMethod     = %d", i=(/IDDebugMethod/))
     call MessageNotify( "M", "main", "FlagRestartMethod = %c", c1=trim(FlagRestartMethod))
     call MessageNotify( "M", "main", "IDRestartMethod   = %d", i=(/IDRestartMethod/))
-
+    call MessageNotify( "M", "main", "FlagDampingMethod = %c", c1=trim(FlagDampingMethod))
+    call MessageNotify( "M", "main", "IDDampingMethod   = %d", i=(/IDDampingMethod/))
+        
   end subroutine CheckFlag
 
 
