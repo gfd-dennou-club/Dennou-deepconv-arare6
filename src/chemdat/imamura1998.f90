@@ -39,9 +39,9 @@ module Imamura1998
   public imamura1998_DelChemPotRDivRT
   public imamura1998_SatPress
   public imamura1998_SatPressRef
-  public imamura1998_newton
-  public imamura1998_bisection
-  public imamura1998_Imamura1998
+  public imamura1998_Newton
+  public imamura1998_Bisection
+  public imamura1998_EquivState
   public Imamura1998_Sediment
   public Imamura1998_H2SO4Prdt
   public Imamura1998_H2SO4Loss
@@ -460,8 +460,6 @@ contains
     ! H2SO4 §» H2O §Œ•‚•Î»Ê
     x2 = 1.0d0 - x1
 
-!    write(*,*) con
-    
     !∑∏øÙ§Ú∑Ë§·§Î
     call imamura1998_coefficient(temp)
 
@@ -706,10 +704,11 @@ contains
   end subroutine Imamura1998_Bisection
   
 
-!!!
-!!! §ﬁ§»§·§∆≤Ú§Ø§ø§·§Œ•◊•Ì•∞•È•‡
-!!!
-  subroutine Imamura1998_Imamura1998( Temp, n1, n2, n1_gas, n2_gas, n1_liq, n2_liq, con, sw, flag )
+  subroutine Imamura1998_EquivState &
+    & ( Temp, n1, n2, n1_gas, n2_gas, n1_liq, n2_liq, con, sw, flag )
+    !
+    !  øπ’æı¬÷§Ú∆¿§Î§ø§·§Œ•◊•Ì•∞•È•‡.
+    !
 
     !∞≈Ã€§Œ∑ø¿Î∏¿∂ÿªﬂ
     implicit none
@@ -806,7 +805,6 @@ contains
       end if
       
       ! ∂≈∑ÎŒÃ§Œ∑◊ªª
-!      call imamura1998_SatPress( Temp, con, SatPress1, SatPress2)
       if ( n1 > (SatPress1 / ( boltz * Temp )) .AND. n2 > (SatPress2 / ( boltz * Temp ))) then 
         n1_gas =       SatPress1 / ( boltz * Temp )
         n1_liq =  n1 - SatPress1 / ( boltz * Temp )
@@ -820,11 +818,14 @@ contains
       end if
     end if
     
-  end subroutine Imamura1998_Imamura1998
+  end subroutine Imamura1998_EquivState
   
 
   subroutine Imamura1998_Sediment(Height, VelZ)
-
+    !    
+    ! ÕÓ≤ºπ‡§Œ∑◊ªª
+    !
+    
     !∞≈Ã€§Œ∑ø¿Î∏¿∂ÿªﬂ
     implicit none
 
@@ -856,6 +857,9 @@ contains
   
   
   subroutine Imamura1998_H2SO4Prdt( Height, DelZ, H2SO4_Prdt, H2O_Loss )
+    !
+    ! H2SO4 §Œ¿∏¿Æπ‡ & H2O §Œæ√Ã«π‡
+    !
     
     !∞≈Ã€§Œ∑ø¿Î∏¿∂ÿªﬂ
     implicit none
@@ -887,6 +891,9 @@ contains
   
   
   subroutine Imamura1998_H2SO4Loss( Temp, Press, n1, n2, H2SO4_Loss, H2O_Prdt )
+    !
+    ! H2SO4 §Œæ√Ã«π‡ & H2O §Œ¿∏¿Æπ‡
+    !
     
     !∞≈Ã€§Œ∑ø¿Î∏¿∂ÿªﬂ
     implicit none
