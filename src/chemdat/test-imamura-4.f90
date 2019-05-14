@@ -14,7 +14,7 @@ program main
   real(8)            :: Height
 
   !csv からデータ読み込み
-  open (17, file='fukuhara_data.csv', status='old')
+  open (17, file='test-imamura-data_from_fukuhara.csv', status='old')
   read (17, '()')       ! ヘッダ行の読み飛ばし
   
   !データ読み込み. 余計なものもあるが気にしない.   

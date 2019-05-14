@@ -23,7 +23,7 @@ program main
   write(*,*) "  Bisection vs. Newton     "
   write(*,*) "===================================="
 
-  open (17, file='fukuhara_data.csv', status='old')
+  open (17, file='test-imamura-data_from_fukuhara.csv', status='old')
   read (17, '()')       ! ヘッダ行の読み飛ばし
 
   do i = 1, Num     
