@@ -823,7 +823,7 @@ contains
 
   subroutine Imamura1998_Sediment(Height, VelZ)
     !    
-    ! 落下項の計算
+    ! 落下項の計算. 高度のみの関数. 
     !
     
     !暗黙の型宣言禁止
@@ -841,7 +841,7 @@ contains
     real(8)              :: VelZ_2,  VelZ_3
     
     !mode3 の分布を tanh で近似
-    Molfr_3 = 0.455d0 * tanh( 57.5d3 - Height ) + 0.455d0
+    Molfr_3 = 0.455d0 * tanh( ( 57.5d3 - Height ) * 1.0d-3 ) + 0.455d0
     
     !mode2 の分布
     Molfr_2 = 1.d0 - Molfr_3
@@ -916,8 +916,8 @@ contains
     mean = press / (Boltz * Temp)
     kp = 10.0d0 ** ( 7.584d0 - ( 5060.0d0 / Temp ) )
     
-    !H2SO4 の消滅項
-    H2SO4_Loss = f_co * k13 * kp * mean * mean  * n1 / n2 / press
+    !H2SO4 の消滅項 (圧力は bar 単位に換算)
+    H2SO4_Loss = - f_co * k13 * kp * mean * mean  * n1 / n2 / ( press * 1.0d-5 )
     
     !H2O の生成項
     H2O_Prdt = -1.0d0 * H2SO4_Loss
