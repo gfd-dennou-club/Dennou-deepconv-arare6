@@ -157,26 +157,20 @@ contains
       &                  xqz_pqz, pqz_pyz, xqz_xyz, xqz_xqr, xqr_xyr, &
       &                  xyr_pyr, pyr_pyz, xyr_xqr, xqr_xqz, xyr_xyz, &
       &                  xyz_pyz, xyz_xqz, xyz_xyr
-!    use xyz_deriv_c4_module, &
-!      &          only : xyz_c4dx_pyz, pqz_c4dy_pyz, pyr_c4dz_pyz, &
-!      &                 pqz_c4dx_xqz, xyz_c4dy_xqz, xqr_c4dz_xqz, &
-!      &                 pyr_c4dx_xyr, xqr_c4dy_xyr, xyz_c4dz_xyr, & 
-!      &                 pyz_c4dx_xyz, xqz_c4dy_xyz, xyr_c4dz_xyz
     use differentiate_center4,                                                                              &
       &          only : pyz_c4dx_xyz => pyz_dx_xyz, xqz_c4dy_xyz => xqz_dy_xyz, xyr_c4dz_xyz => xyr_dz_xyz, &
       &                 xyz_c4dx_pyz => xyz_dx_pyz, pqz_c4dy_pyz => pqz_dy_pyz, pyr_c4dz_pyz => pyr_dz_pyz, &
       &                 pqz_c4dx_xqz => pqz_dx_xqz, xyz_c4dy_xqz => xyz_dy_xqz, xqr_c4dz_xqz => xqr_dz_xqz, &
       &                 pyr_c4dx_xyr => pyr_dx_xyr, xqr_c4dy_xyr => xqr_dy_xyr, xyz_c4dz_xyr => xyz_dz_xyr
+!    use differentiate_center2,                              &
+!      &          only : pyz_dx_xyz, xyz_dx_pyz, pyz_dy_pqz, &
+!      &                 pqz_dy_pyz, pyz_dz_pyr, pyr_dz_pyz, &
+!      &                 xqz_dx_pqz, pqz_dx_xqz, xqz_dy_xyz, &
+!      &                 xyz_dy_xqz, xqz_dz_xqr, xqr_dz_xqz, &
+!      &                 xyr_dx_pyr, pyr_dx_xyr, xyr_dy_xqr, &
+!      &                 xqr_dy_xyr, xyr_dz_xyz, xyz_dz_xyr
     use differentiate_center2,                              &
-      &          only : pyz_dx_xyz, xyz_dx_pyz, pyz_dy_pqz, &
-      &                 pqz_dy_pyz, pyz_dz_pyr, pyr_dz_pyz, &
-      &                 xqz_dx_pqz, pqz_dx_xqz, xqz_dy_xyz, &
-      &                 xyz_dy_xqz, xqz_dz_xqr, xqr_dz_xqz, &
-      &                 xyr_dx_pyr, pyr_dx_xyr, xyr_dy_xqr, &
-      &                 xqr_dy_xyr, xyr_dz_xyz, xyz_dz_xyr, &
-      &                 xyz_dx_pyz, pyz_dx_xyz, xyz_dy_xqz, &
-      &                 xqz_dy_xyz, xyz_dz_xyr, xyr_dz_xyz, &
-      &                 xyz_dx4_xyz, pyz_dx4_pyz, xqz_dx4_xqz, xyr_dx4_xyr, &
+      &          only : xyz_dx4_xyz, pyz_dx4_pyz, xqz_dx4_xqz, xyr_dx4_xyr, &
       &                 xyz_dy4_xyz, pyz_dy4_pyz, xqz_dy4_xqz, xyr_dy4_xyr, &
       &                 xyz_dz4_xyz, pyz_dz4_pyz, xqz_dz4_xqz, xyr_dz4_xyr
 
@@ -232,14 +226,14 @@ contains
 
     ! numerical diffusion term
     !
-    xyz_KmNDiff =                                                             &
-      &  - NuHh * (xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz( xyz_KmB ))))) &
-      &  - NuHh * (xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz( xyz_KmB ))))) &
-      &  - NuVh * (xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz( xyz_KmB ))))) 
 !    xyz_KmNDiff =                                                             &
-!      &  - NuHh * xyz_dx4_xyz( xyz_KmB )  &
-!      &  - NuHh * xyz_dy4_xyz( xyz_KmB )  &
-!      &  - NuVh * xyz_dz4_xyz( xyz_KmB )
+!      &  - NuHh * (xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz( xyz_KmB ))))) &
+!      &  - NuHh * (xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz( xyz_KmB ))))) &
+!      &  - NuVh * (xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz( xyz_KmB ))))) 
+    xyz_KmNDiff =                                                             &
+      &  - NuHh * xyz_dx4_xyz( xyz_KmB )  &
+      &  - NuHh * xyz_dy4_xyz( xyz_KmB )  &
+      &  - NuVh * xyz_dz4_xyz( xyz_KmB )
         
     !------------------------------------------------------------------------
     ! 温位
@@ -255,14 +249,14 @@ contains
     
     ! numerical diffusion term
     !
-    xyz_PTempNDiff =                                                             &
-      &  - NuHh * (xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz( xyz_PTempB ))))) &
-      &  - NuHh * (xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz( xyz_PTempB ))))) &
-      &  - NuVh * (xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz( xyz_PTempB ))))) 
 !    xyz_PTempNDiff =                                                             &
-!      &  - NuHh * xyz_dx4_xyz( xyz_PTempB )  &
-!      &  - NuHh * xyz_dy4_xyz( xyz_PTempB )  &
-!      &  - NuVh * xyz_dz4_xyz( xyz_PTempB )
+!      &  - NuHh * (xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz( xyz_PTempB ))))) &
+!      &  - NuHh * (xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz( xyz_PTempB ))))) &
+!      &  - NuVh * (xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz( xyz_PTempB ))))) 
+    xyz_PTempNDiff =                                                             &
+      &  - NuHh * xyz_dx4_xyz( xyz_PTempB )  &
+      &  - NuHh * xyz_dy4_xyz( xyz_PTempB )  &
+      &  - NuVh * xyz_dz4_xyz( xyz_PTempB )
 
     !------------------------------------------------------------------------
     ! エクスナー関数
@@ -277,14 +271,14 @@ contains
 
     ! numerical diffusion term
     !
-    xyz_ExnerNDiff =                                                             &
-      &  - NuHh * (xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz( xyz_ExnerB ))))) &
-      &  - NuHh * (xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz( xyz_ExnerB ))))) &
-      &  - NuVh * (xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz( xyz_ExnerB )))))     
 !    xyz_ExnerNDiff =                                                             &
-!      &  - NuHh * xyz_dx4_xyz( xyz_ExnerB )  &
-!      &  - NuHh * xyz_dy4_xyz( xyz_ExnerB )  &
-!      &  - NuVh * xyz_dz4_xyz( xyz_ExnerB )
+!      &  - NuHh * (xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz( xyz_ExnerB ))))) &
+!      &  - NuHh * (xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz( xyz_ExnerB ))))) &
+!      &  - NuVh * (xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz( xyz_ExnerB )))))     
+    xyz_ExnerNDiff =                                                             &
+      &  - NuHh * xyz_dx4_xyz( xyz_ExnerB )  &
+      &  - NuHh * xyz_dy4_xyz( xyz_ExnerB )  &
+      &  - NuVh * xyz_dz4_xyz( xyz_ExnerB )
     
     
     !---------------------------------------------------------------------
@@ -303,15 +297,14 @@ contains
       
       ! numerical diffusion term
       !
-      xyzf_QMixNDiff(:,:,:,f) =                                                             &
-        &  - NuHh * (xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz( xyzf_QMixB(:,:,:,f) ))))) &
-        &  - NuHh * (xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz( xyzf_QMixB(:,:,:,f) ))))) &
-        &  - NuVh * (xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz( xyzf_QMixB(:,:,:,f) ))))) 
-
-!      xyzf_QMixNDiff(:,:,:,f) =                         &
-!        &  - NuHh * xyz_dx4_xyz( xyzf_QMixB(:,:,:,f) )  &
-!        &  - NuHh * xyz_dy4_xyz( xyzf_QMixB(:,:,:,f) )  &
-!        &  - NuVh * xyz_dz4_xyz( xyzf_QMixB(:,:,:,f) )
+!      xyzf_QMixNDiff(:,:,:,f) =                                                             &
+!        &  - NuHh * (xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz( xyzf_QMixB(:,:,:,f) ))))) &
+!        &  - NuHh * (xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz( xyzf_QMixB(:,:,:,f) ))))) &
+!        &  - NuVh * (xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz( xyzf_QMixB(:,:,:,f) ))))) 
+      xyzf_QMixNDiff(:,:,:,f) =                         &
+        &  - NuHh * xyz_dx4_xyz( xyzf_QMixB(:,:,:,f) )  &
+        &  - NuHh * xyz_dy4_xyz( xyzf_QMixB(:,:,:,f) )  &
+        &  - NuVh * xyz_dz4_xyz( xyzf_QMixB(:,:,:,f) )
   
     end do
 
@@ -328,14 +321,14 @@ contains
 
     ! Numerical diffusion term 
     !
-    pyz_VelXnDiff =                                                             &
-      & - NuHm * ( pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz( pyz_VelXB ))))) &
-      & - NuHm * ( pyz_dy_pqz(pqz_dy_pyz(pyz_dy_pqz(pqz_dy_pyz( pyz_VelXB ))))) &
-      & - NuVm * ( pyz_dz_pyr(pyr_dz_pyz(pyz_dz_pyr(pyr_dz_pyz( pyz_VelXB )))))    
-!    pyz_VelXnDiff =                        &
-!      & - NuHm * pyz_dx4_pyz( pyz_VelXB )  &
-!      & - NuHm * pyz_dy4_pyz( pyz_VelXB )  &
-!      & - NuVm * pyz_dz4_pyz( pyz_VelXB )
+!    pyz_VelXnDiff =                                                             &
+!      & - NuHm * ( pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz( pyz_VelXB ))))) &
+!      & - NuHm * ( pyz_dy_pqz(pqz_dy_pyz(pyz_dy_pqz(pqz_dy_pyz( pyz_VelXB ))))) &
+!      & - NuVm * ( pyz_dz_pyr(pyr_dz_pyz(pyz_dz_pyr(pyr_dz_pyz( pyz_VelXB )))))    
+    pyz_VelXnDiff =                        &
+      & - NuHm * pyz_dx4_pyz( pyz_VelXB )  &
+      & - NuHm * pyz_dy4_pyz( pyz_VelXB )  &
+      & - NuVm * pyz_dz4_pyz( pyz_VelXB )
 
     !------------------------------------------------------------------------
     ! Y 方向の速度
@@ -350,14 +343,14 @@ contains
 
     ! Numerical diffusion term
     !
-    xqz_VelYnDiff =                                                             &
-      & - NuHm * ( xqz_dx_pqz(pqz_dx_xqz(xqz_dx_pqz(pqz_dx_xqz( xqz_VelYB ))))) &
-      & - NuHm * ( xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz( xqz_VelYB ))))) &
-      & - NuVm * ( xqz_dz_xqr(xqr_dz_xqz(xqz_dz_xqr(xqr_dz_xqz( xqz_VelYB )))))
-!    xqz_VelYnDiff =                        &
-!      & - NuHm * xqz_dx4_xqz( xqz_VelYB )  &
-!      & - NuHm * xqz_dy4_xqz( xqz_VelYB )  &
-!      & - NuVm * xqz_dz4_xqz( xqz_VelYB )
+!    xqz_VelYnDiff =                                                             &
+!      & - NuHm * ( xqz_dx_pqz(pqz_dx_xqz(xqz_dx_pqz(pqz_dx_xqz( xqz_VelYB ))))) &
+!      & - NuHm * ( xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz( xqz_VelYB ))))) &
+!      & - NuVm * ( xqz_dz_xqr(xqr_dz_xqz(xqz_dz_xqr(xqr_dz_xqz( xqz_VelYB )))))
+    xqz_VelYnDiff =                        &
+      & - NuHm * xqz_dx4_xqz( xqz_VelYB )  &
+      & - NuHm * xqz_dy4_xqz( xqz_VelYB )  &
+      & - NuVm * xqz_dz4_xqz( xqz_VelYB )
 
     !------------------------------------------------------------------------
     ! Z 方向の速度
@@ -372,14 +365,14 @@ contains
        
     ! Numerical diffusion term
     !
-    xyr_VelZnDiff =                                                             &
-      & - NuHm * ( xyr_dx_pyr(pyr_dx_xyr(xyr_dx_pyr(pyr_dx_xyr( xyr_VelZB ))))) &
-      & - NuHm * ( xyr_dy_xqr(xqr_dy_xyr(xyr_dy_xqr(xqr_dy_xyr( xyr_VelZB ))))) & 
-      & - NuVm * ( xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr( xyr_VelZB )))))
-!    xyr_VelZnDiff =                        &
-!      & - NuHm * xyr_dx4_xyr( xyr_VelZB )  &
-!      & - NuHm * xyr_dy4_xyr( xyr_VelZB )  & 
-!      & - NuVm * xyr_dz4_xyr( xyr_VelZB )
+!    xyr_VelZnDiff =                                                             &
+!      & - NuHm * ( xyr_dx_pyr(pyr_dx_xyr(xyr_dx_pyr(pyr_dx_xyr( xyr_VelZB ))))) &
+!      & - NuHm * ( xyr_dy_xqr(xqr_dy_xyr(xyr_dy_xqr(xqr_dy_xyr( xyr_VelZB ))))) & 
+!      & - NuVm * ( xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr( xyr_VelZB )))))
+    xyr_VelZnDiff =                        &
+      & - NuHm * xyr_dx4_xyr( xyr_VelZB )  &
+      & - NuHm * xyr_dy4_xyr( xyr_VelZB )  & 
+      & - NuVm * xyr_dz4_xyr( xyr_VelZB )
     
   end subroutine advection_center4_std_main
   

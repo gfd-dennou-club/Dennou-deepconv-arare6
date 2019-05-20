@@ -251,7 +251,7 @@ contains
     call HistoryAddVariable(                         &
       & varname='CDens', dims=(/'x','y','z','t'/),   &
       & longname='CDens',                            &
-      & units='m2.s-1',                              &
+      & units='kg.m-3',                              &
       & xtype='double', history=rstat )
     
     !混合比
@@ -260,6 +260,20 @@ contains
       & longname='Mixing Ratio',                     &
       & units='kg.kg-1"',                            & 
       & xtype='double', history=rstat )
+
+!    !IH1998
+!    call HistoryAddVariable(                         &
+!      & varname='H2O', dims=(/'x','y','z','t'/),     &
+!      & longname='Number Density of H2O',            &
+!      & units='m-3',                                 &
+!      & xtype='double', history=rstat )
+
+!    !IH1998
+!    call HistoryAddVariable(                         &
+!      & varname='H2SO4', dims=(/'x','y','z','t'/),   &
+!      & longname='Number Density of H2SO4',          &
+!      & units='m-3',                                 &
+!      & xtype='double', history=rstat )
     
   end subroutine ReStartFileio_Init
   
@@ -291,6 +305,8 @@ contains
     & xyz_KmB,    xyz_KmN,      & ! (out)
     & xyz_KhB,    xyz_KhN,      & ! (out)
     & xyz_CDensB, xyz_CDensN  )   ! (out)
+!    & xyz_H2SO4b, xyz_H2SO4n,   & ! (out) !IH1998
+!    & xyz_H2Ob,   xyz_H2On    )   ! (out) !IH1998
     !
     !リスタートファイルから情報取得
     !
@@ -348,6 +364,12 @@ contains
       &                     (imin:imax,jmin:jmax,kmin:kmax)
     real(DP), intent(out) :: xyzf_QMixB &
       &                     (imin:imax,jmin:jmax,kmin:kmax,ncmax)
+
+!    !IH1998
+!    real(DP), intent(out) :: xyz_H2SO4b(imin:imax,jmin:jmax,kmin:kmax)
+!    real(DP), intent(out) :: xyz_H2SO4n(imin:imax,jmin:jmax,kmin:kmax)
+!    real(DP), intent(out) :: xyz_H2Ob(imin:imax,jmin:jmax,kmin:kmax)
+!    real(DP), intent(out) :: xyz_H2On(imin:imax,jmin:jmax,kmin:kmax)
 
     character(STRING)    :: name               !変数名
     character(STRING)    :: TimeN = ""
@@ -432,6 +454,16 @@ contains
     name = "QMix"
     call HistoryGet( InputFile, name, xyzf_QMixB, range=TimeB, flag_mpi_split = FLAG_LIB_MPI )
     call HistoryGet( InputFile, name, xyzf_QMixN, range=TimeN, flag_mpi_split = FLAG_LIB_MPI )
+
+!    !IH1998
+!    name = "H2SO4"
+!    call HistoryGet( InputFile, name, xyz_H2SO4b, range=TimeB, flag_mpi_split = FLAG_LIB_MPI )
+!    call HistoryGet( InputFile, name, xyz_H2SO4n, range=TimeN, flag_mpi_split = FLAG_LIB_MPI )
+
+!    !IH1998
+!    name = "H2O"
+!    call HistoryGet( InputFile, name, xyzf_H2Ob, range=TimeB, flag_mpi_split = FLAG_LIB_MPI )
+!    call HistoryGet( InputFile, name, xyzf_H2On, range=TimeN, flag_mpi_split = FLAG_LIB_MPI )
 
   end subroutine ReStartFileio_Var_Get
        
