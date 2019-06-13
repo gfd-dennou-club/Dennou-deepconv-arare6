@@ -121,20 +121,16 @@ contains
       xyz_QMixBZPerMolWt = sum(xyzf_QMixBZPerMolWt, 4) 
       xyz_QMixBZ         = sum(xyzf_QMixBZ, 4) 
 
-      do k = kmin, kmax-1
-        xyr_QMixBZPerMolWt(:,:,k) &
-          & = ( xyz_QMixBZPerMolWt(:,:,k+1) + xyz_QMixBZPerMolWt(:,:,k) ) * 0.5d0
-        xyr_QMixBZ(:,:,k) = ( xyz_QMixBZ(:,:,k+1) + xyz_QMixBZ(:,:,k) )   * 0.5d0
-      end do
+      xyr_QMixBZPerMolWt = xyr_xyz( xyz_QMixBZPerMolWt )
+      xyr_QMixBZ         = xyr_xyz( xyz_QMixBZ )
+      
     end if
     
     xyz_VPTempBZ = xyz_PTempBZ / xyz_EffMolWtBZ
 
-    do k = kmin, kmax-1    
-      xyr_PTempBZ(:,:,k)  = (  xyz_PTempBZ(:,:,k+1) +  xyz_PTempBZ(:,:,k) ) * 0.5d0
-      xyr_VPTempBZ(:,:,k) = ( xyz_VPTempBZ(:,:,k+1) + xyz_VPTempBZ(:,:,k) ) * 0.5d0
-      xyr_DensBZ(:,:,k)   = (   xyz_DensBZ(:,:,k+1) +   xyz_DensBZ(:,:,k) ) * 0.5d0
-    end do
+    xyr_PTempBZ  = xyr_xyz( xyz_PTempBZ )
+    xyr_VPTempBZ = xyr_xyz( xyz_VPTempBZ )
+    xyr_DensBZ   = xyr_xyz( xyz_DensBZ )
 
     ! 水平一様なので, 平均操作は必要ない
     !
@@ -202,5 +198,33 @@ contains
     end subroutine basicset_array_init
 
   end subroutine basicset_init
+  
+  function xyr_xyz(xyz_Var)
+    !
+    ! 平均操作を行い z 方向半整数格子点の配列値を整数格子点上へ返す
     
+    use dc_types,   only:  DP
+    use gridset,    only:  imin,       &! 配列の X 方向の下限
+      &                    imax,       &! 配列の X 方向の上限
+      &                    jmin,       &! 配列の Z 方向の下限
+      &                    jmax,       &! 配列の Z 方向の上限
+      &                    kmin,       &! 配列の Z 方向の下限
+      &                    kmax,       &! 配列の Z 方向の上限
+      &                    ncmax        ! 化学種の数
+
+    !暗黙の型宣言禁止
+    implicit none
+    
+    real(DP),intent(in) :: xyz_Var(imin:imax,jmin:jmax,kmin:kmax) 
+    real(DP)            :: xyr_xyz(imin:imax,jmin:jmax,kmin:kmax)
+    integer             :: kz
+    
+    do kz = kmin, kmax-1
+      xyr_xyz(:,:,kz) = ( xyz_Var(:,:,kz+1) + xyz_Var(:,:,kz) ) * 5.0d-1
+    end do
+    
+    xyr_xyz(:,:,kmax) = xyr_xyz(:,:,kmax-1)
+    
+  end function xyr_xyz
+  
 end module basicset
