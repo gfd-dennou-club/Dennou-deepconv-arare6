@@ -87,10 +87,17 @@ contains
     !初期値生成の場合には, outputfile 名を変更
     if ( present( FlagInitData ) ) then 
       if ( FlagInitData ) then 
-        if ( .NOT. InitialFile == "" ) then  ! ファイル名が空ならば
-          InputFile  = ""
+
+        if ( .NOT. InitialFile == "" ) then  ! ファイル名が空でなければ
           OutputFile = InitialFile
+          InputFile  = ""
         end if
+
+        if ( InitialFile == "" .AND. (.NOT. InputFile == "") ) then  
+          OutputFile = InputFile
+          InputFile  = ""
+        end if
+
       end if
     end if
 
