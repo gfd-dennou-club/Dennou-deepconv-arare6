@@ -38,7 +38,7 @@ module initialdata_disturb
   public initialdata_disturb_circleXZ
 
 contains
-    
+
   subroutine initialdata_disturb_random( DelMax, Zpos, xyz_Var )
     !
     ! 初期擾乱を乱数で与える
@@ -74,11 +74,19 @@ contains
     call random_seed(size=seedsize)  !初期値のサイズを取得
     allocate(seed(seedsize))         !配列割り当て
 
+    ! システムクロックを乱数の種として利用
     do i = 1, seedsize
       call system_clock(count=seed(i)) !時間取得
     end do
-    call random_seed(put=seed(:))
     
+    ! ノード毎にシードを変える.
+    seed = seed * ( myrank + 2) * 10 
+    
+    ! 乱数の種を与える
+    call random_seed(put=seed(:))
+    deallocate(seed)
+
+    ! 乱数生成. 値の範囲は 0-1 となる. 
     do j = 1, ny
       do i = 1, nx
         call random_number(random(i,j))
@@ -86,7 +94,6 @@ contains
     end do
     
     ! 指定された高度の配列添字を用意   
-    !
     do k = kmin, kmax
       if ( z_Z(k) >= Zpos ) then 
         kpos = k
@@ -95,15 +102,13 @@ contains
     end do
 
     ! 擾乱が全体としてはゼロとなるように調整. 平均からの差にする. 
-    !
     mean = sum( Random(1:nx, 1:ny) ) / real((nx * ny),8)
-
     do j = 1, ny
       do i = 1, nx
         xyz_Var(i, j, kpos) = DelMax * ( Random(i,j) - mean )
       end do
     end do
-
+    
   end subroutine initialdata_disturb_random
 
 !!!
