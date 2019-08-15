@@ -1,4 +1,4 @@
-!= ¥ √± ¸ºÕ: •µ•¶•Û•«•£•Û•∞•’•°•§•Î§´§È≤√«ÆŒ®§ÚÕø§®§Î
+!= Á∞°ÂçòÊîæÂ∞Ñ: „Çµ„Ç¶„É≥„Éá„Ç£„É≥„Ç∞„Éï„Ç°„Ç§„É´„Åã„ÇâÂä†ÁÜ±Áéá„Çí‰∏é„Åà„Çã
 !
 ! Authors::   SUGIYAMA Ko-ichiro
 ! Version::   $Id: radiation_sounding.f90,v 1.2 2014/03/04 04:49:42 sugiyama Exp $
@@ -9,26 +9,26 @@
 
 module Radiation_Sounding
   !
-  ! ¥ √± ¸ºÕ: •µ•¶•Û•«•£•Û•∞•’•°•§•Î§´§È≤√«ÆŒ®§ÚÕø§®§Î
+  ! Á∞°ÂçòÊîæÂ∞Ñ: „Çµ„Ç¶„É≥„Éá„Ç£„É≥„Ç∞„Éï„Ç°„Ç§„É´„Åã„ÇâÂä†ÁÜ±Áéá„Çí‰∏é„Åà„Çã
 
-  ! •‚•∏•Â°º•Î∆…§ﬂπ˛§ﬂ
+  ! „É¢„Ç∏„É•„Éº„É´Ë™≠„ÅøËæº„Åø
   !
   use dc_types, only: DP
   
-  ! ∞≈Ã€§Œ∑ø¿Î∏¿∂ÿªﬂ
+  ! ÊöóÈªô„ÅÆÂûãÂÆ£Ë®ÄÁ¶ÅÊ≠¢
   !
   implicit none
 
-  ! private ¬∞¿≠
+  ! private Â±ûÊÄß
   !
   private
 
-  ! —øÙƒÍµ¡
+  !Â§âÊï∞ÂÆöÁæ©
   !
   real(DP), save, allocatable, public :: xyz_DPTempDtRadSndg(:,:,:)   
-                                           ! ¸ºÕ≤√«Æπ‡
+                                           !ÊîæÂ∞ÑÂä†ÁÜ±È†Ö
   real(DP), save, allocatable, public :: xyz_ExnerRadSndg(:,:,:)  
-                                           ! ¸ºÕ≤√«Æπ‡
+                                           !ÊîæÂ∞ÑÂä†ÁÜ±È†Ö
   real(DP), save :: FactorDExnerDtRad = 1.0d0
 
   public  radiation_sounding_init
@@ -39,38 +39,41 @@ contains
 !!!----------------------------------------------------------------------!!!
   subroutine radiation_sounding_init
     !
-    ! •µ•¶•Û•«•£•Û•∞•’•°•§•Î§´§È≤√«ÆŒ®§Ú∆…§ﬂπ˛§‡
+    ! „Çµ„Ç¶„É≥„Éá„Ç£„É≥„Ç∞„Éï„Ç°„Ç§„É´„Åã„ÇâÂä†ÁÜ±Áéá„ÇíË™≠„ÅøËæº„ÇÄ
     !
     
-    ! •‚•∏•Â°º•Î∆…§ﬂπ˛§ﬂ
+    ! „É¢„Ç∏„É•„Éº„É´Ë™≠„ÅøËæº„Åø
     !
     use dc_types,          only : DP
     use dc_iounit,         only : FileOpen
-!    use dc_message,        only : MessageNotify
-    use gtool_historyauto, only : HistoryAutoAddVariable
-    use gridset,           only : imin,     & !x  ˝∏˛§Œ«€ŒÛ§Œ≤º∏¬
-      &                           imax,     & !x  ˝∏˛§Œ«€ŒÛ§ŒæÂ∏¬
-      &                           jmin,     & !y  ˝∏˛§Œ«€ŒÛ§Œ≤º∏¬
-      &                           jmax,     & !y  ˝∏˛§Œ«€ŒÛ§ŒæÂ∏¬
-      &                           kmin,     & !z  ˝∏˛§Œ«€ŒÛ§Œ≤º∏¬
-      &                           kmax        !z  ˝∏˛§Œ«€ŒÛ§ŒæÂ∏¬
-    use axesset,           only : z_Z, r_Z    !Z ∫¬…∏º¥
-    use constants,         only : DayTime     ! 1 ∆¸§Œƒπ§µ [s]
-    use basicset,          only : xyz_ExnerBZ !•®•Ø•π• °º¥ÿøÙ§Œ¥À‹æÏ
+    use gtool_historyauto, only : HistoryAutoAddVariable, HistoryAutoPut
+    use timeset,           only : TimeN
+    use gridset,           only : imin,     & !x ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏ãÈôê
+      &                           imax,     & !x ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏äÈôê
+      &                           jmin,     & !y ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏ãÈôê
+      &                           jmax,     & !y ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏äÈôê
+      &                           kmin,     & !z ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏ãÈôê
+      &                           kmax,     & !z ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏äÈôê
+      &                           nx, ny, nz
+    use axesset,           only : r_Z, z_Z    !Z Â∫ßÊ®ôËª∏
+    use constants,         only : DayTime,  & ! 1 Êó•„ÅÆÈï∑„Åï [s]
+      &                           CpDry
+    use basicset,          only : xyz_ExnerBZ, & !„Ç®„ÇØ„Çπ„Éä„ÉºÈñ¢Êï∞„ÅÆÂü∫Êú¨Â†¥
+      &                           xyz_DensBZ
     use DExnerDt,          only : xyz_DExnerDt_xyz
     use namelist_util,     only : namelist_filename
     
-    !∞≈Ã€§Œ∑ø¿Î∏¿∂ÿªﬂ
+    !ÊöóÈªô„ÅÆÂûãÂÆ£Ë®ÄÁ¶ÅÊ≠¢
     implicit none
     
-    !∆‚…Ù —øÙ
-    integer             :: AltCol = 0       !°÷π‚≈Ÿ°◊§ŒŒÛ»÷πÊ (•µ•¶•Û•«•£•Û•∞•’•°•§•Î∆‚)
-    integer             :: SWaveCol = 0     !°÷√ª«» ¸ºÕ§À§Ë§Î≤√«ÆŒ®°◊§ŒŒÛ»÷πÊ (•µ•¶•Û•«•£•Û•∞•’•°•§•Î∆‚)
-    integer             :: LWaveCol = 0     !°÷ƒπ«» ¸ºÕ§À§Ë§Î≤√«ÆŒ®°◊§ŒŒÛ»÷πÊ (•µ•¶•Û•«•£•Û•∞•’•°•§•Î∆‚)
-    integer             :: unit             !¿ﬂƒÍ•’•°•§•ÎÕ—¡ı√÷»÷πÊ  
+    !ÂÜÖÈÉ®Â§âÊï∞
+    integer             :: AltCol = 0       !„ÄåÈ´òÂ∫¶„Äç„ÅÆÂàóÁï™Âè∑ („Çµ„Ç¶„É≥„Éá„Ç£„É≥„Ç∞„Éï„Ç°„Ç§„É´ÂÜÖ)
+    integer             :: SWaveCol = 0     !„ÄåÁü≠Ê≥¢ÊîæÂ∞Ñ„Å´„Çà„ÇãÂä†ÁÜ±Áéá„Äç„ÅÆÂàóÁï™Âè∑ („Çµ„Ç¶„É≥„Éá„Ç£„É≥„Ç∞„Éï„Ç°„Ç§„É´ÂÜÖ)
+    integer             :: LWaveCol = 0     !„ÄåÈï∑Ê≥¢ÊîæÂ∞Ñ„Å´„Çà„ÇãÂä†ÁÜ±Áéá„Äç„ÅÆÂàóÁï™Âè∑ („Çµ„Ç¶„É≥„Éá„Ç£„É≥„Ç∞„Éï„Ç°„Ç§„É´ÂÜÖ)
+    integer             :: unit             !Ë®≠ÂÆö„Éï„Ç°„Ç§„É´Áî®Ë£ÖÁΩÆÁï™Âè∑  
     integer             :: k
     integer             :: io
-    character(30)       :: SoundingFile     ! •µ•¶•Û•«•£•Û•∞•’•°•§•Î
+    character(30)       :: SoundingFile     ! „Çµ„Ç¶„É≥„Éá„Ç£„É≥„Ç∞„Éï„Ç°„Ç§„É´
     
     integer, parameter  :: maxch=12
     character(len=200)  :: buf, eachcol(maxch)
@@ -79,127 +82,136 @@ contains
     real(DP)            :: r_tmpQradSW(10000)
     real(DP)            :: r_tmpQradLW(10000)
     real(DP)            :: r_tmpAlt(10000)
-    real(DP)            :: r_tmpQrad(10000)
     integer             :: NumRec = 0
 
-    real(DP), allocatable :: xyr_DPTempDtRadSndg(:,:,:)   
+    real(DP)            :: ratio
+    character(10)       :: QUnit
 
-    logical             :: flag
+    real(DP), allocatable :: xyr_DPTempDtRadSndgSW(:,:,:)   
+    real(DP), allocatable :: xyz_DPTempDtRadSndgSW(:,:,:)   
+    real(DP), allocatable :: xyr_DPTempDtRadSndgLW(:,:,:)   
+    real(DP), allocatable :: xyz_DPTempDtRadSndgLW(:,:,:)   
 
    
-    !¿ﬂƒÍ•’•°•§•Î§´§È∆…§ﬂπ˛§‡Ω–Œœ•’•°•§•Îæ Û
+    !Ë®≠ÂÆö„Éï„Ç°„Ç§„É´„Åã„ÇâË™≠„ÅøËæº„ÇÄÂá∫Âäõ„Éï„Ç°„Ç§„É´ÊÉÖÂ†±
     !
     NAMELIST /radiation_sounding_nml/ &
-      & SoundingFile, AltCol, SWaveCol, LWaveCol, FactorDExnerDtRad
+      & SoundingFile, AltCol, SWaveCol, LWaveCol, FactorDExnerDtRad, QUnit
               
-    !¿ﬂƒÍ•’•°•§•Î§´§ÈΩ–Œœ•’•°•§•Î§Àµ≠∫‹§π§Îæ Û§Ú∆…§ﬂπ˛§‡
+    !Ë®≠ÂÆö„Éï„Ç°„Ç§„É´„Åã„ÇâÂá∫Âäõ„Éï„Ç°„Ç§„É´„Å´Ë®òËºâ„Åô„ÇãÊÉÖÂ†±„ÇíË™≠„ÅøËæº„ÇÄ
     !
     call FileOpen(unit, file=namelist_filename, mode='r')
     read(unit, NML=radiation_sounding_nml)
     close(unit)
       
-    ! ΩÈ¥¸≤Ω
+    ! ÂàùÊúüÂåñ
     !
     io = 0
     NumRec = 0
     MaxCol = max( AltCol, max( SWaveCol, LWaveCol ) )
-!    write(*,*) "MaxCol", MaxCol
-    r_tmpAlt  = 0.0d0; r_tmpQrad = 0.0d0; r_tmpQradSW = 0.0d0; r_tmpQradLW = 0.0d0
+    r_tmpAlt  = 0.0d0; r_tmpQradSW = 0.0d0; r_tmpQradLW = 0.0d0
 
-    ! •’•°•§•Î§Œ•™°º•◊•Û
+    ! „Éï„Ç°„Ç§„É´„ÅÆ„Ç™„Éº„Éó„É≥
     !
     open (17, file=SoundingFile, status='old')
     
-    ! •’•°•§•Î∏∆§”Ω–§∑
+    ! „Éï„Ç°„Ç§„É´Âëº„Å≥Âá∫„Åó
     !
     do while ( io == 0 ) 
-      ! 1 π‘ ¨∆…§ﬂΩ–§∑
+      ! 1 Ë°åÂàÜË™≠„ÅøÂá∫„Åó
       !
       read (17, '(a)', IOSTAT=io) buf
       
-      ! π‘§Ú•´•Û•ﬁ∂Ë¿⁄§Í§« ¨≥‰
+      ! Ë°å„Çí„Ç´„É≥„ÉûÂå∫Âàá„Çä„ÅßÂàÜÂâ≤
       !
       call devidecsv( buf, eachcol, maxch, num )
       
-      ! ≥Œ«ß
-      !
-!      write(*,*) num
-!      do i=1, num
-!        write(*,*) i, eachcol(i)(1:len_trim(eachcol(i)))
-!      end do
-      
-      ! num §Œ√Õ§¨æÆ§µ§§§‚§Œ§œ•ÿ•√•¿§»§ﬂ§ §π. 
+      ! num „ÅÆÂÄ§„ÅåÂ∞è„Åï„ÅÑ„ÇÇ„ÅÆ„ÅØ„Éò„ÉÉ„ÉÄ„Å®„Åø„Å™„Åô. 
       !
       if (num >= MaxCol) then 
-        ! π‘øÙ§Œ∑◊ªª
+        ! Ë°åÊï∞„ÅÆË®àÁÆó
         !
         NumRec = NumRec + 1        
         
-        ! √Õ§Œ¬Â∆˛
+        ! ÂÄ§„ÅÆ‰ª£ÂÖ•
         !
         if (AltCol > 0)   read( eachcol(AltCol)(1:len_trim(eachcol(AltCol))), *)   r_tmpAlt(NumRec) 
         if (SWaveCol > 0) read( eachcol(SWaveCol)(1:len_trim(eachcol(SWaveCol))), *) r_tmpQradSW(NumRec) 
         if (LWaveCol > 0) read( eachcol(LWaveCol)(1:len_trim(eachcol(LWaveCol))), *) r_tmpQradLW(NumRec) 
 
-        r_tmpQrad(NumRec) = r_tmpQradSW(NumRec) + r_tmpQradLW(NumRec)
-
       end if
-
-!      write(*,*) r_tmpAlt(NumRec), r_tmpQradSW(NumRec), r_tmpQradLW(NumRec), r_tmpQrad(NumRec) 
-
     end do
 
-    ! •’•°•§•Î§Œ•Ø•Ì°º•∫
+    ! „Éï„Ç°„Ç§„É´„ÅÆ„ÇØ„É≠„Éº„Ç∫
     !
     close (17)
 
-    !ΩÈ¥¸≤Ω
+    !ÂàùÊúüÂåñ
     !
     allocate( xyz_DPTempDtRadSndg(imin:imax, jmin:jmax, kmin:kmax) )
-    allocate( xyr_DPTempDtRadSndg(imin:imax, jmin:jmax, kmin:kmax) )
+    allocate( xyz_DPTempDtRadSndgSW(imin:imax, jmin:jmax, kmin:kmax) )
+    allocate( xyr_DPTempDtRadSndgSW(imin:imax, jmin:jmax, kmin:kmax) )
+    allocate( xyz_DPTempDtRadSndgLW(imin:imax, jmin:jmax, kmin:kmax) )
+    allocate( xyr_DPTempDtRadSndgLW(imin:imax, jmin:jmax, kmin:kmax) )
     allocate( xyz_ExnerRadSndg(imin:imax, jmin:jmax, kmin:kmax) )
 
     xyz_DPTempDtRadSndg = 0.0d0
-    xyr_DPTempDtRadSndg = 0.0d0
+    xyz_DPTempDtRadSndgSW = 0.0d0
+    xyr_DPTempDtRadSndgSW = 0.0d0
+    xyz_DPTempDtRadSndgLW = 0.0d0
+    xyr_DPTempDtRadSndgLW = 0.0d0
     xyz_ExnerRadSndg = 0.0d0
-
-    flag = .false.
     
     do k = kmin, kmax
-      do i = 1, NumRec
-        if ( r_Z(k) == r_tmpAlt(i) ) then           
-          xyr_DPTempDtRadSndg(:,:,k) = r_tmpQrad(i)         
+      do i = 1, NumRec-1
+        if ( r_tmpAlt(i) == r_Z(k) ) then 
+          xyr_DPTempDtRadSndgSW(:,:,k) = r_tmpQradSW(i) 
+          xyr_DPTempDtRadSndgLW(:,:,k) = r_tmpQradLW(i) 
+        elseif ( r_tmpAlt(i) < r_Z(k) .AND. r_Z(k) <= r_tmpAlt(i+1) ) then 
+          ratio = ( r_Z(k) - r_tmpAlt(i) ) / ( r_tmpAlt(i+1) - r_tmpAlt(i) ) 
+          xyr_DPTempDtRadSndgSW(:,:,k) = r_tmpQradSW(i) + ( r_tmpQradSW(i+1) - r_tmpQradSW(i) ) * ratio
+          xyr_DPTempDtRadSndgLW(:,:,k) = r_tmpQradLW(i) + ( r_tmpQradLW(i+1) - r_tmpQradLW(i) ) * ratio
         end if
       end do
     end do
 
-    do k = kmin, kmax
-      do i = 1, NumRec
-        if ( z_Z(k) == r_tmpAlt(i) ) then 
-          flag = .true. 
-!          write(*,*) r_tmpAlt(i), r_tmpQrad(i), '(', r_tmpQradSW(i), '+', r_tmpQradLW(i), ')'
-          xyz_DPTempDtRadSndg(:,:,k) = r_tmpQrad(i)
-        end if
-      end do
+    do k = kmin+1, kmax
+      xyz_DPTempDtRadSndgSW(:,:,k) = &
+        & ( xyr_DPTempDtRadSndgSW(:,:,k-1) + xyr_DPTempDtRadSndgSW(:,:,k) ) * 5.0d-1
+      xyz_DPTempDtRadSndgLW(:,:,k) = &
+        & ( xyr_DPTempDtRadSndgLW(:,:,k-1) + xyr_DPTempDtRadSndgLW(:,:,k) ) * 5.0d-1
     end do
 
-    if (.NOT. flag) then 
-      do k = kmin+1, kmax
-        xyz_DPTempDtRadSndg(:,:,k) = ( xyr_DPTempDtRadSndg(:,:,k-1) + xyr_DPTempDtRadSndg(:,:,k) ) * 5.0d-1
-      end do
+    xyz_DPTempDtRadSndg = xyz_DPTempDtRadSndgSW + xyz_DPTempDtRadSndgLW
+
+    ! Âçò‰ΩçÊèõÁÆó
+    !
+    if (QUnit == "W_m-3") then 
+      xyz_DPTempDtRadSndg = xyz_DPTempDtRadSndg / CpDry / xyz_DensBZ / xyz_ExnerBZ
+    elseif (QUnit == "K_day-1") then 
+      xyz_DPTempDtRadSndg = xyz_DPTempDtRadSndg / DayTime / xyz_ExnerBZ
     end if
 
-
-    ! √±∞Ã¥πªª
-    !
-    xyz_DPTempDtRadSndg = xyz_DPTempDtRadSndg / DayTime / xyz_ExnerBZ
-
-    ! ∞µŒœ§Œ tendency
+    ! ÂúßÂäõ„ÅÆ tendency
     !
     xyz_ExnerRadSndg = xyz_DExnerDt_xyz(xyz_DPTempDtRadSndg) * FactorDExnerDtRad
 
-    ! •“•π•»•Í•«°º•øƒÍµ¡
+    ! „Éí„Çπ„Éà„É™„Éá„Éº„ÇøÂÆöÁæ©
     ! 
+    call HistoryAutoAddVariable(  &
+      & varname='DPTempDtRadSW', &
+      & dims=(/'x','y','z','t'/),     &
+      & longname='Radiation term of potential temperature (short wave)', &
+      & units='K.s-1',    &
+      & xtype='float')
+
+    call HistoryAutoAddVariable(  &
+      & varname='DPTempDtRadLW', &
+      & dims=(/'x','y','z','t'/),     &
+      & longname='Radiation term of potential temperature (long wave)', &
+      & units='K.s-1',    &
+      & xtype='float')
+
     call HistoryAutoAddVariable(  &
       & varname='DPTempDtRad', &
       & dims=(/'x','y','z','t'/),     &
@@ -214,6 +226,9 @@ contains
       & units='K.s-1',    &
       & xtype='float')
 
+    call HistoryAutoPut(TimeN, 'DPTempDtRadSW', xyz_DPTempDtRadSndgSW(1:nx,1:ny,1:nz))
+    call HistoryAutoPut(TimeN, 'DPTempDtRadLW', xyz_DPTempDtRadSndgLW(1:nx,1:ny,1:nz))
+
   end subroutine radiation_sounding_init
 
 
@@ -221,34 +236,34 @@ contains
     & xyz_DPTempDt, xyz_DExnerDt           & !(inout)
     & )
 
-    ! •‚•∏•Â°º•Î∆…§ﬂπ˛§ﬂ
+    ! „É¢„Ç∏„É•„Éº„É´Ë™≠„ÅøËæº„Åø
     !
     use dc_types,          only : DP
     use gtool_historyauto, only : HistoryAutoPut
     use timeset,           only : TimeN
-    use gridset,           only : imin,     & !x  ˝∏˛§Œ«€ŒÛ§Œ≤º∏¬
-      &                           imax,     & !x  ˝∏˛§Œ«€ŒÛ§ŒæÂ∏¬
-      &                           jmin,     & !y  ˝∏˛§Œ«€ŒÛ§Œ≤º∏¬
-      &                           jmax,     & !y  ˝∏˛§Œ«€ŒÛ§ŒæÂ∏¬
-      &                           kmin,     & !z  ˝∏˛§Œ«€ŒÛ§Œ≤º∏¬
-      &                           kmax,     & !z  ˝∏˛§Œ«€ŒÛ§ŒæÂ∏¬
+    use gridset,           only : imin,     & !x ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏ãÈôê
+      &                           imax,     & !x ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏äÈôê
+      &                           jmin,     & !y ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏ãÈôê
+      &                           jmax,     & !y ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏äÈôê
+      &                           kmin,     & !z ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏ãÈôê
+      &                           kmax,     & !z ÊñπÂêë„ÅÆÈÖçÂàó„ÅÆ‰∏äÈôê
       &                           nx, ny, nz
     
-    ! ∞≈Ã€§Œ∑ø¿Î∏¿∂ÿªﬂ
+    ! ÊöóÈªô„ÅÆÂûãÂÆ£Ë®ÄÁ¶ÅÊ≠¢
     !
     implicit none
 
-    ! ∆˛Ω–Œœ —øÙ
+    ! ÂÖ•Âá∫ÂäõÂ§âÊï∞
     !
     real(DP), intent(inout) :: xyz_DPTempDt(imin:imax,jmin:jmax,kmin:kmax)
     real(DP), intent(inout) :: xyz_DExnerDt(imin:imax,jmin:jmax,kmin:kmax)
 
-    ! tendency §Œππø∑
+    ! tendency „ÅÆÊõ¥Êñ∞
     !
     xyz_DPTempDt = xyz_DPTempDt + xyz_DPTempDtRadSndg
     xyz_DExnerDt = xyz_DExnerDt + xyz_ExnerRadSndg
     
-    ! •’•°•§•ÎΩ–Œœ
+    ! „Éï„Ç°„Ç§„É´Âá∫Âäõ
     !    
     call HistoryAutoPut(TimeN, 'DPTempDtRad', xyz_DPTempDtRadSndg(1:nx,1:ny,1:nz))
     call HistoryAutoPut(TimeN, 'ExnerRad', xyz_ExnerRadSndg(1:nx,1:ny,1:nz))
@@ -258,7 +273,7 @@ contains
 
   subroutine devidecsv( buf, eachcol, maxch, num )
     !
-    ! •µ•¶•Û•«•£•Û•∞•’•°•§•Î§Ú∆…§ﬂπ˛§‡§ø§·§Œ•Î°º•¡•Û
+    ! „Çµ„Ç¶„É≥„Éá„Ç£„É≥„Ç∞„Éï„Ç°„Ç§„É´„ÇíË™≠„ÅøËæº„ÇÄ„Åü„ÇÅ„ÅÆ„É´„Éº„ÉÅ„É≥
 
     implicit none
 
