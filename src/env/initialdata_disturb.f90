@@ -11,13 +11,13 @@
 
 module initialdata_disturb
   !
-  !¾ñÍğ¤Î¥Ç¥Õ¥©¥ë¥ÈÃÍ¤òÍ¿¤¨¤ë¤¿¤á¤Î¥ë¡¼¥Á¥ó. 
+  !æ“¾ä¹±ã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå€¤ã‚’ä¸ãˆã‚‹ãŸã‚ã®ãƒ«ãƒ¼ãƒãƒ³. 
   !
   
-  !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+  !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
   implicit none
 
-  !¸ø³«Í×ÁÇ
+  !å…¬é–‹è¦ç´ 
   public initialdata_disturb_random
   public initialdata_disturb_gaussXZ
   public initialdata_disturb_gaussXY
@@ -41,48 +41,52 @@ contains
     
   subroutine initialdata_disturb_random( DelMax, Zpos, xyz_Var )
     !
-    ! ½é´ü¾ñÍğ¤òÍğ¿ô¤ÇÍ¿¤¨¤ë
+    ! åˆæœŸæ“¾ä¹±ã‚’ä¹±æ•°ã§ä¸ãˆã‚‹
     !
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use mpi_wrapper,only: myrank, nprocs
     use dc_types,   only: DP
-    use axesset,    only: z_Z                   ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,    only: nx, imin, imax,      &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                   ny, jmin, jmax,      &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                   kmin, kmax            ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,    only: z_Z                   ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,    only: nx, imin, imax,      &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                   ny, jmin, jmax,      &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                   kmin, kmax            ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, Zpos
     real(DP), intent(out) :: xyz_Var(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP)              :: Random           !¥Õ¥¡¥¤¥ë¤«¤é¼èÆÀ¤·¤¿Íğ¿ô
-    real(DP)              :: Random1(imin:imax, jmin:jmax)
-    integer               :: i, j, k, kpos, ix, jy
-
-    ! ½é´ü²½
+    real(DP)              :: Random(imin:imax, jmin:jmax)
+    real(DP)              :: mean
+    integer               :: i, j, k, kpos
+    integer, allocatable  :: seed(:)
+    integer               :: seedsize
+    
+    ! åˆæœŸåŒ–
     xyz_Var = 0.0d0
     kpos    = 1
 
-    ! 0.0--1.0 ¤Îµ¼»÷Íğ¿ôÈ¯À¸
-    !  mpi ¤Î¾ì¹ç¤Ë, ³Æ CPU ¤Î»ı¤ÄÍğ¿ô¤¬°Û¤Ê¤ë¤è¤¦Ä´À°¤·¤Æ¤¤¤ë.  
+    ! 0.0--1.0 ã®æ“¬ä¼¼ä¹±æ•°ç™ºç”Ÿ
+    !  mpi ã®å ´åˆã«, å„ CPU ã®æŒã¤ä¹±æ•°ãŒç•°ãªã‚‹ã‚ˆã†èª¿æ•´ã—ã¦ã„ã‚‹.  
     !
-    do j = jmin, jmax + ( ny * nprocs )
-      do i = imin, imax * ( nx * nprocs )
-        call random_number(random)
-        if (imin + nx * myrank <= i .AND. i <= imax + nx * myrank) then 
-          if (jmin + ny * myrank <= j .AND. j <= jmax + ny * myrank) then 
-            ix = i - nx * myrank
-            jy = j - ny * myrank
-            Random1(ix,jy) = random
-          end if
-        end if
+    call random_seed(size=seedsize)  !åˆæœŸå€¤ã®ã‚µã‚¤ã‚ºã‚’å–å¾—
+    allocate(seed(seedsize))         !é…åˆ—å‰²ã‚Šå½“ã¦
+
+    do i = 1, seedsize
+      call system_clock(count=seed(i)) !æ™‚é–“å–å¾—
+    end do
+    call random_seed(put=seed(:))
+    
+    do j = 1, ny
+      do i = 1, nx
+        call random_number(random(i,j))
       end do
     end do
-
-    ! »ØÄê¤µ¤ì¤¿¹âÅÙ¤ÎÇÛÎóÅº»ú¤òÍÑ°Õ   
+    
+    ! æŒ‡å®šã•ã‚ŒãŸé«˜åº¦ã®é…åˆ—æ·»å­—ã‚’ç”¨æ„   
+    !
     do k = kmin, kmax
       if ( z_Z(k) >= Zpos ) then 
         kpos = k
@@ -90,23 +94,25 @@ contains
       end if
     end do
 
-    ! ¾ñÍğ¤¬Á´ÂÎ¤È¤·¤Æ¤Ï¥¼¥í¤È¤Ê¤ë¤è¤¦¤ËÄ´À°. Ê¿¶Ñ¤«¤é¤Îº¹¤Ë¤¹¤ë. 
+    ! æ“¾ä¹±ãŒå…¨ä½“ã¨ã—ã¦ã¯ã‚¼ãƒ­ã¨ãªã‚‹ã‚ˆã†ã«èª¿æ•´. å¹³å‡ã‹ã‚‰ã®å·®ã«ã™ã‚‹. 
+    !
+    mean = sum( Random(1:nx, 1:ny) ) / real((nx * ny),8)
+
     do j = 1, ny
       do i = 1, nx
-        xyz_Var(i, j, kpos) = &
-          & DelMax * (Random1(i,j) - sum( Random1(1:nx,1:ny) ) / real((nx * ny),8))
+        xyz_Var(i, j, kpos) = DelMax * ( Random(i,j) - mean )
       end do
     end do
-    
+
   end subroutine initialdata_disturb_random
 
 !!!
-!!! Klemp and Wilhelmson (1978) ¤Î½é´üÃÍ
+!!! Klemp and Wilhelmson (1978) ã®åˆæœŸå€¤
 !!! 
 
 !  subroutine initialdata_disturb_kw1978(DelMax, Xc, Xr, Yc, Yr, Zc, Zr, xyz_Var)
 !    !
-!    ! Klemp and Wilhelmson (1978) ¤Î½é´üÃÍ
+!    ! Klemp and Wilhelmson (1978) ã®åˆæœŸå€¤
 !
 !    implicit none
 !
@@ -142,20 +148,20 @@ contains
 
   subroutine initialdata_disturb_tanh(VarMean, VarDel, Zc, Zr, aaz_Var, aaz_VarBZ)
     !
-    ! tanh ·¿¤Î¥·¥¢
+    ! tanh å‹ã®ã‚·ã‚¢
     !   A(z) = A0 + A1 \tanh( (z - Zc) / h )
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: z_Z             ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: z_Z             ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)            :: VarMean, VarDel, Zc, Zr
     real(DP), intent(in), optional  :: aaz_VarBZ(imin:imax, jmin:jmax, kmin:kmax)
     real(DP), intent(out)           :: aaz_Var(imin:imax, jmin:jmax, kmin:kmax)
@@ -178,21 +184,21 @@ contains
 
   subroutine initialdata_disturb_tanh_sin(VarMean, VarDel, Zc, Zr, aaz_Var, aaz_VarBZ)
     !
-    ! tanh ·¿¤Î¥·¥¢
+    ! tanh å‹ã®ã‚·ã‚¢
     !   A(z) = A0 + A1 \tanh( (z - Zc) / h )
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: x_X,  XMax,    &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  z_Z,  ZMax      ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: x_X,  XMax,    &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  z_Z,  ZMax      ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)            :: VarMean, VarDel, Zc, Zr
     real(DP), intent(in), optional  :: aaz_VarBZ(imin:imax, jmin:jmax, kmin:kmax)
     real(DP), intent(out)           :: aaz_Var(imin:imax, jmin:jmax, kmin:kmax)
@@ -219,25 +225,25 @@ contains
 
 
 !!!
-!!! ±ß¿í·Á
+!!! å††éŒå½¢
 !!! 
 
   subroutine initialdata_disturb_ConeXY(DelMax, Xc, Xr, Yc, Yr, xyz_Var)
     !
-    ! ±ß¿í·¿¤Î½é´üÃÍ
+    ! å††éŒå‹ã®åˆæœŸå€¤
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: x_X,           &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  y_Y             ! Y ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: x_X,           &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  y_Y             ! Y åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, Xc, Xr, Yc, Yr
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     integer               :: i, j, k
@@ -258,20 +264,20 @@ contains
 
   subroutine initialdata_disturb_ConeXZ(DelMax, Xc, Xr, Zc, Zr, xyz_Var)
     !
-    ! ±ß¿í·¿¤Î½é´üÃÍ
+    ! å††éŒå‹ã®åˆæœŸå€¤
     
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: x_X,           &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  z_Z             ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: x_X,           &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  z_Z             ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, Xc, Xr, Zc, Zr
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     integer         :: i, j, k
@@ -293,20 +299,20 @@ contains
 
   subroutine initialdata_disturb_ConeYZ(DelMax, Yc, Yr, Zc, Zr, xyz_Var)
     !
-    ! ±ß¿í·¿¤Î½é´üÃÍ
+    ! å††éŒå‹ã®åˆæœŸå€¤
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: y_Y,           &! Y ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  z_Z             ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: y_Y,           &! Y åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  z_Z             ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ    
+    !å¤‰æ•°å®šç¾©    
     real(DP), intent(in)  :: DelMax, Yc, Yr, Zc, Zr
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     integer               :: i, j, k
@@ -327,26 +333,26 @@ contains
 
   
 !!!
-!!! °ìÄê
+!!! ä¸€å®š
 !!!  
   
   subroutine initialdata_disturb_circleXZ(DelMax, Xc, Xr, Zc, xyz_Var)
     !
-    ! ±ßÃì·¿¤Î½é´üÃÍ
+    ! å††æŸ±å‹ã®åˆæœŸå€¤
     !
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: x_X,           &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  z_Z             ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: x_X,           &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  z_Z             ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, Xc, Zc, Xr
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     integer               :: i, j, k
@@ -367,26 +373,26 @@ contains
 
 
 !!!
-!!! ¥¬¥¦¥·¥¢¥ó
+!!! ã‚¬ã‚¦ã‚·ã‚¢ãƒ³
 !!!  
   
   subroutine initialdata_disturb_gaussXZ(DelMax, Xc, Xr, Zc, Zr, xyz_Var)
     !
-    ! ¥¬¥¦¥·¥¢¥ó¤Ê½é´üÃÍ
+    ! ã‚¬ã‚¦ã‚·ã‚¢ãƒ³ãªåˆæœŸå€¤
     !
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: x_X,           &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  z_Z             ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: x_X,           &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  z_Z             ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, Xc, Xr, Zc, Zr
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     integer               :: i, j, k
@@ -409,21 +415,21 @@ contains
 
   subroutine initialdata_disturb_gaussXY(DelMax, Xc, Xr, Yc, Yr, xyz_Var)
     !
-    ! ¥¬¥¦¥·¥¢¥ó¤Ê½é´üÃÍ
+    ! ã‚¬ã‚¦ã‚·ã‚¢ãƒ³ãªåˆæœŸå€¤
     !
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types, only: DP
-    use axesset,  only: x_X,           &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                 y_Y             ! Y ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,  only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                 jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                 kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,  only: x_X,           &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                 y_Y             ! Y åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,  only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                 jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                 kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, Xc, Xr, Yc, Yr
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     integer         :: i, j, k
@@ -447,21 +453,21 @@ contains
 
   subroutine initialdata_disturb_gaussYZ(DelMax, Yc, Yr, Zc, Zr, xyz_Var)
     !
-    ! ¥¬¥¦¥·¥¢¥ó¤Ê½é´üÃÍ
+    ! ã‚¬ã‚¦ã‚·ã‚¢ãƒ³ãªåˆæœŸå€¤
     !
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: y_Y,           &! Y ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  z_Z             ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: y_Y,           &! Y åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  z_Z             ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, Yc, Yr, Zc, Zr
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     integer               :: i, j, k
@@ -485,22 +491,22 @@ contains
 
   subroutine initialdata_disturb_gaussXYZ(DelMax, Xc, Xr, Yc, Yr, Zc, Zr, xyz_Var)
     !
-    ! ¥¬¥¦¥·¥¢¥ó¤Ê½é´üÃÍ
+    ! ã‚¬ã‚¦ã‚·ã‚¢ãƒ³ãªåˆæœŸå€¤
     !
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: x_X,           &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  y_Y,           &! Y ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  z_Z             ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: x_X,           &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  y_Y,           &! Y åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  z_Z             ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, Xc, Xr, Yc, Yr, Zc, Zr
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     integer               :: i, j, k
@@ -527,21 +533,21 @@ contains
 !!!
   subroutine initialdata_disturb_cosXZ(DelMax, Xc, Xr, Zc, Zr, xyz_Var)
     !
-    ! ½ÅÎÏÎ®¤Î·×»»¤ËÍøÍÑ¤¹¤ë¾ñÍğ
-    ! A [cos(¦ĞL) + 1]*0.5 ( L < 1.0 ) or 0.0
+    ! é‡åŠ›æµã®è¨ˆç®—ã«åˆ©ç”¨ã™ã‚‹æ“¾ä¹±
+    ! A [cos(Ï€L) + 1]*0.5 ( L < 1.0 ) or 0.0
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: xyz_X,         &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  xyz_Z           ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: xyz_X,         &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  xyz_Z           ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, Xc, Xr, Zc, Zr
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     real(DP)              :: xyz_Var2(imin:imax, jmin:jmax, kmin:kmax)
@@ -562,21 +568,21 @@ contains
   
   subroutine initialdata_disturb_cosXY(DelMax, Xc, Xr, Yc, Yr, xyz_Var)
     !
-    ! ½ÅÎÏÎ®¤Î·×»»¤ËÍøÍÑ¤¹¤ë¾ñÍğ
-    ! A [cos(¦ĞL) + 1]*0.5 ( L < 1.0 ) or 0.0
+    ! é‡åŠ›æµã®è¨ˆç®—ã«åˆ©ç”¨ã™ã‚‹æ“¾ä¹±
+    ! A [cos(Ï€L) + 1]*0.5 ( L < 1.0 ) or 0.0
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: xyz_X,         &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  xyz_Y           ! Y ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¤Î X Êı¸ş¤Î¾å¸Â
-      &                  jmin, jmax,    &! ÇÛÎó¤Î Y Êı¸ş¤Î¾å¸Â
-      &                  kmin, kmax      ! ÇÛÎó¤Î Z Êı¸ş¤Î¾å¸Â
+    use axesset,   only: xyz_X,         &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  xyz_Y           ! Y åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã® X æ–¹å‘ã®ä¸Šé™
+      &                  jmin, jmax,    &! é…åˆ—ã® Y æ–¹å‘ã®ä¸Šé™
+      &                  kmin, kmax      ! é…åˆ—ã® Z æ–¹å‘ã®ä¸Šé™
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, Xc, Xr, Yc, Yr
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     real(DP)              :: xyz_Var2(imin:imax, jmin:jmax, kmin:kmax)
@@ -597,18 +603,18 @@ contains
 
   subroutine initialdata_disturb_cosYZ(DelMax, Yc, Yr, Zc, Zr, xyz_Var)
     !
-    ! ½ÅÎÏÎ®¤Î·×»»¤ËÍøÍÑ¤¹¤ë¾ñÍğ
-    ! A [cos(¦ĞL) + 1]*0.5 ( L < 1.0 ) or 0.0
+    ! é‡åŠ›æµã®è¨ˆç®—ã«åˆ©ç”¨ã™ã‚‹æ“¾ä¹±
+    ! A [cos(Ï€L) + 1]*0.5 ( L < 1.0 ) or 0.0
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: xyz_Y,        &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  xyz_Z          ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,   &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,   &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax     ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: xyz_Y,        &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  xyz_Z          ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,   &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,   &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax     ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
     
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
     real(DP), intent(in)  :: DelMax, Yc, Yr, Zc, Zr
@@ -631,22 +637,22 @@ contains
   
   subroutine initialdata_disturb_cosXYZ(DelMax, Xc, Xr, Yc, Yr, Zc, Zr, xyz_Var)
     !
-    ! ½ÅÎÏÎ®¤Î·×»»¤ËÍøÍÑ¤¹¤ë¾ñÍğ
-    ! A [cos(¦ĞL) + 1]*0.5 ( L < 1.0 ) or 0.0
+    ! é‡åŠ›æµã®è¨ˆç®—ã«åˆ©ç”¨ã™ã‚‹æ“¾ä¹±
+    ! A [cos(Ï€L) + 1]*0.5 ( L < 1.0 ) or 0.0
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: xyz_X,        &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  xyz_Y,        &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  xyz_Z          ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,   &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,   &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax     ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: xyz_X,        &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  xyz_Y,        &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  xyz_Z          ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,   &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,   &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax     ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
     
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, Xc, Xr, Yc, Yr, Zc, Zr
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     real(DP)              :: xyz_Var2(imin:imax, jmin:jmax, kmin:kmax)
@@ -673,30 +679,30 @@ contains
     & XposMin, XposMax, YposMin, YposMax, ZposMin, ZposMax, &
     & xyzf_QMix)
     !
-    ! ¶ë·Á¤Ê´¥ÁçÎÎ°è¤òºî¤ë
+    ! çŸ©å½¢ãªä¹¾ç‡¥é ˜åŸŸã‚’ä½œã‚‹
     !
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: x_X,             &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  y_Y,             &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  z_Z               ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,      &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,      &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax,      &! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
-      &                  ncmax             ! ·×»»ÎÎ°è¤Î¥Ş¡¼¥¸¥ó
+    use axesset,   only: x_X,             &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  y_Y,             &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  z_Z               ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,      &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,      &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax,      &! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
+      &                  ncmax             ! è¨ˆç®—é ˜åŸŸã®ãƒãƒ¼ã‚¸ãƒ³
     use basicset, only: xyzf_QMixBZ
     
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: XposMin, XposMax, YposMin, YposMax, ZposMin, ZposMax
     real(DP), intent(out) :: xyzf_QMix(imin:imax, jmin:jmax, kmin:kmax, 1:ncmax)
     integer               :: i, j, k, s
     
-    ! XposMin:XposMax,ZposMin:ZposMax ¤Ç°Ï¤Ş¤ì¤¿ÎÎ°è¤Î½é´ü¤Î¼¾ÅÙ¤ò¥¼¥í¤Ë¤¹¤ë¤¿¤á¤Ë
-    ! ´ğËÜ¾ì¤ÈµÕÉä¹æ¤Î¿å¾øµ¤¾ñÍğ¤òÍ¿¤¨¤ë
+    ! XposMin:XposMax,ZposMin:ZposMax ã§å›²ã¾ã‚ŒãŸé ˜åŸŸã®åˆæœŸã®æ¹¿åº¦ã‚’ã‚¼ãƒ­ã«ã™ã‚‹ãŸã‚ã«
+    ! åŸºæœ¬å ´ã¨é€†ç¬¦å·ã®æ°´è’¸æ°—æ“¾ä¹±ã‚’ä¸ãˆã‚‹
     do s = 1, ncmax
       do k = kmin,kmax  
         do j = jmin, jmax
@@ -718,22 +724,22 @@ contains
     & DelMax, XposMin, XposMax, YposMin, YposMax, ZposMin, ZposMax, &
     & xyz_Var)
     !
-    ! Î©ÊıÂÎ
+    ! ç«‹æ–¹ä½“
     !
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use axesset,   only: x_X,           &! X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  y_Y,           &! Y ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                  z_Z             ! Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset,   only: imin, imax,    &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  jmin, jmax,    &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  kmin, kmax      ! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
+    use axesset,   only: x_X,           &! X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  y_Y,           &! Y åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                  z_Z             ! Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset,   only: imin, imax,    &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  jmin, jmax,    &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  kmin, kmax      ! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: DelMax, XposMin, XposMax, YposMin, YposMax, ZposMin, ZposMax
     real(DP), intent(out) :: xyz_Var(imin:imax, jmin:jmax, kmin:kmax)
     integer         :: i, j, k
@@ -757,43 +763,43 @@ contains
   
   subroutine initialdata_disturb_moist(Hum, xyzf_QMix)
     !
-    ! ¼¾ÅÙ Hum ¤Êº®¹çÈæ¤Î±ôÄ¾Ê¬ÉÛ¤òºîÀ®
+    ! æ¹¿åº¦ Hum ãªæ··åˆæ¯”ã®é‰›ç›´åˆ†å¸ƒã‚’ä½œæˆ
     !
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use gridset,   only: nx, imin, imax,   &! ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                  ny, jmin, jmax,   &! ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                  nz, kmin, kmax,   &! ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
-      &                  ncmax              ! ·×»»ÎÎ°è¤Î¥Ş¡¼¥¸¥ó
-    use basicset,  only: xyz_TempBZ,       &! ´ğËÜ¾ì¤Î²¹ÅÙ
-      &                  xyz_PressBZ,      &! ´ğËÜ¾ì¤Î°µÎÏ
-      &                  xyzf_QMixBZ        ! ´ğËÜ¾ì¤Îº®¹çÈæ
+    use gridset,   only: nx, imin, imax,   &! é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                  ny, jmin, jmax,   &! é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                  nz, kmin, kmax,   &! é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
+      &                  ncmax              ! è¨ˆç®—é ˜åŸŸã®ãƒãƒ¼ã‚¸ãƒ³
+    use basicset,  only: xyz_TempBZ,       &! åŸºæœ¬å ´ã®æ¸©åº¦
+      &                  xyz_PressBZ,      &! åŸºæœ¬å ´ã®åœ§åŠ›
+      &                  xyzf_QMixBZ        ! åŸºæœ¬å ´ã®æ··åˆæ¯”
     use composition, only:                 &
-      &                  MolWtWet,         &!¶Å½ÌÀ®Ê¬¤ÎÊ¬»ÒÎÌ
-      &                  SpcWetMolFr        !¶Å½ÌÀ®Ê¬¤Î½é´ü¥â¥ëÈæ
-    use constants, only: MolWtDry           !´¥ÁçÀ®Ê¬¤ÎÊ¬»ÒÎÌ
+      &                  MolWtWet,         &!å‡ç¸®æˆåˆ†ã®åˆ†å­é‡
+      &                  SpcWetMolFr        !å‡ç¸®æˆåˆ†ã®åˆæœŸãƒ¢ãƒ«æ¯”
+    use constants, only: MolWtDry           !ä¹¾ç‡¥æˆåˆ†ã®åˆ†å­é‡
     use eccm,      only: eccm_molfr
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     real(DP), intent(in)  :: Hum
     real(DP), intent(out) :: xyzf_QMix(imin:imax, jmin:jmax, kmin:kmax, 1:ncmax)
     real(DP)              :: zf_MolFr(kmin:kmax, 1:ncmax)
     integer               :: i, j, k, s
   
-    ! ¼¾ÅÙ¥¼¥í¤Ê¤é²¿¤â¤·¤Ê¤¤
+    ! æ¹¿åº¦ã‚¼ãƒ­ãªã‚‰ä½•ã‚‚ã—ãªã„
     if ( Hum == 0.0d0 ) return
 
-    ! ¿åÊ¿°ìÍÍ¤Ê¤Î¤Ç, i=0 ¤À¤±·×»». 
+    ! æ°´å¹³ä¸€æ§˜ãªã®ã§, i=0 ã ã‘è¨ˆç®—. 
     i = 1
     j = 1
     call eccm_molfr( SpcWetMolFr(1:ncmax), Hum, xyz_TempBZ(i,j,:), &
       &              xyz_PressBZ(i,j,:), zf_MolFr )
     
-    !µ¤Áê¤Î¥â¥ëÈæ¤òº®¹çÈæ¤ËÊÑ´¹
+    !æ°—ç›¸ã®ãƒ¢ãƒ«æ¯”ã‚’æ··åˆæ¯”ã«å¤‰æ›
     do s = 1, ncmax
       do k = 1, nz
         do j = 1, ny
