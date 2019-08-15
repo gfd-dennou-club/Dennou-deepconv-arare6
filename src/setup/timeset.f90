@@ -1,4 +1,4 @@
-!= »ş¹ïÀßÄêÍÑ¥â¥¸¥å¡¼¥ë
+!= æ™‚åˆ»è¨­å®šç”¨ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 !
 ! Authors::   SUGIYAMA Ko-ichiro, ODAKA Masatsugu
 ! Version::   $Id: timeset.f90,v 1.11 2014/01/21 05:00:57 sugiyama Exp $ 
@@ -8,70 +8,80 @@
 
 module timeset
   !
-  != »ş¹ïÀßÄêÍÑ¥â¥¸¥å¡¼¥ë
+  != æ™‚åˆ»è¨­å®šç”¨ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
   !
-  !°ú¿ô¤ËÍ¿¤¨¤é¤ì¤¿ NAMELIST ¥Õ¥¡¥¤¥ë¤«¤é, »ş¹ï¤Ë´Ø¤¹¤ë¾ğÊó¤ò¼èÆÀ¤·, 
-  !Êİ´É¤¹¤ë¤¿¤á¤ÎÊÑ¿ô·¿¥â¥¸¥å¡¼¥ë
+  !å¼•æ•°ã«ä¸ãˆã‚‰ã‚ŒãŸ NAMELIST ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰, æ™‚åˆ»ã«é–¢ã™ã‚‹æƒ…å ±ã‚’å–å¾—ã—, 
+  !ä¿ç®¡ã™ã‚‹ãŸã‚ã®å¤‰æ•°å‹ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
   !
   !== Procedures List
-  ! timeset_init       :: ½é´ü²½¥ë¡¼¥Á¥ó
-  ! TimesetDelTimeHalf :: ¥ê¡¼¥×¥Õ¥í¥Ã¥°¥¹¥­¡¼¥à¤ÎºÇ½é¤Î 1 ¥¹¥Æ¥Ã¥×¤ò²ó¤¹¤¿¤á¤Î¥ë¡¼¥Á¥ó
-  ! TimesetProgress    :: ¥ê¡¼¥×¥Õ¥í¥Ã¥°¥¹¥­¡¼¥à¤Ç 1 ¥¹¥Æ¥Ã¥×¤ò²ó¤¹¤¿¤á¤Î¥ë¡¼¥Á¥ó
+  ! timeset_init       :: åˆæœŸåŒ–ãƒ«ãƒ¼ãƒãƒ³
+  ! TimesetDelTimeHalf :: ãƒªãƒ¼ãƒ—ãƒ•ãƒ­ãƒƒã‚°ã‚¹ã‚­ãƒ¼ãƒ ã®æœ€åˆã® 1 ã‚¹ãƒ†ãƒƒãƒ—ã‚’å›ã™ãŸã‚ã®ãƒ«ãƒ¼ãƒãƒ³
+  ! TimesetProgress    :: ãƒªãƒ¼ãƒ—ãƒ•ãƒ­ãƒƒã‚°ã‚¹ã‚­ãƒ¼ãƒ ã§ 1 ã‚¹ãƒ†ãƒƒãƒ—ã‚’å›ã™ãŸã‚ã®ãƒ«ãƒ¼ãƒãƒ³
   
-  !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+  !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
   use dc_types,      only: DP
   use dc_iounit,     only: FileOpen
   use dc_message,    only: MessageNotify
   use namelist_util, only: namelist_filename
   
-  !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+  !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
   implicit none
-
-  !Â°À­
-  private
   
-  ! Public Interface
-  real(DP), save, public  :: TimeA                   !»ş¹ï t + \del t
-  real(DP), save, public  :: TimeN                   !»ş¹ï t
-  real(DP), save, public  :: TimeB                   !»ş¹ï t - \del t
-  real(DP), save, public  :: DelTimeLong  = 2.0d0    !Ä¹¤¤¥¿¥¤¥à¥¹¥Æ¥Ã¥×
-  real(DP), save          :: DelTimeLongSave  = 2.0d0 !Ä¹¤¤¥¿¥¤¥à¥¹¥Æ¥Ã¥×
-  real(DP), save, public  :: DelTimeShort = 2.0d-1   !Ã»¤¤¥¿¥¤¥à¥¹¥Æ¥Ã¥×
-  real(DP), save, public  :: RestartTime  = 0.0d0    !·×»»³«»Ï»ş¹ï
-  real(DP), save, public  :: IntegPeriod  = 3600.0d0 !ÀÑÊ¬»ş´Ö
-  real(DP), save, public  :: EndTime      = 3600.0d0 !·×»»½ªÎ»»ş¹ï
-  real(DP), save, public  :: DelTimeOutput= 2.0d0    !½ĞÎÏ¥¿¥¤¥à¥¹¥Æ¥Ã¥×
-  real(DP), save, public  :: tfil         = 1.0d-1   !¥¢¥»¥ê¥ó¤Î»ş´Ö¥Õ¥£¥ë¥¿¤Î·¸¿ô
-  real(DP), parameter     :: tfilSave     = 1.0d-1   !¥¢¥»¥ê¥ó¤Î»ş´Ö¥Õ¥£¥ë¥¿¤Î·¸¿ô
-  integer,  save, public  :: NstepShort = 20         !Ã»¤¤¥¿¥¤¥à¥¹¥Æ¥Ã¥×¤Î¥¹¥Æ¥Ã¥×¿ô
-  integer,  save          :: NstepShortSave = 20     !Ã»¤¤¥¿¥¤¥à¥¹¥Æ¥Ã¥×¤Î¥¹¥Æ¥Ã¥×¿ô
-  integer,  save, public  :: NstepOutput    = 20     !¥ê¥¹¥¿¡¼¥È¥Õ¥¡¥¤¥ë¤Ø¤Î½ĞÎÏ
-  logical,  save, public  :: FlagInitialRun = .false.!t=0 ¤«Èİ¤«¤Î¥Õ¥é¥°. 
+  ! Namelist ã‹ã‚‰å–å¾—ã™ã‚‹å¤‰æ•°
+  !
+  real(DP), save, public  :: DelTimeLong  = 2.0d0    !é•·ã„ã‚¿ã‚¤ãƒ ã‚¹ãƒ†ãƒƒãƒ—
+  real(DP), save, public  :: DelTimeShort = 2.0d-1   !çŸ­ã„ã‚¿ã‚¤ãƒ ã‚¹ãƒ†ãƒƒãƒ—
+  real(DP), save, public  :: IntegPeriod  = 3600.0d0 !ç©åˆ†æ™‚é–“
+  real(DP), save, public  :: RestartTime  = 0.0d0    !è¨ˆç®—é–‹å§‹æ™‚åˆ»
+  real(DP), save, private :: DelTimeOutput= 2.0d0    !å‡ºåŠ›ã‚¿ã‚¤ãƒ ã‚¹ãƒ†ãƒƒãƒ—
 
-  integer,  save, public  :: NstepDisp = 20          !¥ê¥¹¥¿¡¼¥È¥Õ¥¡¥¤¥ë¤Ø¤Î½ĞÎÏ
+  ! public ãªå¤‰æ•°
+  !
+  real(DP), save, public  :: TimeA                   !æ™‚åˆ» t + \del t
+  real(DP), save, public  :: TimeN                   !æ™‚åˆ» t
+  real(DP), save, public  :: TimeB                   !æ™‚åˆ» t - \del t
+  real(DP), save, public  :: tfil           = 1.0d-1 !ã‚¢ã‚»ãƒªãƒ³ã®æ™‚é–“ãƒ•ã‚£ãƒ«ã‚¿ã®ä¿‚æ•°
+  integer,  save, public  :: NstepLong      = 20     !é•·ã„ã‚¿ã‚¤ãƒ ã‚¹ãƒ†ãƒƒãƒ—ã®ã‚¹ãƒ†ãƒƒãƒ—æ•°
+  integer,  save, public  :: NstepShort     = 20     !çŸ­ã„ã‚¿ã‚¤ãƒ ã‚¹ãƒ†ãƒƒãƒ—ã®ã‚¹ãƒ†ãƒƒãƒ—æ•°
+  integer,  save, public  :: NstepOutput    = 20     !ãƒªã‚¹ã‚¿ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã¸ã®å‡ºåŠ›
+  integer,  save, public  :: Nstep                   !ãƒ«ãƒ¼ãƒ—å›æ•°
+  logical,  save, public  :: FlagInitialRun = .false.!t=0 ã‹å¦ã‹ã®ãƒ•ãƒ©ã‚°. 
 
-  real(DP), save, public  :: TimeInt  = 3600.0d0     !ÀÑÊ¬»ş´Ö
-  
-  ! ¸ø³«Í×ÁÇ
+  ! private ãªå¤‰æ•°
+  !
+  real(DP), parameter, private :: tfilSave = 1.0d-1  !ã‚¢ã‚»ãƒªãƒ³ã®æ™‚é–“ãƒ•ã‚£ãƒ«ã‚¿ã®ä¿‚æ•° (ä¿ç®¡)
+  real(DP), save, private :: DelTimeLongSave         !é•·ã„ã‚¿ã‚¤ãƒ ã‚¹ãƒ†ãƒƒãƒ—(ä¿ç®¡)
+  real(DP), save, private :: DelTimeShortSave        !çŸ­ã„ã‚¿ã‚¤ãƒ ã‚¹ãƒ†ãƒƒãƒ—ã®ã‚¹ãƒ†ãƒƒãƒ—æ•°(ä¿ç®¡)
+  integer,  save, private :: NstepInit      = 0      !ãƒªã‚¹ã‚¿ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã¸ã®å‡ºåŠ›
+
+  ! arare4 ã¨ã®äº’æ›æ€§ã®ãŸã‚ã«æ®‹ã—ã¦ãŠã„ãŸå¤‰æ•°
+  !
+  real(DP), save, public  :: TimeInt   = 3600.0d0    !ç©åˆ†æ™‚é–“
+  integer,  save, public  :: NstepDisp = 20          !ãƒªã‚¹ã‚¿ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã¸ã®å‡ºåŠ›  
+
+  ! å…¬é–‹è¦ç´ 
   public timeset_init, TimesetDelTimeHalf, TimesetProgress
 
 contains
    
   subroutine timeset_init
     !
-    != ½é´ü²½¥ë¡¼¥Á¥ó
+    != åˆæœŸåŒ–ãƒ«ãƒ¼ãƒãƒ³
     !
-    ! NAMELIST ¤«¤éÉ¬Í×¤Ê¾ğÊó¤òÆÉ¤ß¼è¤ê, »ş´Ö´ØÏ¢¤ÎÊÑ¿ô¤ÎÀßÄê¤ò¹Ô¤¦. 
+    ! NAMELIST ã‹ã‚‰å¿…è¦ãªæƒ…å ±ã‚’èª­ã¿å–ã‚Š, æ™‚é–“é–¢é€£ã®å¤‰æ•°ã®è¨­å®šã‚’è¡Œã†. 
     !
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
+    !
     implicit none
 
-    !ÆâÉôÊÑ¿ô
-    integer    :: unit
+    !å†…éƒ¨å¤‰æ•°
+    !
+    real(DP), parameter :: order = 1.0d2
+    integer             :: unit
 
     !---------------------------------------------------------------    
-    ! NAMELIST ¤«¤é¾ğÊó¤ò¼èÆÀ
+    ! NAMELIST ã‹ã‚‰æƒ…å ±ã‚’å–å¾—
     !
     NAMELIST /timeset_nml/ &
       & DelTimeLong, DelTimeShort, IntegPeriod, RestartTime, DelTimeOutput
@@ -79,69 +89,110 @@ contains
     call FileOpen(unit, file=namelist_filename, mode='r')
     read(unit, NML=timeset_nml)
     close(unit)
-
-    ! ·×»»½ªÎ»»ş¹ï
-    !
-    EndTime = RestartTime + IntegPeriod
     
-    ! »ş¹ï¡¦¥¿¥¤¥à¥¹¥Æ¥Ã¥×¤ÎÀßÄê
-    !   ¼Â¿ô¤Î³ä¤ê»»¤Ê¤Î¤Ç, Ç°¤Î°Ù¤Ë. 
+    ! ä¿ç®¡
+    !
+    DelTimeLongSave  = DelTimeLong
+    DelTimeShortSave = DelTimeShort
+   
+    !---------------------------------------------------------------
+    ! æ™‚é–“åˆ»ã¿ãªã©ã‚’å®Ÿæ•°ã§ä¸ãˆã¦ã„ã‚‹ã®ã§, æ•´æ•°ã«å¤‰æ›ã—ãŸä¸Šã§, 
+    ! ãƒ«ãƒ¼ãƒ—ã‚’å›ã™å›æ•°ã‚’æ±ºå®šã™ã‚‹ã“ã¨ã«ã—ãŸ. 
+    ! 
+    
+    ! é•·ã„ã‚¿ã‚¤ãƒ ã‚¹ãƒ†ãƒƒãƒ—(å‰é€²å·®åˆ†)ã®ãƒ«ãƒ¼ãƒ—æ•°
     !    
-    NstepShort = ( nint( 2.0d0 * DelTimeLong * 1.0d3 ) / nint( DelTimeShort * 1.0d3 ) )
-
-    ! »ş´Ö¹ï¤ß¤ÎÀßÄê
-    !   ¸µ¡¹¤ÎÃÍ¤òÊİ´É¤·¤Æ¤ª¤¯
-    DelTimeLongSave = DelTimeLong
-    NstepShortSave  = NstepShort
-
-    ! ¥ê¥¹¥¿¡¼¥È¥Õ¥¡¥¤¥ë¤ò½ñ¤­½Ğ¤¹¥¿¥¤¥ß¥ó¥°
-    !
-    NstepOutput = nint( DelTimeOutput * 1.0d2 ) / nint( DelTimeLong * 1.0d2 )
-    if ( NstepOutput < 0 ) then 
-       NstepOutput = nint( DelTimeOutput * 1.0d1 ) / nint( DelTimeLong * 1.0d1 )
-    end if
-    if ( NstepOutput < 0 ) then 
-       NstepOutput = nint( DelTimeOutput ) / nint( DelTimeLong )
-    end if
-    if ( NstepOutput < 0 ) then 
-      call MessageNotify( "E", &
-        & "timeset_init", "NstepOutput is negative, %d", i=(/NstepOutput/) )
-    end if
-
-
-    ! »ş¹ï¤ÎÀßÄê
-    !
-    TimeB = RestartTime - DelTimeLong
-    TimeN = RestartTime
-    TimeA = RestartTime + DelTimeLong      
+    NstepLong = nint( IntegPeriod * order ) / nint( DelTimeLong * order ) 
     
-    ! ¥ê¥¹¥¿¡¼¥È¤«Èİ¤«. ¥ê¥¹¥¿¡¼¥È¤Ê¤é  .false.
+    ! çŸ­ã„ã‚¿ã‚¤ãƒ ã‚¹ãƒ†ãƒƒãƒ—(å‰é€²å·®åˆ†)ã®ãƒ«ãƒ¼ãƒ—æ•°
+    !    
+    NstepShort = nint( 2.0d0 * DelTimeLong * order ) / nint( DelTimeShort * order ) 
+    
+    ! ãƒªã‚¹ã‚¿ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ›¸ãå‡ºã™ã‚¿ã‚¤ãƒŸãƒ³ã‚°
     !
-    if ( nint( RestartTime * 1.0d3 ) == 0 ) then 
-      FlagInitialRun = .true.
-    else
-      FlagInitialRun = .false.
+    NstepOutput = nint( DelTimeOutput * order ) / nint( DelTimeLong * order )
+    
+    ! è¨ˆç®—é–‹å§‹æ™‚ã®ãƒ«ãƒ¼ãƒ—æ•°
+    !
+    NstepInit = nint( RestartTime * order ) / nint( DelTimeLong * order )
+
+    ! ç¾åœ¨ã®ãƒ«ãƒ¼ãƒ—å›æ•°
+    !
+    Nstep = 0
+    
+    ! å‰²ã‚Šåˆ‡ã‚Œãªã„å ´åˆã¯ã‚¨ãƒ©ãƒ¼ã‚’å‡ºã™
+    ! ç©åˆ†æ™‚é–“ / dt /= 0.0
+    !
+    if ( mod( nint( IntegPeriod * order ), nint( DelTimeLong * order ) ) /= 0 ) then
+      call MessageNotify( "E", "timeset_init", "mod( IntegPeriod, DelTimeLong ) /= 0")
+    end if
+
+    ! å‰²ã‚Šåˆ‡ã‚Œãªã„å ´åˆã¯ã‚¨ãƒ©ãƒ¼ã‚’å‡ºã™
+    ! dt / d\tau /= 0.0
+    !
+    if ( mod( nint( DelTimeLong * order ), nint( DelTimeShort * order ) ) /= 0 ) then
+      call MessageNotify( "E", "timeset_init", "mod( DelTimeLong, DelTimeShort ) /= 0")
+    end if
+
+    ! å‰²ã‚Šåˆ‡ã‚Œãªã„å ´åˆã¯ã‚¨ãƒ©ãƒ¼ã‚’å‡ºã™
+    ! ãƒªã‚¹ã‚¿ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«æ›¸ãå‡ºã—ã®ã‚¿ã‚¤ãƒŸãƒ³ã‚° (DelTimeOutput) / dt /= 0.0
+    !
+    if ( mod( nint( DelTimeOutput * order ), nint( DelTimeLong * order ) ) /= 0 ) then
+      call MessageNotify( "E", "timeset_init", "mod( DelTimeOutput, DelTimeLong ) /= 0")
+    end if
+
+    ! å‰²ã‚Šåˆ‡ã‚Œãªã„å ´åˆã¯ã‚¨ãƒ©ãƒ¼ã‚’å‡ºã™
+    ! ãƒªã‚¹ã‚¿ãƒ¼ãƒˆæ™‚åˆ» / dt /= 0.0
+    !
+    if ( mod( nint( RestartTime * order ), nint( DelTimeLong * order ) ) /= 0 ) then
+      call MessageNotify( "E", "timeset_init", "mod( RestartTime, DelTimeLong ) /= 0")
+    end if
+
+    ! ãƒªã‚¹ã‚¿ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã®å‡ºåŠ›ã®ã‚¿ã‚¤ãƒŸãƒ³ã‚°ãŒ 1 ä»¥ä¸Šã§ãªã„ã¨ã‚¨ãƒ©ãƒ¼ã‚’å‡ºã™. 
+    !
+    if ( NstepOutput < 1 ) then 
+      call MessageNotify( "E", "timeset_init", "NstepOutput is < 1, %d", i=(/NstepOutput/) )
     end if
 
     !---------------------------------------------------------------
-    ! ³ÎÇ§
+    ! ãƒªã‚¹ã‚¿ãƒ¼ãƒˆã‹å¦ã‹ã‚’åˆ¤æ–­ã—ãŸä¸Šã§æ™‚åˆ»ã‚’è¨­å®šã™ã‚‹. 
+    !
+    if ( NstepInit == 0 ) then 
+      FlagInitialRun = .true.
+      Nstep = 0
+      TimeB = 0.0d0
+      TimeN = 0.0d0
+      TimeA = DelTimeLong
+    else
+      FlagInitialRun = .false.
+      Nstep = 1
+      TimeB = ( NstepInit + Nstep - 1 ) * DelTimeLong
+      TimeN = ( NstepInit + Nstep     ) * DelTimeLong
+      TimeA = ( NstepInit + Nstep + 1 ) * DelTimeLong
+    end if
+
+
+    !---------------------------------------------------------------
+    ! ç¢ºèª
     !
     call MessageNotify( "M", &
       & "timeset_init", "DelTimeLong  = %f", d=(/DelTimeLong/) )
     call MessageNotify( "M", &
       & "timeset_init", "DelTimeShort = %f", d=(/DelTimeShort/) )
     call MessageNotify( "M", &
-      & "timeset_init", "Restarttime  = %f", d=(/Restarttime/)  )
-    call MessageNotify( "M", &
       & "timeset_init", "IntegPeriod  = %f", d=(/IntegPeriod/) )
     call MessageNotify( "M", &
-      & "timeset_init", "EndTime      = %f", d=(/EndTime/) )
+      & "timeset_init", "Restarttime  = %f", d=(/Restarttime/)  )
     call MessageNotify( "M", &
       & "timeset_init", "DelTimeOutput= %f", d=(/DelTimeOutput/) )
+    call MessageNotify( "M", &
+      & "timeset_init", "NstepLong    = %d", i=(/NstepLong/) )
     call MessageNotify( "M", &
       & "timeset_init", "NstepShort   = %d", i=(/NstepShort/) )
     call MessageNotify( "M", &
       & "timeset_init", "NstepOutput  = %d", i=(/NstepOutput/) )
+    call MessageNotify( "M", &
+      & "timeset_init", "NstepInit    = %d", i=(/NstepInit/) )
     call MessageNotify( "M", &
       & "timeset_init", "tfil  = %f", d=(/tfil/) )
     call MessageNotify( "M", &
@@ -154,7 +205,7 @@ contains
       & "timeset_init", "FlagInitialRun  = %b", L=(/FlagInitialRun/) )
     
     !---------------------------------------------------------------
-    ! arare4 ÍÑ¤ÎÊÑ¿ô¤ÎÀßÄê
+    ! arare4 ç”¨ã®å¤‰æ•°ã®è¨­å®š
     !
     NStepDisp = NStepOutput
     TimeInt   = IntegPeriod
@@ -164,28 +215,41 @@ contains
 
   subroutine TimesetDelTimeHalf    
     !
-    != ¥ê¡¼¥×¥Õ¥í¥Ã¥°¥¹¥­¡¼¥à¤ÎºÇ½é¤Î 1 ¥¹¥Æ¥Ã¥×¤ò²ó¤¹¤¿¤á¤Î¥ë¡¼¥Á¥ó
+    != ãƒªãƒ¼ãƒ—ãƒ•ãƒ­ãƒƒã‚°ã‚¹ã‚­ãƒ¼ãƒ ã®æœ€åˆã® 1 ã‚¹ãƒ†ãƒƒãƒ—ã‚’å›ã™ãŸã‚ã®ãƒ«ãƒ¼ãƒãƒ³
     !
-    ! ºÇ½é¤Î°ì²óÌÜ¤Ï¥ª¥¤¥é¡¼¥¹¥­¡¼¥à¤Ç²ó¤¹¤Î¤Ç, 
-    ! Ä¹¤¤»ş´Ö¹ï¤ß¤òÈ¾Ê¬¤Ë¤·, Ã»¤¤»ş´Ö¤Ç²ó¤¹¥ë¡¼¥×²ó¿ô¤âÈ¾Ê¬¤Ë¤¹¤ë.
-    ! Asselin ¤Î»ş´Ö¥Õ¥£¥ë¥¿¤Î·¸¿ô¤ò¥¼¥í¤È¤¹¤ë. 
-
+    ! æœ€åˆã®ä¸€å›ç›®ã¯ã‚ªã‚¤ãƒ©ãƒ¼ã‚¹ã‚­ãƒ¼ãƒ ã§å›ã™ãŸã‚ã®å‡¦ç½®
+    ! * çŸ­ã„æ™‚é–“ã‚¹ãƒ†ãƒƒãƒ—ã®ãƒ«ãƒ¼ãƒ—å›æ•°ã‚‚åŠåˆ†ã«ã™ã‚‹. 
+    ! * é•·ã„æ™‚é–“ã‚¹ãƒ†ãƒƒãƒ—ã® DelTimeLong ã‚’åŠåˆ†ã«ã™ã‚‹.
+    ! * Asselin ã®æ™‚é–“ãƒ•ã‚£ãƒ«ã‚¿ã®ä¿‚æ•°ã‚’ã‚¼ãƒ­ã¨ã™ã‚‹. 
+    
+    ! æš—é»™ã®å‹å®£è¨€ç¦æ­¢
+    !
     implicit none
 
-    TimeB       = TimeN
-    DelTimeLong = DelTimeLongSave * 0.5d0
-    NstepShort  = NstepShortSave  / 2
-    tfil        = 0.0d0
+    ! FlagInitialRun = .false. ã®æ™‚ã¯ã“ã®ãƒ«ãƒ¼ãƒãƒ³ã‚’å‘¼ã¶å¿…è¦ã¯ç„¡ã„. 
+    !
+    if ( .NOT. FlagInitialRun ) then 
+       call MessageNotify( "E", "timeset_init_TimesetDelTimeHalf", "FlagInitialRun = false" )
+    end if
+
+    ! æ™‚åˆ»åˆ»ã¿å¹…ã‚’ç›´ã™ 
+    !
+    DelTimeShort = DelTimeShortSave * 5.0d-1   
+    DelTimeLong  = DelTimeLongSave  * 5.0d-1   
+
+    ! Asselin ã®æ™‚é–“ãƒ•ã‚£ãƒ«ã‚¿ã®ä¿‚æ•°
+    !
+    tfil = 0.0d0
 
     !---------------------------------------------------------------
-    ! ³ÎÇ§
+    ! ç¢ºèª
     !
     call MessageNotify( "M",               &
       & "timeset_init_TimesetDelTimeHalf", &
       & "Initial DelTimeLong  = %f", d=(/DelTimeLong/) )
     call MessageNotify( "M",               &
       & "timeset_init_TimesetDelTimeHalf", &
-      & "Initial NstepShort   = %d", i=(/NstepShort/) )
+      & "Initial DelTimeShort = %f", d=(/DelTimeShort/) )
     call MessageNotify( "M",               &
       & "timeset_init_TimesetDelTimeHalf", &
       & "Asselin Time Filter coefficient = %f", d=(/tfil/) )
@@ -195,27 +259,34 @@ contains
 
   subroutine TimesetProgress
     !
-    ! = ¥ê¡¼¥×¥Õ¥í¥Ã¥°¥¹¥­¡¼¥à¤Ç 1 ¥¹¥Æ¥Ã¥×¤ò²ó¤¹¤¿¤á¤Î¥ë¡¼¥Á¥ó
+    != ãƒªãƒ¼ãƒ—ãƒ•ãƒ­ãƒƒã‚°ã‚¹ã‚­ãƒ¼ãƒ ã§ 1 ã‚¹ãƒ†ãƒƒãƒ—ã‚’å›ã™ãŸã‚ã®ãƒ«ãƒ¼ãƒãƒ³
     !
-    ! »ş¹ï¤ò¿Ê¤á, »ş¹ï¤Î¹ï¤ßÉı¤È Asselin ¤Î»ş´Ö¥Õ¥£¥ë¥¿¤Î·¸¿ô¤òÄ¾¤¹. 
+    ! æ™‚åˆ»ã‚’é€²ã‚, æ™‚åˆ»ã®åˆ»ã¿å¹…ã¨ Asselin ã®æ™‚é–“ãƒ•ã‚£ãƒ«ã‚¿ã®ä¿‚æ•°ã‚’ç›´ã™. 
     ! 
 
+    ! æš—é»™ã®å‹å®£è¨€ç¦æ­¢
+    !
     implicit none
 
-    ! »ş¹ï¹ï¤ßÉı¤òÄ¾¤¹ 
+    ! call ã•ã‚ŒãŸå›æ•°ã‚’ 1 å¢—åŠ ã•ã›ã‚‹
     !
-    DelTimeLong = DelTimeLongSave
-    NstepShort  = NstepShortSave
+    Nstep = Nstep + 1
 
-    ! »ş¹ï¤ò¿Ê¤á¤ë
+    ! æ™‚åˆ»åˆ»ã¿å¹…ã‚’ç›´ã™ 
     !
-    TimeB = TimeN
-    TimeN = TimeA
-    TimeA = TimeA + DelTimeLong
+    DelTimeShort = DelTimeShortSave
+    DelTimeLong  = DelTimeLongSave
 
-    ! Asselin ¤Î»ş´Ö¥Õ¥£¥ë¥¿¤Î·¸¿ô
+    ! ãƒ«ãƒ¼ãƒ—å›æ•°ã‹ã‚‰æ™‚åˆ»ã‚’æ±ºã‚ã‚‹. 
+    !
+    TimeB = ( NstepInit + Nstep - 1 ) * DelTimeLong
+    TimeN = ( NstepInit + Nstep     ) * DelTimeLong
+    TimeA = ( NstepInit + Nstep + 1 ) * DelTimeLong
+    
+    ! Asselin ã®æ™‚é–“ãƒ•ã‚£ãƒ«ã‚¿ã®ä¿‚æ•°
+    !
     tfil = tfilSave
-
+  
   end subroutine TimesetProgress
   
 end module timeset

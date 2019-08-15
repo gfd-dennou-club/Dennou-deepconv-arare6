@@ -397,12 +397,16 @@ contains
     real(8) , intent(in ) :: sbuf(nz)
     real(8) , intent(out) :: rbuf(nz)
 
-
-#ifdef LIB_MPI
     ! 作業変数
     ! Work variables
     !
     integer               :: ierr
+
+    ! シングル版対応.
+    !
+    rbuf = sbuf   
+
+#ifdef LIB_MPI
 
     call mpi_allreduce(                   &
       &    sbuf, rbuf, nz,                &
