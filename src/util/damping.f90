@@ -115,6 +115,8 @@ contains
       & pyz_Gamma(imin:imax,jmin:jmax,kmin:kmax), &
       & xqz_Gamma(imin:imax,jmin:jmax,kmin:kmax), &
       & xyr_Gamma(imin:imax,jmin:jmax,kmin:kmax)    )
+
+    !デフォルト値はゼロ. 
     xyz_Gamma = 0.0d0
     pyz_Gamma = 0.0d0
     xqz_Gamma = 0.0d0
@@ -122,6 +124,7 @@ contains
 
     !-----------------------------------------------------------------    
     ! 厚さのチェック
+    ! DepthX > 0 の場合は, 厚さを dx, dy, dz より大きくする必要がある. 
     !
     if ( DepthH > 0.0d0 ) then 
       if ( DepthH < dx ) then 
@@ -155,6 +158,7 @@ contains
 
     !-----------------------------------------------------------------    
     ! スポンジ層の減衰率
+    ! スポンジ層の厚さ (DepthX) がゼロの場合はダンピングの係数をいじらない.
     !
 
     !水平方向の東側・西側境界
@@ -296,6 +300,8 @@ contains
     call MessageNotify( "M", "Damping_init", "DepthV = %f", d=(/DepthV/) )  
     call MessageNotify( "M", "Damping_init", "DepthVb= %f", d=(/DepthVb/) )  
 
+    write(*,*) minval( xyz_Gamma ), maxval( xyz_Gamma )
+    
     !-----------------------------------------------------------------    
     ! 平均風のダンピング
     !
