@@ -1,4 +1,4 @@
-!= ¥¹¥İ¥ó¥¸ÁØ¥â¥¸¥å¡¼¥ë
+!= ã‚¹ãƒãƒ³ã‚¸å±¤ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 !
 ! Authors::   SUGIYAMA Ko-ichiro, ODAKA Masatsugu
 ! Version::   $Id: damping.f90,v 1.14 2014/11/07 06:46:45 sugiyama Exp $
@@ -9,39 +9,44 @@
 
 module Damping
   !
-  ! ¥¹¥İ¥ó¥¸ÁØ (¶­³¦ÉÕ¶á¤ÇÇÈ¤ÎÈ¿¼Í¤òÍŞ¤¨µÛ¼ı¤¹¤ë¤¿¤á¤ÎÁØ) ¤Ë¤ª¤±¤ë
-  ! ¸º¿êÎ¨¤È¤½¤Î·×»»¤ò¹Ô¤¦¤¿¤á¤Î¥Ñ¥Ã¥±¡¼¥¸·¿¥â¥¸¥å¡¼¥ë
+  ! ã‚¹ãƒãƒ³ã‚¸å±¤ (å¢ƒç•Œä»˜è¿‘ã§æ³¢ã®åå°„ã‚’æŠ‘ãˆå¸åã™ã‚‹ãŸã‚ã®å±¤) ã«ãŠã‘ã‚‹
+  ! æ¸›è¡°ç‡ã¨ãã®è¨ˆç®—ã‚’è¡Œã†ãŸã‚ã®ãƒ‘ãƒƒã‚±ãƒ¼ã‚¸å‹ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
   !
 
-  !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+  !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
   use dc_types, only : DP
 
-  !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+  !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
   implicit none
 
-  !private Â°À­¤ò»ØÄê
+  !private å±æ€§ã‚’æŒ‡å®š
   private 
   
-  !´Ø¿ô¤Ë¤Ï public Â°À­¤ò»ØÄê
+  !é–¢æ•°ã«ã¯ public å±æ€§ã‚’æŒ‡å®š
   public Damping_Init
   public SpongeLayer_forcing
   public SpongeLayer_MeanFlow
   
-  !ÊÑ¿ôÄêµÁ
-  real(DP), save, private              :: EFTime = 5000.0d0!¥¹¥İ¥ó¥¸ÁØ¤Î e-folding time
-  real(DP), save, private              :: DepthH = 0.0d0   !¥¹¥İ¥ó¥¸ÁØ¤Î¸ü¤µ(¿åÊ¿Êı¸ş)
-  real(DP), save, private              :: DepthV = 0.0d0   !¥¹¥İ¥ó¥¸ÁØ¤Î¸ü¤µ(±ôÄ¾Êı¸ş) [¾åÉô¶­³¦]
-  real(DP), save, private              :: DepthVb= 0.0d0   !¥¹¥İ¥ó¥¸ÁØ¤Î¸ü¤µ(±ôÄ¾Êı¸ş) [²¼Éô¶­³¦]
-  real(DP), allocatable, save, private :: xyz_Gamma(:,:,:) !xyz ³Ê»Ò¸º¿ê·¸¿ô(¿åÊ¿Êı¸ş)
-  real(DP), allocatable, save, private :: pyz_Gamma(:,:,:) !pyz ³Ê»Ò¸º¿ê·¸¿ô(±ôÄ¾Êı¸ş)
-  real(DP), allocatable, save, private :: xqz_Gamma(:,:,:) !xqz ³Ê»Ò¸º¿ê·¸¿ô(±ôÄ¾Êı¸ş)
-  real(DP), allocatable, save, private :: xyr_Gamma(:,:,:) !xyr ³Ê»Ò¸º¿ê·¸¿ô(±ôÄ¾Êı¸ş)
+  !å¤‰æ•°å®šç¾©
+  real(DP), save, private              :: EFTime = 5000.0d0!ã‚¹ãƒãƒ³ã‚¸å±¤ã® e-folding time
+  real(DP), save, private              :: DepthH = 0.0d0   !ã‚¹ãƒãƒ³ã‚¸å±¤ã®åšã•(æ°´å¹³æ–¹å‘)
+  real(DP), save, private              :: DepthV = 0.0d0   !ã‚¹ãƒãƒ³ã‚¸å±¤ã®åšã•(é‰›ç›´æ–¹å‘) [ä¸Šéƒ¨å¢ƒç•Œ]
+  real(DP), save, private              :: DepthVb= 0.0d0   !ã‚¹ãƒãƒ³ã‚¸å±¤ã®åšã•(é‰›ç›´æ–¹å‘) [ä¸‹éƒ¨å¢ƒç•Œ]
+  real(DP), allocatable, save, private :: xyz_Gamma(:,:,:) !xyz æ ¼å­æ¸›è¡°ä¿‚æ•°(æ°´å¹³æ–¹å‘)
+  real(DP), allocatable, save, private :: pyz_Gamma(:,:,:) !pyz æ ¼å­æ¸›è¡°ä¿‚æ•°(é‰›ç›´æ–¹å‘)
+  real(DP), allocatable, save, private :: xqz_Gamma(:,:,:) !xqz æ ¼å­æ¸›è¡°ä¿‚æ•°(é‰›ç›´æ–¹å‘)
+  real(DP), allocatable, save, private :: xyr_Gamma(:,:,:) !xyr æ ¼å­æ¸›è¡°ä¿‚æ•°(é‰›ç›´æ–¹å‘)
   real(DP), save, private              :: FactorSpngVelX  = 1.0d0
   real(DP), save, private              :: FactorSpngVelY  = 1.0d0
   real(DP), save, private              :: FactorSpngVelZ  = 1.0d0
   real(DP), save, private              :: FactorSpngPTemp = 1.0d0
   real(DP), save, private              :: FactorSpngExner = 0.0d0
-  real(DP), save, public               :: DampSound  = 0.0d0   !²»ÇÈ¸º¿ê¹à¤Î¸º¿ê·¸¿ô
+  real(DP), save, public               :: DampSound  = 0.0d0   !éŸ³æ³¢æ¸›è¡°é …ã®æ¸›è¡°ä¿‚æ•°
+
+  real(DP), allocatable, save, private :: pyz_SpngMF(:,:,:)
+  real(DP), allocatable, save, private :: xqz_SpngMF(:,:,:)
+  real(DP), allocatable, save, private :: z_VelX0(:)
+  real(DP), allocatable, save, private :: z_VelY0(:)
 
   real(DP), save, private              :: EFTimeMF = 50000.0d0
   real(DP), save, private              :: DelTimeMF = 1.0d0
@@ -53,57 +58,58 @@ contains
 !!!------------------------------------------------------------------------!!!
   subroutine Damping_Init
     !
-    ! ²»ÇÈ¸º¿ê¹à¤È¥¹¥İ¥ó¥¸ÁØ¤Î¸º¿ê·¸¿ô¤Î½é´ü²½
+    ! éŸ³æ³¢æ¸›è¡°é …ã¨ã‚¹ãƒãƒ³ã‚¸å±¤ã®æ¸›è¡°ä¿‚æ•°ã®åˆæœŸåŒ–
     ! 
-    use dc_types,   only: DP
+    use dc_types,   only: DP, STRING
     use dc_iounit,  only: FileOpen
     use dc_message, only: MessageNotify
     use gtool_historyauto, only: HistoryAutoAddVariable
-    use gridset, only: imin,       &! x Êı¸ş¤ÎÇÛÎó¤Î²¼¸Â
-      &                imax,       &! x Êı¸ş¤ÎÇÛÎó¤Î¾å¸Â
-      &                jmin,       &! y Êı¸ş¤ÎÇÛÎó¤Î²¼¸Â
-      &                jmax,       &! y Êı¸ş¤ÎÇÛÎó¤Î¾å¸Â
-      &                kmin,       &! z Êı¸ş¤ÎÇÛÎó¤Î²¼¸Â
-      &                kmax         ! z Êı¸ş¤ÎÇÛÎó¤Î¾å¸Â
-    use axesset, only: x_X,        &!X ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                y_Y,        &!Y ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                z_Z,        &!Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-      &                p_X,        &!X ºÂÉ¸¼´(¥Õ¥é¥Ã¥¯¥¹³Ê»ÒÅÀ)
-      &                q_Y,        &!Y ºÂÉ¸¼´(¥Õ¥é¥Ã¥¯¥¹³Ê»ÒÅÀ)
-      &                r_Z,        &!Z ºÂÉ¸¼´(¥Õ¥é¥Ã¥¯¥¹³Ê»ÒÅÀ)
-      &                dx, dy, dz, &! ³Ê»Ò´Ö³Ö
-      &                XMax,       &!X ºÂÉ¸¤ÎºÇÂçÃÍ
-      &                YMax,       &!Y ºÂÉ¸¤ÎºÇÂçÃÍ
-      &                ZMin,       &!Z ºÂÉ¸¤ÎºÇ¾®ÃÍ 
-      &                ZMax         !Z ºÂÉ¸¤ÎºÇÂçÃÍ 
+    use gridset, only: imin,       &! x æ–¹å‘ã®é…åˆ—ã®ä¸‹é™
+      &                imax,       &! x æ–¹å‘ã®é…åˆ—ã®ä¸Šé™
+      &                jmin,       &! y æ–¹å‘ã®é…åˆ—ã®ä¸‹é™
+      &                jmax,       &! y æ–¹å‘ã®é…åˆ—ã®ä¸Šé™
+      &                kmin,       &! z æ–¹å‘ã®é…åˆ—ã®ä¸‹é™
+      &                kmax         ! z æ–¹å‘ã®é…åˆ—ã®ä¸Šé™
+    use axesset, only: x_X,        &!X åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                y_Y,        &!Y åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                z_Z,        &!Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+      &                p_X,        &!X åº§æ¨™è»¸(ãƒ•ãƒ©ãƒƒã‚¯ã‚¹æ ¼å­ç‚¹)
+      &                q_Y,        &!Y åº§æ¨™è»¸(ãƒ•ãƒ©ãƒƒã‚¯ã‚¹æ ¼å­ç‚¹)
+      &                r_Z,        &!Z åº§æ¨™è»¸(ãƒ•ãƒ©ãƒƒã‚¯ã‚¹æ ¼å­ç‚¹)
+      &                dx, dy, dz, &! æ ¼å­é–“éš”
+      &                XMax,       &!X åº§æ¨™ã®æœ€å¤§å€¤
+      &                YMax,       &!Y åº§æ¨™ã®æœ€å¤§å€¤
+      &                ZMin,       &!Z åº§æ¨™ã®æœ€å°å€¤ 
+      &                ZMax         !Z åº§æ¨™ã®æœ€å¤§å€¤ 
     use namelist_util,  &
       &          only: namelist_filename
-    use timeset, only: DelTimeShort    !Ã»¤¤»ş´Ö¥¹¥Æ¥Ã¥×
+    use timeset, only: DelTimeShort    !çŸ­ã„æ™‚é–“ã‚¹ãƒ†ãƒƒãƒ—
     
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
-    real(DP), parameter       :: Pi =3.1415926535897932385d0   !±ß¼şÎ¨
-    real(DP)                  :: Alpha = 5.0d-2
-    integer                   :: unit ! ÁõÃÖÈÖ¹æ
-    integer                   :: i, j, k
+    !å¤‰æ•°å®šç¾©
+    real(DP), parameter  :: Pi =3.1415926535897932385d0   !å††å‘¨ç‡
+    real(DP)             :: Alpha = 5.0d-2
+    integer              :: unit ! è£…ç½®ç•ªå·
+    integer              :: i, j, k
+    character(STRING)    :: InputFileMF = ""
 
-    !NAMELIST ¤«¤é¼èÆÀ
+    !NAMELIST ã‹ã‚‰å–å¾—
     NAMELIST /damping_nml/ Alpha,                        &
       & EFTime, DepthH, DepthV, DepthVb,                 &
       & FactorSpngVelX, FactorSpngVelY, FactorSpngVelZ,  &
       & FactorSpngPTemp, FactorSpngExner,                &
-      & DelTimeMF, ZMinMF, ZMaxMF, EFTimeMF
+      & DelTimeMF, ZMinMF, ZMaxMF, EFTimeMF, InputFileMF
 
     call FileOpen(unit, file=namelist_filename, mode='r')
     read(unit, NML=damping_nml)
     close(unit)
 
-    ! ²»ÇÈ¸º¿ê¹à
+    ! éŸ³æ³¢æ¸›è¡°é …
     DampSound = Alpha * ( Min(dx, dz) ** 2.0d0 ) / DelTimeShort
 
-    !½é´ü²½
+    !åˆæœŸåŒ–
     allocate( &
       & xyz_Gamma(imin:imax,jmin:jmax,kmin:kmax), &
       & pyz_Gamma(imin:imax,jmin:jmax,kmin:kmax), &
@@ -115,7 +121,7 @@ contains
     xyr_Gamma = 0.0d0
 
     !-----------------------------------------------------------------    
-    ! ¸ü¤µ¤Î¥Á¥§¥Ã¥¯
+    ! åšã•ã®ãƒã‚§ãƒƒã‚¯
     !
     if ( DepthH > 0.0d0 ) then 
       if ( DepthH < dx ) then 
@@ -148,91 +154,97 @@ contains
     end if
 
     !-----------------------------------------------------------------    
-    ! ¥¹¥İ¥ó¥¸ÁØ¤Î¸º¿êÎ¨
+    ! ã‚¹ãƒãƒ³ã‚¸å±¤ã®æ¸›è¡°ç‡
     !
 
-    !¿åÊ¿Êı¸ş¤ÎÅìÂ¦¡¦À¾Â¦¶­³¦
+    !æ°´å¹³æ–¹å‘ã®æ±å´ãƒ»è¥¿å´å¢ƒç•Œ
     !
     if ( DepthH > 0.0d0 ) then 
       do i = imin, imax
-        !¥¹¥«¥é¡¼³Ê»ÒÅÀ¤ÎÀ¾Â¦¶­³¦
+        !ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹ã®è¥¿å´å¢ƒç•Œ
         if ( x_X(i) < DepthH) then 
           xyz_Gamma(i,:,:) = xyz_Gamma(i,:,:) &
             & + ((1.0d0 - x_X(i) / DepthH) ** 3.0d0) / EFTime
         end if
         
-        !¥Õ¥é¥Ã¥¯¥¹³Ê»ÒÅÀ¤ÎÀ¾Â¦¶­³¦
+        !ãƒ•ãƒ©ãƒƒã‚¯ã‚¹æ ¼å­ç‚¹ã®è¥¿å´å¢ƒç•Œ
         if ( p_X(i) < DepthH) then 
           pyz_Gamma(i,:,:) = pyz_Gamma(i,:,:) &
             & + ((1.0d0 - p_X(i) / DepthH) ** 3.0d0) / EFTime
         end if
         
-      !¥¹¥«¥é¡¼³Ê»ÒÅÀ¤ÎÅìÂ¦¶­³¦    
+      !ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹ã®æ±å´å¢ƒç•Œ    
         if ( x_X(i) > ( XMax - DepthH ) ) then 
           xyz_Gamma(i,:,:) = xyz_Gamma(i,:,:) &
             & + ((1.0d0 - (XMax - x_X(i)) / DepthH) ** 3.0d0) / EFTime 
         end if
         
-        !¥Õ¥é¥Ã¥¯¥¹³Ê»ÒÅÀ¤ÎÅìÂ¦¶­³¦    
+        !ãƒ•ãƒ©ãƒƒã‚¯ã‚¹æ ¼å­ç‚¹ã®æ±å´å¢ƒç•Œ    
         if ( p_X(i) > ( XMax - DepthH ) ) then 
           pyz_Gamma(i,:,:) = pyz_Gamma(i,:,:) &
             & + ((1.0d0 - (XMax - p_X(i)) / DepthH) ** 3.0d0) / EFTime 
         end if
       end do
 
-      ! x Êı¸ş¤Ë¤ÏÆ±¤¸
+      ! x æ–¹å‘ã«ã¯åŒã˜
       !
       xyr_Gamma  = xyz_Gamma
       xqz_Gamma  = xyz_Gamma
     end if
     
-    !¿åÊ¿Êı¸ş¤ÎÆîÂ¦¡¦ËÌÂ¦¶­³¦
+    !æ°´å¹³æ–¹å‘ã®å—å´ãƒ»åŒ—å´å¢ƒç•Œ
     !
     if ( DepthH > 0.0d0 ) then 
       do j = jmin, jmax
-        !¥¹¥«¥é¡¼³Ê»ÒÅÀ¤ÎÆîÂ¦¶­³¦
+        !ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹ã®å—å´å¢ƒç•Œ
         if ( y_Y(j) < DepthH) then 
           xyz_Gamma(:,j,:) = xyz_Gamma(:,j,:) &
             & + ((1.0d0 - y_Y(j) / DepthH) ** 3.0d0) / EFTime
         end if
         
-        !¥Õ¥é¥Ã¥¯¥¹³Ê»ÒÅÀ¤ÎÆîÂ¦¶­³¦
+        !ãƒ•ãƒ©ãƒƒã‚¯ã‚¹æ ¼å­ç‚¹ã®å—å´å¢ƒç•Œ
         if ( q_Y(j) < DepthH) then 
           xqz_Gamma(:,j,:) = xqz_Gamma(:,j,:) &
             & + ((1.0d0 - q_Y(j) / DepthH) ** 3.0d0) / EFTime
         end if
         
-        !¥¹¥«¥é¡¼³Ê»ÒÅÀ¤ÎËÌÂ¦¶­³¦    
+        !ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹ã®åŒ—å´å¢ƒç•Œ    
         if ( y_Y(j) > ( YMax - DepthH ) ) then 
           xyz_Gamma(:,j,:) = xyz_Gamma(:,j,:) &
             & + ((1.0d0 - (YMax - y_Y(j)) / DepthH) ** 3.0d0) / EFTime 
         end if
         
-        !¥Õ¥é¥Ã¥¯¥¹³Ê»ÒÅÀ¤ÎËÌÂ¦¶­³¦    
+        !ãƒ•ãƒ©ãƒƒã‚¯ã‚¹æ ¼å­ç‚¹ã®åŒ—å´å¢ƒç•Œ    
         if ( q_Y(j) > ( YMax - DepthH ) ) then 
           xqz_Gamma(:,j,:) = xqz_Gamma(:,j,:)  &
             & + ((1.0d0 - (YMax - q_Y(j)) / DepthH) ** 3.0d0) / EFTime 
         end if
       end do
 
-      ! y Êı¸ş¤Ë¤ÏÆ±¤¸
+      ! y æ–¹å‘ã«ã¯åŒã˜
       !
       pyz_Gamma  = xyz_Gamma
       xyr_Gamma  = xyz_Gamma
     end if
     
-    !±ôÄ¾Êı¸ş¤Î¾åÉô¶­³¦    
+    !é‰›ç›´æ–¹å‘ã®ä¸Šéƒ¨å¢ƒç•Œ    
     !
     if ( DepthV > 0.0d0 ) then 
       do k = kmin, kmax
-        !¥¹¥«¥é¡¼³Ê»ÒÅÀ
+        !ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹
         if ( z_Z(k) >= ( ZMax - DepthV ) ) then 
           xyz_Gamma(:,:,k) = xyz_Gamma(:,:,k) &
             & + (1.0d0 - dcos(Pi * (z_Z(k) - ZMax + DepthV) / DepthV)) &
             &    / EFTime 
+          
+          ! æœ€å¤§   z = ZMax
+          !    gamma = 1.0 - cos( \pi ) = 1.0
+          ! æœ€å°   z = ZMax - DepthV
+          !    gamma = 1.0 - cos( 0 ) = 0
+          
         end if
-      
-        !¥Õ¥é¥Ã¥¯¥¹³Ê»ÒÅÀ
+
+        !ãƒ•ãƒ©ãƒƒã‚¯ã‚¹æ ¼å­ç‚¹
         if ( r_Z(k) >= ( ZMax - DepthV ) ) then 
           xyr_Gamma(:,:,k) = xyr_Gamma(:,:,k) &
             & + (1.0d0 - dcos(Pi * (r_Z(k) - ZMax + DepthV)/ DepthV)) &
@@ -240,51 +252,44 @@ contains
         end if
       end do
       
-      ! z Êı¸ş¤Ë¤ÏÆ±¤¸
+      ! z æ–¹å‘ã«ã¯åŒã˜
       !
       pyz_Gamma  = xyz_Gamma
       xqz_Gamma  = xyz_Gamma
     end if
 
-    !±ôÄ¾Êı¸ş¤Î²¼Éô¶­³¦    
+    !é‰›ç›´æ–¹å‘ã®ä¸‹éƒ¨å¢ƒç•Œ    
     !
     if ( DepthVb > 0.0d0 ) then 
       do k = kmin, kmax
-        !¥¹¥«¥é¡¼³Ê»ÒÅÀ
-        if ( z_Z(k) <= (ZMin + DepthV) ) then 
+        !ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹
+        if ( z_Z(k) <= (ZMin + DepthVb) ) then 
           xyz_Gamma(:,:,k) = xyz_Gamma(:,:,k) &
-            & + (1.0d0 + dcos(Pi * ( z_Z(k) - ZMin ) / DepthV) ) &
+            & + (1.0d0 - dcos(Pi * ( z_Z(k) - ( ZMin - DepthVb ) ) / DepthVb ) ) &
             &    / EFTime 
         end if
-        
-        !¥Õ¥é¥Ã¥¯¥¹³Ê»ÒÅÀ
-        if ( r_Z(k) <= (ZMin + DepthV) ) then 
+
+          ! æœ€å¤§   z = ZMin + DepthVb
+          !    gamma = 1.0 - cos( 0 ) = 0.0     ZMin
+          ! æœ€å°   z = ZMin
+          !    gamma = 1.0 - cos( \pi ) = 1.0
+
+        !ãƒ•ãƒ©ãƒƒã‚¯ã‚¹æ ¼å­ç‚¹
+        if ( r_Z(k) <= (ZMin + DepthVb) ) then 
           xyr_Gamma(:,:,k) = xyr_Gamma(:,:,k) &
-            & + (1.0d0 + dcos(Pi * ( r_Z(k) - ZMin )/ DepthV ) ) &
+            & + (1.0d0 - dcos(Pi * ( r_Z(k) - ( ZMin - DepthVb ) ) / DepthVb ) ) &
             &    / EFTime 
         end if
       end do
       
-      ! z Êı¸ş¤Ë¤ÏÆ±¤¸
+      ! z æ–¹å‘ã«ã¯åŒã˜
       !
       pyz_Gamma  = xyz_Gamma
       xqz_Gamma  = xyz_Gamma
     end if
       
-    ! ³ÎÇ§
-    ! 
-!    i = 1; j = 1
-!    write(*,*) 'z_Z,   xyz_Gamma'
-!    do k = kmin, kmax      
-!      write(*,*) z_Z(k), '=>', xyz_Gamma(i,j,k)
-!    end do
-!    write(*,*) 'r_Z,   xyr_Gamma'
-!    do k = kmin, kmax      
-!      write(*,*) r_Z(k), '=>', xyr_Gamma(i,j,k)
-!    end do
-
     !-----------------------------------------------------------------    
-    ! ÃÍ¤Î³ÎÇ§
+    ! å€¤ã®ç¢ºèª
     !
     call MessageNotify( "M", "Damping_init", "EFTime = %f", d=(/EFTime/) )
     call MessageNotify( "M", "Damping_init", "DepthH = %f", d=(/DepthH/) )
@@ -292,7 +297,37 @@ contains
     call MessageNotify( "M", "Damping_init", "DepthVb= %f", d=(/DepthVb/) )  
 
     !-----------------------------------------------------------------    
-    ! ½ĞÎÏ
+    ! å¹³å‡é¢¨ã®ãƒ€ãƒ³ãƒ”ãƒ³ã‚°
+    !
+    allocate( &
+      & pyz_SpngMF(imin:imax,jmin:jmax,kmin:kmax), &
+      & xqz_SpngMF(imin:imax,jmin:jmax,kmin:kmax), &
+      & z_VelX0(kmin:kmax),   &
+      & z_VelY0(kmin:kmax)    )
+    
+    pyz_SpngMF = 0.0d0
+    xqz_SpngMF = 0.0d0
+
+    ! ãƒ€ãƒ³ãƒ”ãƒ³ã‚°ã•ã›ã‚‹å…ˆã®é¢¨é€Ÿã‚’å¾—ã‚‹
+    !
+    if ( InputFileMF == "" ) then 
+      z_VelX0 = 0.0d0
+      z_VelY0 = 0.0d0
+    else
+      call SpongeLayer_MeanFlow_Get( InputFileMF, z_VelX0, z_VelY0 )
+    end if
+
+    !-----------------------------------------------------------------    
+    ! å€¤ã®ç¢ºèª
+    !
+    call MessageNotify( "M", "Damping_init", "DelTimeMF  = %f", d=(/DelTimeMF/) )
+    call MessageNotify( "M", "Damping_init", "EFTimeMF   = %f", d=(/EFTimeMF/) )
+    call MessageNotify( "M", "Damping_init", "ZMinMF     = %f", d=(/ZMinMF/) )
+    call MessageNotify( "M", "Damping_init", "ZMaxMF     = %f", d=(/ZMaxMF/) )  
+    call MessageNotify( "M", "Damping_init", "InputFileMF= %c", c1=trim(InputFileMF) )
+
+    !-----------------------------------------------------------------    
+    ! å‡ºåŠ›
     !
     call HistoryAutoAddVariable(                          &
       & varname='DPTempDtSpng',                           &
@@ -302,7 +337,7 @@ contains
       & xtype='double')
 
     call HistoryAutoAddVariable(                    &
-      & varname='ExnerSpng',                        &
+      & varname='DExnerDtSpng',                     &
       & dims=(/'x','y','z','t'/),                   &
       & longname='Damping term of exner function',  &
       & units='s-1',                                &
@@ -352,18 +387,18 @@ contains
 
     use dc_types, only : DP
     use gtool_historyauto, only: HistoryAutoPut
-    use timeset, only: TimeN        ! ¸½ºß¤Î»ş¹ï
-    use gridset, only: imin,       &! x Êı¸ş¤ÎÇÛÎó¤Î²¼¸Â
-      &                imax,       &! x Êı¸ş¤ÎÇÛÎó¤Î¾å¸Â
-      &                jmin,       &! y Êı¸ş¤ÎÇÛÎó¤Î²¼¸Â
-      &                jmax,       &! y Êı¸ş¤ÎÇÛÎó¤Î¾å¸Â
-      &                kmin,       &! z Êı¸ş¤ÎÇÛÎó¤Î²¼¸Â
-      &                kmax,       &! z Êı¸ş¤ÎÇÛÎó¤Î¾å¸Â
-      &                nx,         &! x Êı¸ş¤ÎÊªÍıÎÎ°è¤Î¾å¸Â
-      &                ny,         &! y Êı¸ş¤ÎÊªÍıÎÎ°è¤Î¾å¸Â
-      &                nz           ! z Êı¸ş¤ÎÊªÍıÎÎ°è¤Î¾å¸Â
+    use timeset, only: TimeN        ! ç¾åœ¨ã®æ™‚åˆ»
+    use gridset, only: imin,       &! x æ–¹å‘ã®é…åˆ—ã®ä¸‹é™
+      &                imax,       &! x æ–¹å‘ã®é…åˆ—ã®ä¸Šé™
+      &                jmin,       &! y æ–¹å‘ã®é…åˆ—ã®ä¸‹é™
+      &                jmax,       &! y æ–¹å‘ã®é…åˆ—ã®ä¸Šé™
+      &                kmin,       &! z æ–¹å‘ã®é…åˆ—ã®ä¸‹é™
+      &                kmax,       &! z æ–¹å‘ã®é…åˆ—ã®ä¸Šé™
+      &                nx,         &! x æ–¹å‘ã®ç‰©ç†é ˜åŸŸã®ä¸Šé™
+      &                ny,         &! y æ–¹å‘ã®ç‰©ç†é ˜åŸŸã®ä¸Šé™
+      &                nz           ! z æ–¹å‘ã®ç‰©ç†é ˜åŸŸã®ä¸Šé™
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
     real(DP), intent(in)    :: pyz_VelXBl(imin:imax, jmin:jmax, kmin:kmax)
@@ -383,7 +418,7 @@ contains
     real(DP)                :: xyz_SpngExner(imin:imax, jmin:jmax, kmin:kmax)
 
     !--------------------------------------------------------
-    ! ¾ñÍğ¾ì¤ÎÃÍ¤ò¥¼¥í¤ËÌá¤¹¤è¤¦¤Ê¶¯À©¤òÍ¿¤¨¤ë 
+    ! æ“¾ä¹±å ´ã®å€¤ã‚’ã‚¼ãƒ­ã«æˆ»ã™ã‚ˆã†ãªå¼·åˆ¶ã‚’ä¸ãˆã‚‹ 
     !
     pyz_SpngVelX  =  - pyz_Gamma * pyz_VelXBl  * FactorSpngVelX
     xqz_SpngVelY  =  - xqz_Gamma * xqz_VelYBl  * FactorSpngVelY
@@ -401,121 +436,166 @@ contains
     call HistoryAutoPut(TimeN, 'DVelYDtSpng',  xqz_SpngVelY(1:nx,1:ny,1:nz))
     call HistoryAutoPut(TimeN, 'DVelZDtSpng',  xyr_SpngVelZ(1:nx,1:ny,1:nz))
     call HistoryAutoPut(TimeN, 'DPTempDtSpng', xyz_SpngPTemp(1:nx,1:ny,1:nz))
-    call HistoryAutoPut(TimeN, 'ExnerSpng', xyz_SpngExner(1:nx,1:ny,1:nz))
+    call HistoryAutoPut(TimeN, 'DExnerDtSpng', xyz_SpngExner(1:nx,1:ny,1:nz))
 
   end subroutine SpongeLayer_forcing
 
+!!!
+!!!================================================================================
+!!!
 
   subroutine SpongeLayer_MeanFlow( &
-    & pyz_VelXBl,  xqz_VelYBl,     & !(in) 
+    & pyz_VelX,    xqz_VelY,       & !(in) 
     & pyz_DVelXDt, xqz_DVelYDt     ) !(inout)
 
-    use mpi_wrapper, only: nprocs, myrank, MPIWrapperGather, MPIWrapperAllreduce
+    use mpi_wrapper,       only: MPIWrapperAllreduce, nprocs
     use gtool_historyauto, only: HistoryAutoPut
     use dc_types, only: DP
-    use timeset, only: TimeN        ! ¸½ºß¤Î»ş¹ï
-    use axesset, only: z_Z          !Z ºÂÉ¸¼´(¥¹¥«¥é¡¼³Ê»ÒÅÀ)
-    use gridset, only: imin,       &! x Êı¸ş¤ÎÇÛÎó¤Î²¼¸Â
-      &                imax,       &! x Êı¸ş¤ÎÇÛÎó¤Î¾å¸Â
-      &                jmin,       &! y Êı¸ş¤ÎÇÛÎó¤Î²¼¸Â
-      &                jmax,       &! y Êı¸ş¤ÎÇÛÎó¤Î¾å¸Â
-      &                kmin,       &! z Êı¸ş¤ÎÇÛÎó¤Î²¼¸Â
-      &                kmax,       &! z Êı¸ş¤ÎÇÛÎó¤Î¾å¸Â
-      &                nx,         &! x Êı¸ş¤ÎÊªÍıÎÎ°è¤Î¾å¸Â
-      &                ny,         &! y Êı¸ş¤ÎÊªÍıÎÎ°è¤Î¾å¸Â
-      &                nz           ! z Êı¸ş¤ÎÊªÍıÎÎ°è¤Î¾å¸Â
+    use timeset, only: TimeN, TimeA ! ç¾åœ¨ã®æ™‚åˆ»
+    use axesset, only: z_Z          !Z åº§æ¨™è»¸(ã‚¹ã‚«ãƒ©ãƒ¼æ ¼å­ç‚¹)
+    use gridset, only: imin,       &! x æ–¹å‘ã®é…åˆ—ã®ä¸‹é™
+      &                imax,       &! x æ–¹å‘ã®é…åˆ—ã®ä¸Šé™
+      &                jmin,       &! y æ–¹å‘ã®é…åˆ—ã®ä¸‹é™
+      &                jmax,       &! y æ–¹å‘ã®é…åˆ—ã®ä¸Šé™
+      &                kmin,       &! z æ–¹å‘ã®é…åˆ—ã®ä¸‹é™
+      &                kmax,       &! z æ–¹å‘ã®é…åˆ—ã®ä¸Šé™
+      &                nx,         &! x æ–¹å‘ã®ç‰©ç†é ˜åŸŸã®ä¸Šé™
+      &                ny,         &! y æ–¹å‘ã®ç‰©ç†é ˜åŸŸã®ä¸Šé™
+      &                nz           ! z æ–¹å‘ã®ç‰©ç†é ˜åŸŸã®ä¸Šé™
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    real(DP), intent(in)    :: pyz_VelXBl(imin:imax, jmin:jmax, kmin:kmax)
-    real(DP), intent(in)    :: xqz_VelYBl(imin:imax, jmin:jmax, kmin:kmax)
+    real(DP), intent(in)    :: pyz_VelX(imin:imax, jmin:jmax, kmin:kmax)
+    real(DP), intent(in)    :: xqz_VelY(imin:imax, jmin:jmax, kmin:kmax)
     real(DP), intent(inout) :: pyz_DVelXDt(imin:imax, jmin:jmax, kmin:kmax)
     real(DP), intent(inout) :: xqz_DVelYDt(imin:imax, jmin:jmax, kmin:kmax)
-    real(DP)                :: pyz_SpngVelX(imin:imax, jmin:jmax, kmin:kmax)
-    real(DP)                :: xqz_SpngVelY(imin:imax, jmin:jmax, kmin:kmax)
-    real(DP)                :: z_SpngVelX(kmin:kmax)
-    real(DP)                :: z_SpngVelY(kmin:kmax)
     real(DP)                :: z_VelX(nz)
-    real(DP)                :: z_VelXMean(nz)
     real(DP)                :: z_VelXSum(nz)
-    real(DP)                :: a_VelX(nz * nprocs)
-    real(DP)                :: za_VelX(nz, nprocs)
+    real(DP)                :: z_VelXMean(nz)
     real(DP)                :: z_VelY(nz)
-    real(DP)                :: z_VelYMean(nz)
     real(DP)                :: z_VelYSum(nz)
-    real(DP)                :: a_VelY(nz * nprocs)
-    real(DP)                :: za_VelY(nz, nprocs)
-    integer                 :: i, j, k, n, n0, n1
+    real(DP)                :: z_VelYMean(nz)
+    integer                 :: i, j, k
 
 
     !------------------------------------------
-    ! Ê¿¶ÑÎ®¤ò¥À¥ó¥×¤¹¤ë¤«¤Î¥¹¥¤¥Ã¥Á. 
+    ! å¹³å‡æµã®ãƒ€ãƒ³ãƒ—ä¿‚æ•°ã‚’æ›´æ–°
     !
-    if (mod(TimeN, DelTimeMF) /= 0.0d0 ) return 
-    
+!!    write(*,*) TimeN, DelTimeMF, mod(TimeN, DelTimeMF)
 
-    !------------------------------------------
-    ! ¥Î¡¼¥ÉÆâ¤ÇÊ¿¶ÑÃÍ¤ÎºîÀ®
-    !
-    z_VelX = 0.0d0
-    z_VelY = 0.0d0
+    if ( mod(TimeA, DelTimeMF) == 0.0d0 ) then 
 
-    do k = 1, nz
-      do j = 1, ny
-        do i = 1, nx
-          z_VelX(k) = z_VelX(k) + pyz_VelXBl(i,j,k)
-          z_VelY(k) = z_VelY(k) + xqz_VelYBl(i,j,k)
+      !------------------------------------------
+      ! ãƒãƒ¼ãƒ‰å†…ã§å¹³å‡å€¤ã®ä½œæˆ
+      !
+      z_VelX = 0.0d0
+      z_VelY = 0.0d0
+      
+      do k = 1, nz
+        do j = 1, ny
+          do i = 1, nx
+            z_VelX(k) = z_VelX(k) + pyz_VelX(i,j,k)
+            z_VelY(k) = z_VelY(k) + xqz_VelY(i,j,k)
+          end do
         end do
       end do
-    end do
+      
+      z_VelX = z_VelX / real( nx * ny, kind=DP)
+      z_VelY = z_VelY / real( nx * ny, kind=DP)
+      
+      !--------------------------------------------------------
+      ! MPI : å…¨ãƒãƒ¼ãƒ‰ã§ã®åˆè¨ˆã‚’å¾—ã‚‹
+      !
+      ! MPI ã‚’ä½¿ã‚ãªã„å ´åˆã¯ä½•ã‚‚è¡Œã‚ãªã„ 
+      ! (z_VelXSum = z_VelX, z_VelYSum = z_VelY).
+      !
+      call MPIWrapperAllreduce(   &
+        &  nz, z_VelX,        & !(in)
+        &  z_VelXSum          & !(out)
+        & )
+      
+      call MPIWrapperAllreduce(   &
+        &  nz, z_VelY,        & !(in)
+        &  z_VelYSum          & !(out)
+        & )
+      
+      !--------------------------------------------------------
+      ! ãƒ€ãƒ³ãƒ”ãƒ³ã‚°ä¿‚æ•°   
+      !   - 1/T * ( \bar{u} / \bar{u}_max ) * ( \bar{u} - u0 )
+      !   \bar{u} ã‚’ \bar{u} ã®æœ€å¤§å€¤ã§è¦æ ¼åŒ–ã™ã‚‹.
+      !
+      z_VelXMean = z_VelXSum / real(nprocs, kind=DP) 
+      z_VelYMean = z_VelYSum / real(nprocs, kind=DP) 
+
+      do k = 1, nz
+        if ( z_Z(k) >= ZMinMF .OR.  z_Z(k) <= ZMaxMF ) then 
+          pyz_SpngMF(:,:,k) = - ( z_VelXMean(k) - z_VelX0(k) ) / EFTimeMF 
+          xqz_SpngMF(:,:,k) = - ( z_VelYMean(k) - z_VelY0(k) ) / EFTimeMF
+        else
+          pyz_SpngMF(:,:,k) = 0.0d0
+          xqz_SpngMF(:,:,k) = 0.0d0
+        end if
+      end do
+      
+    end if
+
+    !--------------------------------------------------------
+    ! æ“¾ä¹±å ´ã®å€¤ã‚’ã‚¼ãƒ­ã«æˆ»ã™ã‚ˆã†ãªå¼·åˆ¶ã‚’ä¸ãˆã‚‹ 
+    !
+    pyz_DVelXDt  = pyz_DVelXDt  + pyz_SpngMF
+    xqz_DVelYDt  = xqz_DVelYDt  + xqz_SpngMF
     
-    z_VelX = z_VelX / real( nx * ny, kind=8)
-    z_VelY = z_VelY / real( nx * ny, kind=8)
-
-    !--------------------------------------------------------
-    ! MPI : Á´¥Î¡¼¥É¤Ç¤Î¹ç·×¤òÆÀ¤ë
-    !
-    call MPIWrapperAllreduce(   &
-      &  nz, z_VelX,        & !(in)
-      &  z_VelXSum          & !(out)
-      & )
-
-    call MPIWrapperAllreduce(   &
-      &  nz, z_VelY,        & !(in)
-      &  z_VelYSum          & !(out)
-      & )
-
-    !--------------------------------------------------------
-    ! ¥À¥ó¥Ô¥ó¥°·¸¿ô   
-    !
-    pyz_SpngVelX = 0.0d0
-    xqz_SpngVelY = 0.0d0
-
-    do k = 1, nz
-      if ( z_Z(k) >= ZMinMF .OR.  z_Z(k) <= ZMaxMF ) then 
-        pyz_SpngVelX(:,:,k) = - z_VelXSum(k) / real( nprocs, kind=8 ) / EFTimeMF
-        xqz_SpngVelY(:,:,k) = - z_VelYSum(k) / real( nprocs, kind=8 ) / EFTimeMF
-      else
-        pyz_SpngVelX(:,:,k) = 0.0d0
-        xqz_SpngVelY(:,:,k) = 0.0d0
-      end if
-    end do
-
-!!    if ( myrank == 0 ) then 
-!!      write(*,*) "z_VelXSum / nprocs : ", z_VelXSum(1:10) / real( nprocs, kind=8 )
-!!      write(*,*) "z_VelYSum / nprocs : ", z_VelYSum / real( nprocs, kind=8 )
-!!    end if
-
-    !--------------------------------------------------------
-    ! ¾ñÍğ¾ì¤ÎÃÍ¤ò¥¼¥í¤ËÌá¤¹¤è¤¦¤Ê¶¯À©¤òÍ¿¤¨¤ë 
-    !
-    pyz_DVelXDt  = pyz_DVelXDt  + pyz_SpngVelX
-    xqz_DVelYDt  = xqz_DVelYDt  + xqz_SpngVelY
+    call HistoryAutoPut(TimeN, 'DVelXDtSpngMF',  pyz_SpngMF(1:nx,1:ny,1:nz))
+    call HistoryAutoPut(TimeN, 'DVelYDtSpngMF',  xqz_SpngMF(1:nx,1:ny,1:nz))
     
-    call HistoryAutoPut(TimeN, 'DVelXDtSpngMF',  pyz_SpngVelX(1:nx,1:ny,1:nz))
-    call HistoryAutoPut(TimeN, 'DVelYDtSpngMF',  xqz_SpngVelY(1:nx,1:ny,1:nz))
-
   end subroutine SpongeLayer_MeanFlow
+
+
+  subroutine SpongeLayer_MeanFlow_Get(   &
+    & InputFileMF,                       & !(in)
+    & z_VelX0, z_VelY0 )                   !(out)
+    !
+    !ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰æƒ…å ±å–å¾—
+    !
+
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
+    use gtool_history, only : HistoryGet
+    use dc_types,      only : DP, STRING
+    use mpi_wrapper,   only : FLAG_LIB_MPI
+    use gridset,       only : imin, imax,    &!é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                       jmin, jmax,    &!é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                       kmin, kmax      !é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
+    
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
+    implicit none
+    
+    !å¤‰æ•°å®šç¾©
+    character(STRING), intent(in) :: InputFileMF
+    real(DP), intent(out) :: z_VelX0(kmin:kmax)
+    real(DP), intent(out) :: z_VelY0(kmin:kmax)
+    real(DP)              :: aaa_tmp1(imin:imax,jmin:jmax,kmin:kmax)
+    real(DP)              :: aaa_tmp2(imin:imax,jmin:jmax,kmin:kmax)
+    character(STRING)     :: name               !å¤‰æ•°å
+    character(STRING)     :: time = "t=^1"
+    integer               :: k
+    
+
+    ! ãƒ•ã‚¡ã‚¤ãƒ«ã‚ªãƒ¼ãƒ—ãƒ³ & å€¤ã®å–ã‚Šå‡ºã—
+    ! æŒ‡å®šã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã®å…ˆé ­æ™‚åˆ»ã®å€¤ã‚’å–ã‚Šå‡ºã™.
+    !
+    name = "VelX"
+    call HistoryGet( InputFileMF, name, aaa_tmp1, range=Time, flag_mpi_split = FLAG_LIB_MPI )
+    
+    name = "VelY"
+    call HistoryGet( InputFileMF, name, aaa_tmp2, range=Time, flag_mpi_split = FLAG_LIB_MPI )
+
+    do k = kmin, kmax
+      z_VelX0(k) = aaa_tmp1(1,1,k)
+      z_VelY0(k) = aaa_tmp2(1,1,k)
+    end do
+
+  end subroutine SpongeLayer_MeanFlow_Get
   
+
 end module Damping
