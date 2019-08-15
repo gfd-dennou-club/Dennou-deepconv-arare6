@@ -1,8 +1,8 @@
-!= deepconv/arare ¼¾½áÂçµ¤ÂĞÎ®·×»»ÍÑ¼ç¥×¥í¥°¥é¥à 
+!= deepconv/arare æ¹¿æ½¤å¤§æ°—å¯¾æµè¨ˆç®—ç”¨ä¸»ãƒ—ãƒ­ã‚°ãƒ©ãƒ  
 !
 != deepconv/arare main program for moist atmospheric convection 
 !
-! Authors::   ¿ù»³¹Ì°ìÏ¯(SUGIYAMA Ko-ichiro), ODAKA Masatsugu
+! Authors::   æ‰å±±è€•ä¸€æœ—(SUGIYAMA Ko-ichiro), ODAKA Masatsugu
 ! Version::   $Id: arare.f90,v 1.49 2014/07/08 01:01:44 sugiyama Exp $
 ! Tag Name::  $Name:  $
 ! Copyright:: Copyright (C) GFD Dennou Club, 2007. All rights reserved.
@@ -11,13 +11,13 @@
 
 program deepconv_arare
   !
-  ! ÈóÀÅÎÏ³Ø¥â¥Ç¥ë deepconv/arare ¼¾½áÂçµ¤ÂĞÎ®·×»»ÍÑ¼ç¥×¥í¥°¥é¥à (»°¼¡¸µÈÇ)
+  ! éé™åŠ›å­¦ãƒ¢ãƒ‡ãƒ« deepconv/arare æ¹¿æ½¤å¤§æ°—å¯¾æµè¨ˆç®—ç”¨ä¸»ãƒ—ãƒ­ã‚°ãƒ©ãƒ  (ä¸‰æ¬¡å…ƒç‰ˆ)
   !
 
-  ! ¥â¥¸¥å¡¼¥ë°úÍÑ  use statement 
+  ! ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«å¼•ç”¨  use statement 
   !
 
-  ! gtool5 ´ØÏ¢ 
+  ! gtool5 é–¢é€£ 
   ! gtool5 modules
   !
   use dc_types,          only: STRING, DP
@@ -25,7 +25,7 @@ program deepconv_arare
   use gtool_history,     only: HistoryPut
   use gtool_historyauto, only: HistoryAutoPut
 
-  ! ½é´üÀßÄê¥â¥¸¥å¡¼¥ë
+  ! åˆæœŸè¨­å®šãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
   ! Initialize module
   !
   use mpi_wrapper,     only : MPIWrapperInit,                          &
@@ -40,9 +40,12 @@ program deepconv_arare
     &                         nx, ny, nz, ncmax
   use timeset,         only : timeset_init,                            &
     &                         TimesetDelTimeHalf, TimesetProgress,     &
-    &                         TimeA, TimeN, DelTimeLong,               &
-    &                         NstepShort, NstepOutput,                 &
-    &                         EndTime, FlagInitialRun
+    &                         TimeA, TimeN, TimeB,                     &
+    &                         Nstep, NstepShort, NstepLong,            &
+    &                         NstepOutput, FlagInitialRun
+!    &                         TimeA, TimeN, DelTimeLong,               &
+!    &                         NstepShort, NstepOutput,                 &
+!    &                         EndTime, FlagInitialRun
   use axesset,         only : axesset_init
   use average,         only : xyz_pyz, xyz_xyr, xyz_xqz
   use constants,       only : constants_init
@@ -59,12 +62,12 @@ program deepconv_arare
   use namelist_util,   only : NmlutilInit,                             &
     &                         namelist_filename
 
-  ! ²½³ØÎÌ·×»»¥â¥¸¥å¡¼¥ë 
+  ! åŒ–å­¦é‡è¨ˆç®—ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ« 
   ! Chemical calculation modules
   !
   use chemdata,        only : chemdata_init
 
-  ! ÎÏ³Ø²áÄø·×»»ÍÑ´Ø¿ô¥â¥¸¥å¡¼¥ë
+  ! åŠ›å­¦éç¨‹è¨ˆç®—ç”¨é–¢æ•°ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
   ! Dynamical processes module
   !
 !  use DynamicsHEVI, only : Dynamics_Init,                        &
@@ -73,7 +76,7 @@ program deepconv_arare
     &                         Dynamics_Long_forcing,                &
     &                         Dynamics_Short_forcing
 
-  ! ÍğÎ®³È»¶·×»»ÍÑ¥â¥¸¥å¡¼¥ë
+  ! ä¹±æµæ‹¡æ•£è¨ˆç®—ç”¨ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
   ! Turbulent diffusion module
   !
   use Turbulence_kw1978_v2, only : Turbulence_kw1978_Init,          &
@@ -83,7 +86,7 @@ program deepconv_arare
   use Turbulence_constKm, only : Turbulence_constKm_Init,           & 
     &                            Turbulence_constKm_forcing
 
-  ! ¶­³¦¤«¤é¤Î¥Õ¥é¥Ã¥¯¥¹·×»»ÍÑ¥â¥¸¥å¡¼¥ë
+  ! å¢ƒç•Œã‹ã‚‰ã®ãƒ•ãƒ©ãƒƒã‚¯ã‚¹è¨ˆç®—ç”¨ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
   ! Surface flux module
   !
   use Surfaceflux_Diff,       only : Surfaceflux_Diff_init,         &
@@ -97,7 +100,7 @@ program deepconv_arare
   use Surfaceflux_baker1998,  only : Surfaceflux_baker1998_init,    &
     &                                Surfaceflux_baker1998_forcing
 
-  ! Êü¼Í¶¯À©·×»»ÍÑ¥â¥¸¥å¡¼¥ë
+  ! æ”¾å°„å¼·åˆ¶è¨ˆç®—ç”¨ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
   ! Radiative forceing module
   !
   use Radiation_simple,      only : Radiation_simple_init,           &
@@ -110,7 +113,7 @@ program deepconv_arare
   use Radiation_heatbalance, only : Radiation_heatbalance_init,      &
     &                               Radiation_heatbalance_forcing
 
-  ! ¼¾½á²áÄø·×»»ÍÑ¥â¥¸¥å¡¼¥ë
+  ! æ¹¿æ½¤éç¨‹è¨ˆç®—ç”¨ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
   ! Moist processes modules
   !
   use Cloudphys_K1969,       only : Cloudphys_K1969_Init,            &
@@ -118,25 +121,22 @@ program deepconv_arare
   use Cloudphys_marscond,    only : cloudphys_marscond_Init,         &
     &                               cloudphys_marscond_forcing
 
-  ! ²¼ÀÁ¤±¥â¥¸¥å¡¼¥ë
+  ! ä¸‹è«‹ã‘ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
   ! Utility modules
   !
   use damping,               only : Damping_init,                    &
     &                               SpongeLayer_forcing,             &
     &                               SpongeLayer_MeanFlow
-  use fillnegative,          only : FillNegative_init,               &
-    &                               xyza_FillNegative_xyza
+  use fillnegative,          only : FillNegative_init
   use energymonit,           only : EnergyMonit_init,                &
     &                               EnergyMonit_exec
   use cflcheck,              only : CFLCheckTimeShort,               &
     &                               CFLCheckTimeLongVelX,            &
     &                               CFLCheckTimeLongVelY,            &
     &                               CFLCheckTimeLongVelZ
-  use setmargin,             only : SetMargin_init,                  &
-    &                               SetMargin_xyzf, SetMargin_xyz,   &
-    &                               SetMargin_pyz, SetMargin_xqz, SetMargin_xyr
+  use setmargin,             only : SetMargin_init
 
-  ! ¥Õ¥¡¥¤¥ëÆş½ĞÎÏ¥â¥¸¥å¡¼¥ë
+  ! ãƒ•ã‚¡ã‚¤ãƒ«å…¥å‡ºåŠ›ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
   ! File I/O module
   !
   use RestartFileIO,         only : ReStartFileio_init,              &
@@ -151,109 +151,109 @@ program deepconv_arare
   use BasicFileIO,           only : BasicFileio_Output
 
 
-  ! °ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+  ! æš—é»™ã®å‹å®£è¨€ç¦æ­¢
   !
   implicit none
 
-  ! ÆâÉôÊÑ¿ô
+  ! å†…éƒ¨å¤‰æ•°
   ! Internal variables
   !
   character(*), parameter:: prog_name = 'arare'
-                            ! ¼ç¥×¥í¥°¥é¥àÌ¾.
+                            ! ä¸»ãƒ—ãƒ­ã‚°ãƒ©ãƒ å.
                             ! Main program name
 
   real(DP), allocatable :: pyz_VelXBl(:,:,:)    
-                             ! $ u (t-\Delta t) $ ÅìÀ¾É÷ ; zonal wind
+                             ! $ u (t-\Delta t) $ æ±è¥¿é¢¨ ; zonal wind
   real(DP), allocatable :: pyz_VelXNl(:,:,:)    
-                             ! $ u (t) $          ÅìÀ¾É÷ ; zonal wind
+                             ! $ u (t) $          æ±è¥¿é¢¨ ; zonal wind
   real(DP), allocatable :: xyz_VelXNl(:,:,:)    
-                             ! $ u (t) $          ÅìÀ¾É÷ ; zonal wind
+                             ! $ u (t) $          æ±è¥¿é¢¨ ; zonal wind
   real(DP), allocatable :: pyz_VelXAl(:,:,:)    
-                             ! $ u (t+\Delta t) $ ÅìÀ¾É÷ ; zonal wind
+                             ! $ u (t+\Delta t) $ æ±è¥¿é¢¨ ; zonal wind
   real(DP), allocatable :: pyz_VelXNs(:,:,:)    
-                             ! $ u (\tau) $ ÅìÀ¾É÷ ; zonal wind
+                             ! $ u (\tau) $ æ±è¥¿é¢¨ ; zonal wind
   real(DP), allocatable :: pyz_VelXAs(:,:,:)    
-                             ! $ u (\tau +\Delta \tau) $ ÅìÀ¾É÷ ; zonal wind
+                             ! $ u (\tau +\Delta \tau) $ æ±è¥¿é¢¨ ; zonal wind
   real(DP), allocatable :: xqz_VelYBl(:,:,:)    
-                             ! $ v (t-\Delta t) $ ÆîËÌÉ÷ ; meridonal wind
+                             ! $ v (t-\Delta t) $ å—åŒ—é¢¨ ; meridonal wind
   real(DP), allocatable :: xqz_VelYNl(:,:,:)    
-                             ! $ v (t) $ ÆîËÌÉ÷ ; meridonal wind
+                             ! $ v (t) $ å—åŒ—é¢¨ ; meridonal wind
   real(DP), allocatable :: xyz_VelYNl(:,:,:)    
-                             ! $ v (t) $ ÆîËÌÉ÷ ; meridonal wind
+                             ! $ v (t) $ å—åŒ—é¢¨ ; meridonal wind
   real(DP), allocatable :: xqz_VelYAl(:,:,:)    
-                             ! $ v (t+\Delta t) $ ÆîËÌÉ÷ ; meridonal wind
+                             ! $ v (t+\Delta t) $ å—åŒ—é¢¨ ; meridonal wind
   real(DP), allocatable :: xqz_VelYNs(:,:,:)   
-                             ! $ v (\tau -\tau) $ ÆîËÌÉ÷ ; meridonal wind
+                             ! $ v (\tau -\tau) $ å—åŒ—é¢¨ ; meridonal wind
   real(DP), allocatable :: xqz_VelYAs(:,:,:)
-                             ! $ v (\tau) $ ÆîËÌÉ÷ ; meridonal wind
+                             ! $ v (\tau) $ å—åŒ—é¢¨ ; meridonal wind
   real(DP), allocatable :: xyr_VelZBl(:,:,:)    
-                             ! $ w (t-\Delta t) $ ±ôÄ¾É÷ ; vertical wind
+                             ! $ w (t-\Delta t) $ é‰›ç›´é¢¨ ; vertical wind
   real(DP), allocatable :: xyr_VelZNl(:,:,:)    
-                             ! $ w (t) $ ±ôÄ¾É÷ ; vertical wind
+                             ! $ w (t) $ é‰›ç›´é¢¨ ; vertical wind
   real(DP), allocatable :: xyz_VelZNl(:,:,:)    
-                             ! $ w (t) $ ±ôÄ¾É÷ ; vertical wind
+                             ! $ w (t) $ é‰›ç›´é¢¨ ; vertical wind
   real(DP), allocatable :: xyr_VelZAl(:,:,:)    
-                             ! $ w (t+\Delta t) $ ±ôÄ¾É÷ ; vertical wind
+                             ! $ w (t+\Delta t) $ é‰›ç›´é¢¨ ; vertical wind
   real(DP), allocatable :: xyr_VelZNs(:,:,:)    
-                             ! $ w (\tau) $ ±ôÄ¾É÷ ; vertical wind
+                             ! $ w (\tau) $ é‰›ç›´é¢¨ ; vertical wind
   real(DP), allocatable :: xyr_VelZAs(:,:,:) 
-                             ! $ w (\tau +\Delta \tau)  ±ôÄ¾É÷ ; vertical wind
+                             ! $ w (\tau +\Delta \tau)  é‰›ç›´é¢¨ ; vertical wind
   real(DP), allocatable :: xyz_ExnerBl(:,:,:)   
-                             ! $ \pi (t-\Delta t) $ °µÎÏ´Ø¿ô ; Exner function
+                             ! $ \pi (t-\Delta t) $ åœ§åŠ›é–¢æ•° ; Exner function
   real(DP), allocatable :: xyz_ExnerNl(:,:,:)   
-                             ! $ \pi (t) $ °µÎÏ´Ø¿ô ; Exner function
+                             ! $ \pi (t) $ åœ§åŠ›é–¢æ•° ; Exner function
   real(DP), allocatable :: xyz_ExnerAl(:,:,:)
-                             ! $ \pi (t+\Delta t) $ °µÎÏ´Ø¿ô ; Exner function
+                             ! $ \pi (t+\Delta t) $ åœ§åŠ›é–¢æ•° ; Exner function
   real(DP), allocatable :: xyz_ExnerNs(:,:,:)   
-                             ! $ \pi (\tau -\Delta \tau) $ °µÎÏ´Ø¿ô ; Exner function
+                             ! $ \pi (\tau -\Delta \tau) $ åœ§åŠ›é–¢æ•° ; Exner function
   real(DP), allocatable :: xyz_ExnerAs(:,:,:)   
-                             ! $ \pi (\tau) $ °µÎÏ´Ø¿ô ; Exner function
+                             ! $ \pi (\tau) $ åœ§åŠ›é–¢æ•° ; Exner function
   real(DP), allocatable :: xyz_PTempBl(:,:,:) 
-                             ! $ \theta (t-\Delta t) $ ²¹°Ì ; Potential temp.
+                             ! $ \theta (t-\Delta t) $ æ¸©ä½ ; Potential temp.
   real(DP), allocatable :: xyz_PTempNl(:,:,:) 
-                             ! $ \theta (t) $ ²¹°Ì ; Potential temp.
+                             ! $ \theta (t) $ æ¸©ä½ ; Potential temp.
   real(DP), allocatable :: xyz_PTempAl(:,:,:) 
-                             ! $ \theta (t+\Delta t) $ ²¹°Ì ; Potential temp.
+                             ! $ \theta (t+\Delta t) $ æ¸©ä½ ; Potential temp.
   real(DP), allocatable :: xyz_PTempNs(:,:,:) 
-                             ! $ \theta (t) $ ²¹°Ì ; Potential temp.
+                             ! $ \theta (t) $ æ¸©ä½ ; Potential temp.
   real(DP), allocatable :: xyz_PTempAs(:,:,:) 
-                             ! $ \theta (t+\Delta t) $ ²¹°Ì ; Potential temp.
+                             ! $ \theta (t+\Delta t) $ æ¸©ä½ ; Potential temp.
   real(DP), allocatable :: xyz_CDensBl(:,:,:) 
-                             ! $ \theta (t-\Delta t) $ ²¹°Ì ; Potential temp.
+                             ! $ \theta (t-\Delta t) $ æ¸©ä½ ; Potential temp.
   real(DP), allocatable :: xyz_CDensNl(:,:,:) 
-                             ! $ \theta (t) $ ²¹°Ì ; Potential temp.
+                             ! $ \theta (t) $ æ¸©ä½ ; Potential temp.
   real(DP), allocatable :: xyz_CDensAl(:,:,:) 
-                             ! $ \theta (t+\Delta t) $ ²¹°Ì ; Potential temp.
+                             ! $ \theta (t+\Delta t) $ æ¸©ä½ ; Potential temp.
   real(DP), allocatable :: xyz_CDensNs(:,:,:) 
-                             ! $ \theta (t) $ ²¹°Ì ; Potential temp.
+                             ! $ \theta (t) $ æ¸©ä½ ; Potential temp.
   real(DP), allocatable :: xyz_CDensAs(:,:,:) 
-                             ! $ \theta (t+\Delta t) $ ²¹°Ì ; Potential temp.
+                             ! $ \theta (t+\Delta t) $ æ¸©ä½ ; Potential temp.
   real(DP), allocatable :: xyz_KmBl(:,:,:)
-                             ! $ Km (t-\Delta t) $ ÍğÎ®³È»¶·¸¿ô 
+                             ! $ Km (t-\Delta t) $ ä¹±æµæ‹¡æ•£ä¿‚æ•° 
                              ! Turbulent diffusion coeff. 
   real(DP), allocatable :: xyz_KmNl(:,:,:)
-                             ! $ K_m (t) $ ÍğÎ®³È»¶·¸¿ô 
+                             ! $ K_m (t) $ ä¹±æµæ‹¡æ•£ä¿‚æ•° 
                              ! Turbulent diffusion coeff. 
   real(DP), allocatable :: xyz_KmAl(:,:,:)
-                             ! $ K_m (t+\Delta t) $ ÍğÎ®³È»¶·¸¿ô 
+                             ! $ K_m (t+\Delta t) $ ä¹±æµæ‹¡æ•£ä¿‚æ•° 
                              ! Turbulent diffusion coeff. 
   real(DP), allocatable :: xyz_KhBl(:,:,:)      
-                             ! $ K_h (t-\Delta t) $ ÍğÎ®³È»¶·¸¿ô
+                             ! $ K_h (t-\Delta t) $ ä¹±æµæ‹¡æ•£ä¿‚æ•°
                              ! Turbulent diffusion coeff. 
   real(DP), allocatable :: xyz_KhNl(:,:,:)
-                             ! $ K_h (t) $ ÍğÎ®³È»¶·¸¿ô 
+                             ! $ K_h (t) $ ä¹±æµæ‹¡æ•£ä¿‚æ•° 
                              ! Turbulent diffusion coeff. 
   real(DP), allocatable :: xyz_KhAl(:,:,:)
-                             ! $ K_h (t+\Delta t) $ ÍğÎ®³È»¶·¸¿ô
+                             ! $ K_h (t+\Delta t) $ ä¹±æµæ‹¡æ•£ä¿‚æ•°
                              ! Turbulent diffusion coeff. 
   real(DP), allocatable :: xyzf_QMixBl(:,:,:,:) 
-                             ! $ q (t-\Delta t) $ ¼¾½áÎÌ¤Îº®¹çÈæ
+                             ! $ q (t-\Delta t) $ æ¹¿æ½¤é‡ã®æ··åˆæ¯”
                              ! Mixing ratio of moist variables.
   real(DP), allocatable :: xyzf_QMixNl(:,:,:,:) 
-                             ! $ q (t) $ ¼¾½áÎÌ¤Îº®¹çÈæ 
+                             ! $ q (t) $ æ¹¿æ½¤é‡ã®æ··åˆæ¯” 
                              ! Mixing ratio of moist variables
   real(DP), allocatable :: xyzf_QMixAl(:,:,:,:) ! 
-                             ! $ q (t+\Delta t) $ ¼¾½áÎÌ¤Îº®¹çÈæ 
+                             ! $ q (t+\Delta t) $ æ¹¿æ½¤é‡ã®æ··åˆæ¯” 
                              !Mixing ratio of moist variables
 
   real(DP), allocatable :: pyz_DVelXDtNl(:,:,:)
@@ -266,7 +266,7 @@ program deepconv_arare
   real(DP), allocatable :: xyz_DKmDtNl(:,:,:)
   real(DP), allocatable :: xyz_DCDensDtNl(:,:,:)
 
-  integer :: s, t, tau  ! do ¥ë¡¼¥×ÊÑ¿ô ; do loop variable 
+  integer :: s, t, tau  ! do ãƒ«ãƒ¼ãƒ—å¤‰æ•° ; do loop variable 
 
   integer            :: IDTurbMethod          = 0
   integer, parameter :: IDTurbKW1978          = 2
@@ -297,23 +297,23 @@ program deepconv_arare
 
 
   !------------------------------------------
-  ! ½é´ü²½¼êÂ³¤­ ; Initialize procedure 
+  ! åˆæœŸåŒ–æ‰‹ç¶šã ; Initialize procedure 
   !
   call MainInit
 
   !------------------------------------------
-  ! »ş´ÖÀÑÊ¬ time integration 
+  ! æ™‚é–“ç©åˆ† time integration 
   !
   call MessageNotify( "M", "main", "Time Integration Start" )
 
-  ! CPU »ş´Ö·×Â¬³«»Ï
+  ! CPU æ™‚é–“è¨ˆæ¸¬é–‹å§‹
   ! Start CPU time counting 
   !
   call ClocksetLoopStart
   
-  ! »ş´ÖÈ¯Å¸¥ë¡¼¥×¤Î¥¹¥¿¡¼¥È
+  ! æ™‚é–“ç™ºå±•ãƒ«ãƒ¼ãƒ—ã®ã‚¹ã‚¿ãƒ¼ãƒˆ
   !
-  do while (TimeN <= EndTime ) 
+  do while ( Nstep <= NstepLong )
 
     ! clear tendency 
     !
@@ -322,7 +322,7 @@ program deepconv_arare
     xyz_DKmDtNl   = 0.0d0 ; xyz_DCDensDtNl = 0.0d0
 
     !------------------------------------------
-    ! ¥¹¥İ¥ó¥¸ÁØ; sponge layer
+    ! ã‚¹ãƒãƒ³ã‚¸å±¤; sponge layer
     !
     select case ( IDDampingMethod )
        
@@ -352,7 +352,7 @@ program deepconv_arare
     end select
 
     !-----------------------------------------
-    ! °ÜÎ®³È»¶.
+    ! ç§»æµæ‹¡æ•£.
     ! Advection and diffusion
     !
     call Dynamics_Long_forcing(       &
@@ -373,7 +373,7 @@ program deepconv_arare
       )
 
     !-------------------------------
-    ! ÊªÍı²áÄø: ÍğÎ®
+    ! ç‰©ç†éç¨‹: ä¹±æµ
     !
     select case ( IDTurbMethod )
        
@@ -390,13 +390,13 @@ program deepconv_arare
         &   xyz_DKmDtNl,   xyz_DCDensDtNl                  &!(inout)
         & )
       
-      ! ³È»¶·¸¿ô¤ÎÀÑÊ¬
+      ! æ‹¡æ•£ä¿‚æ•°ã®ç©åˆ†
       !
       call turbulence_integrate
       
     case ( IDTurbConstKm )
     
-      ! ³È»¶·¸¿ô°ìÄê
+      ! æ‹¡æ•£ä¿‚æ•°ä¸€å®š
       !
       call turbulence_ConstKm_forcing(                     &
         &   pyz_VelXBl,  xqz_VelYBl,  xyr_VelZBl,          &!(in)
@@ -409,7 +409,7 @@ program deepconv_arare
     end select
      
     !-------------------------------
-    ! ÊªÍı²áÄø: Êü¼Í
+    ! ç‰©ç†éç¨‹: æ”¾å°„
     !
     select case (IDRadMethod)
       
@@ -446,7 +446,7 @@ program deepconv_arare
     end select
 
     !--------------------------------
-    ! ¶­³¦¤«¤é¤ÎÇ®¡¦±¿Æ°ÎÌÍ¢Á÷
+    ! å¢ƒç•Œã‹ã‚‰ã®ç†±ãƒ»é‹å‹•é‡è¼¸é€
     !
     select case (IDSurfaceMethod)
 
@@ -481,14 +481,14 @@ program deepconv_arare
     end select
     
     !-----------------------------------------
-    ! ²¹°Ì¤Èº®¹çÈæ¤ÎÀÑÊ¬
+    ! æ¸©ä½ã¨æ··åˆæ¯”ã®ç©åˆ†
     ! Integration
     !
     call PTemp_integrate
     call QMix_integrate
     
     !------------------------------------------
-    ! ¶Å·ë²áÄø. Al ¤ÊÃÍ¤òÆş¤ìÂØ¤¨.
+    ! å‡çµéç¨‹. Al ãªå€¤ã‚’å…¥ã‚Œæ›¿ãˆ.
     ! 
     select case (IDCloudMethod)
     case (IDCloudK1969)
@@ -500,7 +500,7 @@ program deepconv_arare
         & )
     end select
     
-    ! Ã»¤¤»ş´Ö¥¹¥Æ¥Ã¥×¤Î½é´üÃÍºîÀ®.
+    ! çŸ­ã„æ™‚é–“ã‚¹ãƒ†ãƒƒãƒ—ã®åˆæœŸå€¤ä½œæˆ.
     ! Initial values set up for time integration with short time step.
     !
     pyz_VelXNs  = pyz_VelXBl
@@ -510,7 +510,7 @@ program deepconv_arare
     xyz_PTempNs = xyz_PTempBl
     xyz_CDensNs = xyz_CDensBl
 
-    ! DEBUG: Ä¹¤¤»ş´Ö¥¹¥Æ¥Ã¥×¤Ç¤Î tendency ¤òÌµ»ë¤¹¤ë¾ì¹ç
+    ! DEBUG: é•·ã„æ™‚é–“ã‚¹ãƒ†ãƒƒãƒ—ã§ã® tendency ã‚’ç„¡è¦–ã™ã‚‹å ´åˆ
     !
     select case (IDDebugMethod)
     case (IDDebugNoTendencyLong)
@@ -525,7 +525,7 @@ program deepconv_arare
       xyz_DCDensDtNl = 0.0d0
     end select
  
-    ! Ã»¤¤»ş´Ö¥¹¥Æ¥Ã¥×¤Î»ş´ÖÀÑÊ¬. ¥ª¥¤¥é¡¼Ë¡¤òÍøÍÑ.
+    ! çŸ­ã„æ™‚é–“ã‚¹ãƒ†ãƒƒãƒ—ã®æ™‚é–“ç©åˆ†. ã‚ªã‚¤ãƒ©ãƒ¼æ³•ã‚’åˆ©ç”¨.
     ! Time integration with short time step.
     !
     Euler: do tau = 1, NstepShort
@@ -535,26 +535,26 @@ program deepconv_arare
       !
       xyz_DExnerDtNs = 0.0d0
 
-      ! ²ĞÀ±·×»»¤Î¾ì¹ç. ¶Å·ëÎÌ¤ÎÉ¾²Á¤Ï¤³¤³¤Ç¹Ô¤¦. 
+      ! ç«æ˜Ÿè¨ˆç®—ã®å ´åˆ. å‡çµé‡ã®è©•ä¾¡ã¯ã“ã“ã§è¡Œã†. 
       ! 
       select case (IDCloudMethod)
       case (IDCloudMarsCond)
 
         call cloudphys_marscond_forcing(  &
-          &   xyz_PTempNs,         &  !(in) ²¹°Ì
-          &   xyz_ExnerNs,         &  !(in) ¥¨¥¯¥¹¥Ê¡¼´Ø¿ô
+          &   xyz_PTempNs,         &  !(in) æ¸©ä½
+          &   xyz_ExnerNs,         &  !(in) ã‚¨ã‚¯ã‚¹ãƒŠãƒ¼é–¢æ•°
           &   xyz_CDensNs,         &  !(in) 
           &   xyz_DPTempDtNl,      &  !(in)    
           &   xyz_DExnerDtNl,      &  !(in)    
           &   xyz_DCDensDtNl,      &  !(in)    
-          &   xyz_PTempAs,         &  !(out) ²¹°Ì
-          &   xyz_CDensAs,         &  !(out) ±ÀÌ©ÅÙ
+          &   xyz_PTempAs,         &  !(out) æ¸©ä½
+          &   xyz_CDensAs,         &  !(out) é›²å¯†åº¦
           &   xyz_DExnerDtNs       &  !(out) 
           & )
 
       end select
 
-      ! HE-VI : Â®ÅÙ u, v ¤Î·×»».
+      ! HE-VI : é€Ÿåº¦ u, v ã®è¨ˆç®—.
       !
       call Dynamics_Short_forcing( &
         &   pyz_VelXNs,          & ! (in)
@@ -572,7 +572,7 @@ program deepconv_arare
         &   xyz_ExnerAs          & ! (out)
         & )
 
-      ! Ã»¤¤»ş´Ö¥¹¥Æ¥Ã¥×¤Î¥ë¡¼¥×¤ò²ó¤¹¤¿¤á¤Î½èÃÖ
+      ! çŸ­ã„æ™‚é–“ã‚¹ãƒ†ãƒƒãƒ—ã®ãƒ«ãƒ¼ãƒ—ã‚’å›ã™ãŸã‚ã®å‡¦ç½®
       ! Renew prognostic variables for next short time step integration.
       !
       xyz_ExnerNs  = xyz_ExnerAs
@@ -584,7 +584,7 @@ program deepconv_arare
 
     end do Euler
 
-    ! ºÇ½ªÅª¤ÊÃ»¤¤»ş´Ö¥¹¥Æ¥Ã¥×¤Ç¤ÎÃÍ¤òÄ¹¤¤»ş´Ö¥¹¥Æ¥Ã¥×¤Ç¤ÎÃÍ¤È¤ß¤Ê¤¹
+    ! æœ€çµ‚çš„ãªçŸ­ã„æ™‚é–“ã‚¹ãƒ†ãƒƒãƒ—ã§ã®å€¤ã‚’é•·ã„æ™‚é–“ã‚¹ãƒ†ãƒƒãƒ—ã§ã®å€¤ã¨ã¿ãªã™
     ! Renew prognostic variables for next long time step integration.
     !
     xyz_ExnerAl  = xyz_ExnerAs
@@ -597,7 +597,7 @@ program deepconv_arare
       xyz_CDensAl = xyz_CDensAs
     end select
 
-    ! Â®ÅÙ¾ì¤ò½é´üÂ®ÅÙ¤Ç¸ÇÄê¤¹¤ë¾ì¹ç
+    ! é€Ÿåº¦å ´ã‚’åˆæœŸé€Ÿåº¦ã§å›ºå®šã™ã‚‹å ´åˆ
     !
     select case (IDDebugMethod)
     case (IDDebugWindConst)
@@ -606,12 +606,12 @@ program deepconv_arare
       xyr_VelZAl = xyr_VelZBl
     end select
    
-    ! »ş´Ö¥Õ¥£¥ë¥¿. 
+    ! æ™‚é–“ãƒ•ã‚£ãƒ«ã‚¿. 
     ! Time filter. 
     !
     call AsselinTimeFilter 
     
-    ! ¥Ò¥¹¥È¥ê¥Õ¥¡¥¤¥ë½ĞÎÏ. »ş´Ö¥Õ¥£¥ë¥¿¤ò¤«¤±¤¿¸å¤Î¿ôÃÍ¤ò½ĞÎÏ. 
+    ! ãƒ’ã‚¹ãƒˆãƒªãƒ•ã‚¡ã‚¤ãƒ«å‡ºåŠ›. æ™‚é–“ãƒ•ã‚£ãƒ«ã‚¿ã‚’ã‹ã‘ãŸå¾Œã®æ•°å€¤ã‚’å‡ºåŠ›. 
     ! Out put to history file.
     !
     xyz_VelXNl = xyz_pyz(pyz_VelXNl)
@@ -635,9 +635,8 @@ program deepconv_arare
       call HistoryAutoPut(TimeN, trim(SpcWetSymbol(s)), xyzf_QMixNl(1:nx, 1:ny, 1:nz, s))
     end do
 
-
     !------------------------------------------
-    ! ÊİÂ¸ÎÌ¤Î½ĞÎÏ
+    ! ä¿å­˜é‡ã®å‡ºåŠ›
     ! Out put conservation variables
     !
     call EnergyMonit_exec(                    &
@@ -646,19 +645,19 @@ program deepconv_arare
       & )
     
     !----------------------------------------------------
-    ! ¥ê¥¹¥¿¡¼¥È¥Õ¥¡¥¤¥ë¤ÎºîÀ®
+    ! ãƒªã‚¹ã‚¿ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã®ä½œæˆ
     ! Make restartfile.
     !    
-    if (mod(t, NstepOutput) == 0) then 
+    if (mod(Nstep, NstepOutput) == 0) then 
 
-      ! °ÜÎ®¤ËÂĞ¤¹¤ë CFL ¾ò·ï¤Î¥Á¥§¥Ã¥¯ 
+      ! ç§»æµã«å¯¾ã™ã‚‹ CFL æ¡ä»¶ã®ãƒã‚§ãƒƒã‚¯ 
       ! CFL condtion check for advection
       !
       call CFLCheckTimeLongVelX( pyz_VelXNl ) !(in)
       call CFLCheckTimeLongVelY( xqz_VelYNl ) !(in)
       call CFLCheckTimeLongVelZ( xyr_VelZNl ) !(in)
       
-      ! ¥ê¥¹¥¿¡¼¥È¥Õ¥¡¥¤¥ë¤ËÊÑ¿ô¤ò½ĞÎÏ
+      ! ãƒªã‚¹ã‚¿ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã«å¤‰æ•°ã‚’å‡ºåŠ›
       !
       call HistoryPut( 't',     TimeN,       rstat)
       call HistoryPut( 'VelX',  pyz_VelXNl,  rstat)
@@ -682,7 +681,7 @@ program deepconv_arare
       call HistoryPut( 'CDens', xyz_CDensAl, rstat)
       call HistoryPut( 'QMix',  xyzf_QMixAl, rstat) 
       
-      ! ´ğËÜ¾ì¤Î¥Õ¥¡¥¤¥ë½ĞÎÏ
+      ! åŸºæœ¬å ´ã®ãƒ•ã‚¡ã‚¤ãƒ«å‡ºåŠ›
       !
       call HistoryPut( 'DensBZ',     xyz_DensBZ    , rstat)
       call HistoryPut( 'ExnerBZ',    xyz_ExnerBZ   , rstat)
@@ -701,7 +700,7 @@ program deepconv_arare
       
     end if
 
-    ! Ä¹¤¤»ş´Ö¥¹¥Æ¥Ã¥×¤Î¥ë¡¼¥×¤ò²ó¤¹¤¿¤á¤Î½èÃÖ.
+    ! é•·ã„æ™‚é–“ã‚¹ãƒ†ãƒƒãƒ—ã®ãƒ«ãƒ¼ãƒ—ã‚’å›ã™ãŸã‚ã®å‡¦ç½®.
     ! Renew prognostic variables for next long time step integration.
     !
     pyz_VelXBl  = pyz_VelXNl;  pyz_VelXNl  = pyz_VelXAl
@@ -713,9 +712,8 @@ program deepconv_arare
     xyz_KhBl    = xyz_KhNl;    xyz_KhNl    = xyz_KhAl
     xyz_CDensBl = xyz_CDensNl; xyz_CDensNl = xyz_CDensAl
     xyzf_QMixBl = xyzf_QMixNl; xyzf_QMixNl = xyzf_QMixAl
-    t = t + 1
 
-    ! »ş¹ï¤Î¿Ê¹Ô
+    ! æ™‚åˆ»ã®é€²è¡Œ
     ! Progress time
     !
     call TimesetProgress
@@ -723,14 +721,14 @@ program deepconv_arare
   end do
 
   !----------------------------------------------------
-  ! ½ĞÎÏ¥Õ¥¡¥¤¥ë¤Î¥¯¥í¡¼¥º
+  ! å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚¯ãƒ­ãƒ¼ã‚º
   ! Close out put files.
   !
   call HistoryFileio_finalize
   call ReStartFileio_finalize
 
   !----------------------------------------------------
-  ! CPU »ş´Ö¤Î·×Â¬½ªÎ»
+  ! CPU æ™‚é–“ã®è¨ˆæ¸¬çµ‚äº†
   ! 
   call ClocksetLoopStop
   call ClocksetClose
@@ -745,13 +743,13 @@ contains
 !-----------------------------------------------------------------------
   subroutine VariableAllocate
     !
-    !½é´ü²½¤È¤·¤Æ, ÇÛÎó¤òÄêµÁ¤·, ÃÍ¤È¤·¤Æ¥¼¥í¤òÂåÆş¤¹¤ë.
+    !åˆæœŸåŒ–ã¨ã—ã¦, é…åˆ—ã‚’å®šç¾©ã—, å€¤ã¨ã—ã¦ã‚¼ãƒ­ã‚’ä»£å…¥ã™ã‚‹.
     !
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÇÛÎó³ä¤êÅö¤Æ
+    !é…åˆ—å‰²ã‚Šå½“ã¦
     allocate( pyz_VelXBl(imin:imax,jmin:jmax,kmin:kmax) )
     allocate( pyz_VelXNl(imin:imax,jmin:jmax,kmin:kmax) )
     allocate( xyz_VelXNl(imin:imax,jmin:jmax,kmin:kmax) )
@@ -850,7 +848,7 @@ contains
     xyz_DCDensDtNl = 0.0d0
     xyzf_DQMixDtNl = 0.0d0
 
-    ! »ş´Ö¥ë¡¼¥×¤Î½é´ü²½
+    ! æ™‚é–“ãƒ«ãƒ¼ãƒ—ã®åˆæœŸåŒ–
     !
     t = 1
 
@@ -860,17 +858,17 @@ contains
   !-----------------------------------------------------------------------
   subroutine AsselinTimeFilter
     !
-    ! »ş´Ö¥Õ¥£¥ë¥¿¡¼; Asselin ¤Î¥¿¥¤¥à¥Õ¥£¥ë¥¿¡¼¤òÍøÍÑ
-    !   t = 0.0 ¤Î¾ì¹ç¤Ë¤Ï tfil = 0.0d0, ¤½¤ì°Ê³°¤Ï tfil = 1.0d-1
-    !   (t = 0 ¤Î»ş¤Ï¥ª¥¤¥é¡¼Ë¡¤Ç, ¤½¤ì°Ê³°¤Ï¥ê¡¼¥×¥Õ¥í¥Ã¥°Ë¡¤ÇÀÑÊ¬¤¹¤ë¤¿¤á)
+    ! æ™‚é–“ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼; Asselin ã®ã‚¿ã‚¤ãƒ ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã‚’åˆ©ç”¨
+    !   t = 0.0 ã®å ´åˆã«ã¯ tfil = 0.0d0, ãã‚Œä»¥å¤–ã¯ tfil = 1.0d-1
+    !   (t = 0 ã®æ™‚ã¯ã‚ªã‚¤ãƒ©ãƒ¼æ³•ã§, ãã‚Œä»¥å¤–ã¯ãƒªãƒ¼ãƒ—ãƒ•ãƒ­ãƒƒã‚°æ³•ã§ç©åˆ†ã™ã‚‹ãŸã‚)
     !
     use TimeSet, only: tfil
 
-    ! °ÅÌÛ¤Î·¿Àë¸À¶Ø»ß    
+    ! æš—é»™ã®å‹å®£è¨€ç¦æ­¢    
     !
     implicit none
 
-    ! ºî¶ÈÊÑ¿ô
+    ! ä½œæ¥­å¤‰æ•°
     !
     real(DP) :: tfil2
 
@@ -891,18 +889,18 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine MainInit
-    ! ½é´ü²½¼êÂ³¤­ ; Initialize procedure 
+    ! åˆæœŸåŒ–æ‰‹ç¶šã ; Initialize procedure 
     !    
 
-    ! °ÅÌÛ¤Î·¿Àë¸À¶Ø»ß    
+    ! æš—é»™ã®å‹å®£è¨€ç¦æ­¢    
     !
     implicit none
 
-    character(STRING) :: cfgfile ! NAMELIST ¥Õ¥¡¥¤¥ëÌ¾ ; NAMELIST fine name
+    character(STRING) :: cfgfile ! NAMELIST ãƒ•ã‚¡ã‚¤ãƒ«å ; NAMELIST fine name
     integer, parameter:: OutputRank = 0
 
-    ! gtool ¤Î¥á¥Ã¥»¡¼¥¸¤ÎÍŞÀ©
-    ! rank0 ¤Î¤ßÉ¸½à½ĞÎÏ
+    ! gtool ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®æŠ‘åˆ¶
+    ! rank0 ã®ã¿æ¨™æº–å‡ºåŠ›
     !
     call MessageSuppressMPI( OutputRank )
 
@@ -910,79 +908,79 @@ contains
     !
     call MPIWrapperInit
 
-    ! »ş´Ö·×Â¬
+    ! æ™‚é–“è¨ˆæ¸¬
     !
-    call ClocksetInit      !½é´ü²½
-    call ClocksetPreStart  !½é´ü²½¥ë¡¼¥Á¥ó·×Â¬³«»Ï
+    call ClocksetInit      !åˆæœŸåŒ–
+    call ClocksetPreStart  !åˆæœŸåŒ–ãƒ«ãƒ¼ãƒãƒ³è¨ˆæ¸¬é–‹å§‹
     
-    ! NAMELIST ¥Õ¥¡¥¤¥ëÌ¾¤ÎÆÉ¤ß¹ş¤ß
+    ! NAMELIST ãƒ•ã‚¡ã‚¤ãƒ«åã®èª­ã¿è¾¼ã¿
     ! Loading NAMELIST file.
     !
     call argset_init( cfgfile ) !(out)
 
-    ! NAMELIST ¥Õ¥¡¥¤¥ëÌ¾¤Î¥â¥¸¥å¡¼¥ë¤Ø¤ÎÅĞÏ¿
+    ! NAMELIST ãƒ•ã‚¡ã‚¤ãƒ«åã®ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã¸ã®ç™»éŒ²
     ! Loading NAMELIST file.
     !
     call NmlutilInit( cfgfile ) !(in)
     
-    ! »ş´ÖÀÑÊ¬¤Î½é´ü²½
+    ! æ™‚é–“ç©åˆ†ã®åˆæœŸåŒ–
     ! Initialization of time integration.
     !
     call timeset_init
 
-    ! ³Ê»ÒÅÀ¾ğÊó¤Î½é´ü²½
+    ! æ ¼å­ç‚¹æƒ…å ±ã®åˆæœŸåŒ–
     ! Initialization of grid arrangement.
     !
     call gridset_init
     
-    ! ²½³ØÄê¿ô¤Î½é´ü²½
+    ! åŒ–å­¦å®šæ•°ã®åˆæœŸåŒ–
     ! Initialization of chemical constatns.
     !
     call chemdata_init
 
-    ! Äê¿ô¤Î¾ğÊó¤Î½é´ü²½
+    ! å®šæ•°ã®æƒ…å ±ã®åˆæœŸåŒ–
     ! Initialization of constant variables.
     !
     call constants_init
 
-    ! ¼´¤Î¾ğÊó¤Î½é´ü²½
+    ! è»¸ã®æƒ…å ±ã®åˆæœŸåŒ–
     ! Initialization of axis variables.
     !
     call axesset_init
     
-    ! I/O ¥Õ¥¡¥¤¥ëÌ¾¤Î½é´ü²½
+    ! I/O ãƒ•ã‚¡ã‚¤ãƒ«åã®åˆæœŸåŒ–
     ! Initialization of output file name. 
     !
     call fileset_init
     
-    ! ¼¾½á²áÄø¶¦Í­ÊÑ¿ô¤Î½é´ü²½
+    ! æ¹¿æ½¤éç¨‹å…±æœ‰å¤‰æ•°ã®åˆæœŸåŒ–
     ! Initialization of common variables for moist process.
     !
     call composition_init
 
-    ! ¥Ò¥¹¥È¥ê¡¼¥Õ¥¡¥¤¥ë¡¦¥ê¥¹¥¿¡¼¥È¥Õ¥¡¥¤¥ë¤Î½é´ü²½
+    ! ãƒ’ã‚¹ãƒˆãƒªãƒ¼ãƒ•ã‚¡ã‚¤ãƒ«ãƒ»ãƒªã‚¹ã‚¿ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã®åˆæœŸåŒ–
     ! Initialize restart & history files.
     !
     call HistoryFileio_init
     call ReStartFileio_init
 
-    ! ¥Ş¡¼¥¸¥ó¤ÎÀßÄê¤Î½é´ü²½
+    ! ãƒãƒ¼ã‚¸ãƒ³ã®è¨­å®šã®åˆæœŸåŒ–
     ! Initialization of margin
     !
     call SetMargin_Init
    
-    ! ÆâÉôÊÑ¿ô¤Î½é´ü²½
+    ! å†…éƒ¨å¤‰æ•°ã®åˆæœŸåŒ–
     ! Initialization of internal variables.
     !
     call VariableAllocate
 
-    ! ¥Õ¥é¥°½èÍı
+    ! ãƒ•ãƒ©ã‚°å‡¦ç†
     !
     call CheckFlag
 
-    ! ½é´üÃÍ¤ÎÂåÆş 
-    ! * ReStartFile ¤¬ÀßÄê¤µ¤ì¤Æ¤¤¤ë¾ì¹ç¤Ë¤Ï¥Õ¥¡¥¤¥ë¤òÆÉ¤ß¹ş¤à. 
-    !   ÀßÄê¤µ¤ì¤Æ¤¤¤Ê¤¤¾ì¹ç¤Ë¤Ï¥Ç¥Õ¥©¥ë¥È¤Î´ğËÜ¾ì¤È¾ñÍğ¾ì¤òºî¤ë. 
+    ! åˆæœŸå€¤ã®ä»£å…¥ 
+    ! * ReStartFile ãŒè¨­å®šã•ã‚Œã¦ã„ã‚‹å ´åˆã«ã¯ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€. 
+    !   è¨­å®šã•ã‚Œã¦ã„ãªã„å ´åˆã«ã¯ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®åŸºæœ¬å ´ã¨æ“¾ä¹±å ´ã‚’ä½œã‚‹. 
     !
     ! Initial value set up.
     ! * Read restartfile if it is specified. If not, make default basic
@@ -990,7 +988,7 @@ contains
     !
     call MessageNotify( "M", "main", "Initial value setup." )
 
-    ! ´ğËÜ¾ì, ¾ñÍğ¾ì¤Î½é´üÃÍ¤ò netCDF ¥Õ¥¡¥¤¥ë¤«¤é¼èÆÀ¤¹¤ë.
+    ! åŸºæœ¬å ´, æ“¾ä¹±å ´ã®åˆæœŸå€¤ã‚’ netCDF ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰å–å¾—ã™ã‚‹.
     ! 
     select case (IDRestartMethod)
 
@@ -1024,55 +1022,55 @@ contains
 
     end select
 
-    ! ²½³Ø·×»»¥ë¡¼¥Á¥ó¤Î½é´ü²½
+    ! åŒ–å­¦è¨ˆç®—ãƒ«ãƒ¼ãƒãƒ³ã®åˆæœŸåŒ–
     ! Initialization of chemical routines.
     !
     call chemcalc_init
     
-    ! ¿ôÃÍËà»¤·¸¿ô¤Î½é´ü²½
+    ! æ•°å€¤æ‘©æ“¦ä¿‚æ•°ã®åˆæœŸåŒ–
     ! Initialization of numerical friction coefficient.
     !
     call Damping_Init
 
-    ! ÎÏ³Ø¥â¥¸¥å¡¼¥ë¤Î½é´ü²½
+    ! åŠ›å­¦ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®åˆæœŸåŒ–
     ! Initialization of dynamical modules
     !
     call Dynamics_init
     
-    ! Éé¤Î¼¾½áÎÌ¤ÎÊäÅ¶·×»»¤Î½é´ü²½
+    ! è² ã®æ¹¿æ½¤é‡ã®è£œå¡«è¨ˆç®—ã®åˆæœŸåŒ–
     ! Initialization of negative moist value correction.
     !
     call FillNegative_Init
    
-    ! ÊªÍı²áÄø¤Î½é´ü²½. 
-    ! ¥Õ¥é¥°¤ò¸µ¤ËÉ¬Í×¤Ê¤â¤Î¤À¤±½é´ü²½¤¹¤ë. 
+    ! ç‰©ç†éç¨‹ã®åˆæœŸåŒ–. 
+    ! ãƒ•ãƒ©ã‚°ã‚’å…ƒã«å¿…è¦ãªã‚‚ã®ã ã‘åˆæœŸåŒ–ã™ã‚‹. 
     !
     call PhysicalProcess_init
 
     !-------------------------------------------------------------
-    ! ´ğËÜ¾ì¤Î¥Õ¥¡¥¤¥ë½ĞÎÏ
+    ! åŸºæœ¬å ´ã®ãƒ•ã‚¡ã‚¤ãƒ«å‡ºåŠ›
     !
 
-    ! ¥â¥Ë¥¿ÍÑ
+    ! ãƒ¢ãƒ‹ã‚¿ç”¨
     !
     call BasicFileio_Output
     
-    ! ²»ÇÈ¤ËÂĞ¤¹¤ë CFL ¾ò·ï¤Î¥Á¥§¥Ã¥¯
+    ! éŸ³æ³¢ã«å¯¾ã™ã‚‹ CFL æ¡ä»¶ã®ãƒã‚§ãƒƒã‚¯
     ! CFL condtion check for sound wave.
     !
     call CFLCheckTimeShort( &
       & xyz_VelSoundBZ   & ! (in)
       & )
     
-    ! ÊİÂ¸ÎÌ¤Î¥â¥Ë¥¿¥ê¥ó¥°
+    ! ä¿å­˜é‡ã®ãƒ¢ãƒ‹ã‚¿ãƒªãƒ³ã‚°
     !
     call EnergyMonit_init
 
-    ! t=0 ¤«¤é¿ôÃÍÀÑÊ¬¤ò¹Ô¤¦¾ì¹ç¤Ï, ºÇ½é¤Î°ì²óÌÜ¤Ï¥ª¥¤¥é¡¼Ë¡¤òÍøÍÑ. 
+    ! t=0 ã‹ã‚‰æ•°å€¤ç©åˆ†ã‚’è¡Œã†å ´åˆã¯, æœ€åˆã®ä¸€å›ç›®ã¯ã‚ªã‚¤ãƒ©ãƒ¼æ³•ã‚’åˆ©ç”¨. 
     !
     if ( FlagInitialRun ) call TimesetDelTimeHalf
 
-    ! ½é´ü²½¥ë¡¼¥Á¥ó¤Î CPU »ş´Ö¤Î·×Â¬½ªÎ»
+    ! åˆæœŸåŒ–ãƒ«ãƒ¼ãƒãƒ³ã® CPU æ™‚é–“ã®è¨ˆæ¸¬çµ‚äº†
     !
     call ClocksetPreStop
    
@@ -1081,7 +1079,7 @@ contains
 
   subroutine CheckFlag
     !
-    ! ÀßÄê¥Õ¥¡¥¤¥ë¤Î»ØÄê¤Ë½¾¤Ã¤Æ, É¬Í×¤ÊÊªÍı²áÄø¤Î½é´ü²½¥ë¡¼¥Á¥ó¤ò¸Æ¤Ö
+    ! è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã®æŒ‡å®šã«å¾“ã£ã¦, å¿…è¦ãªç‰©ç†éç¨‹ã®åˆæœŸåŒ–ãƒ«ãƒ¼ãƒãƒ³ã‚’å‘¼ã¶
     !
 
     use dc_message,    only: MessageNotify
@@ -1089,15 +1087,15 @@ contains
 
     implicit none
 
-    integer            :: unit                    !ÁõÃÖÈÖ¹æ
-    character(STRING)  :: FlagTurbMethod    = ""  !ÍğÎ®³È»¶¤Ë´Ø¤¹¤ëÀßÄê
-    character(STRING)  :: FlagRadMethod     = ""  !Êü¼Í¤Ë´Ø¤¹¤ëÀßÄê
-    character(STRING)  :: FlagCloudMethod   = ""  !±ÀÈùÊªÍı¤Ë´Ø¤¹¤ëÀßÄê
-    character(STRING)  :: FlagSurfaceMethod = ""  !ÃÏÉ½ÌÌ²áÄø¤Ë´Ø¤¹¤ëÀßÄê
-    character(STRING)  :: FlagWindMethod    = ""  !Â®ÅÙ¾ì¤Ë´Ø¤¹¤ëÀßÄê
-    character(STRING)  :: FlagDebugMethod   = ""  !¥Ç¥Ğ¥Ã¥°ÍÑ¤Î¥Õ¥é¥°
-    character(STRING)  :: FlagRestartMethod = ""  !ÆÉ¤ß¹ş¤à¥ê¥¹¥¿¡¼¥È¥Õ¥¡¥¤¥ë¤Î·Á¼°
-    character(STRING)  :: FlagDampingMethod = ""  !¥À¥ó¥Ô¥ó¥°¤Ë´Ø¤¹¤ëÀßÄê
+    integer            :: unit                    !è£…ç½®ç•ªå·
+    character(STRING)  :: FlagTurbMethod    = ""  !ä¹±æµæ‹¡æ•£ã«é–¢ã™ã‚‹è¨­å®š
+    character(STRING)  :: FlagRadMethod     = ""  !æ”¾å°„ã«é–¢ã™ã‚‹è¨­å®š
+    character(STRING)  :: FlagCloudMethod   = ""  !é›²å¾®ç‰©ç†ã«é–¢ã™ã‚‹è¨­å®š
+    character(STRING)  :: FlagSurfaceMethod = ""  !åœ°è¡¨é¢éç¨‹ã«é–¢ã™ã‚‹è¨­å®š
+    character(STRING)  :: FlagWindMethod    = ""  !é€Ÿåº¦å ´ã«é–¢ã™ã‚‹è¨­å®š
+    character(STRING)  :: FlagDebugMethod   = ""  !ãƒ‡ãƒãƒƒã‚°ç”¨ã®ãƒ•ãƒ©ã‚°
+    character(STRING)  :: FlagRestartMethod = ""  !èª­ã¿è¾¼ã‚€ãƒªã‚¹ã‚¿ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã®å½¢å¼
+    character(STRING)  :: FlagDampingMethod = ""  !ãƒ€ãƒ³ãƒ”ãƒ³ã‚°ã«é–¢ã™ã‚‹è¨­å®š
 
     NAMELIST /deepconv_main_nml / &
       & FlagTurbMethod,           &
@@ -1109,7 +1107,7 @@ contains
       & FlagRestartMethod,        &
       & FlagDampingMethod
 
-    ! ¥Ç¥Õ¥©¥ë¥ÈÃÍ¤ÎÀßÄê
+    ! ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå€¤ã®è¨­å®š
     ! Default values settings
     !
     FlagTurbMethod       = "Nothing"
@@ -1140,7 +1138,9 @@ contains
     FlagRestartMethod    = "Arare6"
 !!$    FlagRestartMethod = "Arare4"
 
-    FlagDampingMethod    = "SpongeLayer"
+!!$    FlagDampingMethod    = "Nothing"
+    !æ•´åˆæ€§ã®ãŸã‚ã«ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå€¤ã‚’ "SpongeLayer" ã«è¨­å®š. 
+    FlagDampingMethod    = "SpongeLayer"  
 !!$    FlagDampingMethod    = "SpongeLayerMeanFlow"
 
     
@@ -1309,23 +1309,34 @@ contains
 
 
   subroutine turbulence_integrate
+
+    ! ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«å‘¼ã³å‡ºã—
     !
-    ! Km ¤ÎÀÑÊ¬ (leap-frog)
+    use timeset,              only : DelTimeLong
+    use setmargin,            only : SetMargin_xyz
+    use Turbulence_kw1978_v2, only : KmMax
+
+    ! æš—é»™ã®å‹å®£è¨€ç¦æ­¢
+    !
+    implicit none
+
+    !
+    ! Km ã®ç©åˆ† (leap-frog)
     !
     xyz_KmAl = xyz_KmBl + 2.0d0 * DelTimeLong * xyz_DKmDtNl
 
-    ! ÃÍ¤Î¾å¸Â²¼¸Â¤ÎÀßÄê
-    !  * ÃÍ¤ÏÀµ¤Ë¤Ê¤ë¤³¤È¤òÊİ¾Ú¤¹¤ë
+    ! å€¤ã®ä¸Šé™ä¸‹é™ã®è¨­å®š
+    !  * å€¤ã¯æ­£ã«ãªã‚‹ã“ã¨ã‚’ä¿è¨¼ã™ã‚‹
     !
     ! Upper and lower bound value are specified.
     !
     xyz_KmAl = max( 0.0d0, min( xyz_KmAl, KmMax ) )
     
-    ! ¶­³¦¾ò·ï ; Boundary condition
+    ! å¢ƒç•Œæ¡ä»¶ ; Boundary condition
     !
     call SetMargin_xyz( xyz_KmAl )  
 
-    ! ¥¹¥«¥é¡¼¤ËÂĞ¤¹¤ë±²³È»¶·¸¿ô¤Î·×»» 
+    ! ã‚¹ã‚«ãƒ©ãƒ¼ã«å¯¾ã™ã‚‹æ¸¦æ‹¡æ•£ä¿‚æ•°ã®è¨ˆç®— 
     ! Specify turbulent diffusion coefficient for scalar variables.
     !
     xyz_KhAl = 3.0d0 * xyz_KmAl
@@ -1335,12 +1346,22 @@ contains
 
 
   subroutine PTemp_integrate
+
+    ! ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«å‘¼ã³å‡ºã—
     !
-    ! ²¹°Ì¤ÎÀÑÊ¬ (leap-frog)
+    use timeset,   only: DelTimeLong
+    use setmargin, only : SetMargin_xyz
+
+    ! æš—é»™ã®å‹å®£è¨€ç¦æ­¢
+    !
+    implicit none
+    
+    !
+    ! æ¸©ä½ã®ç©åˆ† (leap-frog)
     !
     xyz_PTempAl = xyz_PTempBl + 2.0d0 * DelTimeLong * xyz_DPTempDtNl
 
-    ! ¶­³¦¾ò·ï ; Boundary condition
+    ! å¢ƒç•Œæ¡ä»¶ ; Boundary condition
     !
     call SetMargin_xyz( xyz_PTempAl )  
 
@@ -1350,25 +1371,37 @@ contains
 
   subroutine QMix_integrate
 
+    ! ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«å‘¼ã³å‡ºã—
+    !
+    use timeset,      only : DelTimeLong
+    use setmargin,    only : SetMargin_xyzf
+    use fillnegative, only : xyza_FillNegative_xyza
+
+    ! æš—é»™ã®å‹å®£è¨€ç¦æ­¢
+    !
+    implicit none
+
+    ! ä½œæ¥­å¤‰æ•°
+    !    
     real(DP) :: xyzf_QMixWork(imin:imax,jmin:jmax,kmin:kmax,ncmax) 
     real(DP) :: xyzf_DQMixDt1(imin:imax,jmin:jmax,kmin:kmax,ncmax) 
 
     !
-    ! º®¹çÈæ¤ÎÀÑÊ¬ (leap-frog)
+    ! æ··åˆæ¯”ã®ç©åˆ† (leap-frog)
     !
     xyzf_QMixAl = xyzf_QMixBl + 2.0d0 * DelTimeLong * xyzf_DQMixDtNl
     
-    ! ¶­³¦¾ò·ï ; Boundary condition
+    ! å¢ƒç•Œæ¡ä»¶ ; Boundary condition
     !
     call SetMargin_xyzf( xyzf_QMixAl )  
 
-    ! °ÜÎ®¤Ë¤è¤Ã¤ÆÉé¤Ë¤Ê¤Ã¤¿ÉôÊ¬¤òËä¤á¤ë
+    ! ç§»æµã«ã‚ˆã£ã¦è² ã«ãªã£ãŸéƒ¨åˆ†ã‚’åŸ‹ã‚ã‚‹
     ! Negative values due to advection are corrected.
     !
     xyzf_QMixWork = xyzf_QMixAl
     xyzf_QMixAl   = xyza_FillNegative_xyza( xyzf_QMixWork ) 
     
-    ! Ëä¤á¤¿/ºï¤Ã¤¿ÎÌ¤òÊİ´É. Ã±°Ì»ş´ÖÅö¤¿¤ê¤ÎÎÌ¤ËÊÑ´¹. 
+    ! åŸ‹ã‚ãŸ/å‰Šã£ãŸé‡ã‚’ä¿ç®¡. å˜ä½æ™‚é–“å½“ãŸã‚Šã®é‡ã«å¤‰æ›. 
     ! Correction value is stored.
     !
     xyzf_DQMixDt1 = (xyzf_QMixAl - xyzf_QMixWork) / ( 2.0d0 * DelTimeLong )
@@ -1376,7 +1409,7 @@ contains
       call HistoryAutoPut(TimeN, 'D'//trim(SpcWetSymbol(s))//'DtFill1', xyzf_DQMixDt1(1:nx,1:ny,1:nz,s))
     end do
     
-    ! Ëä¤áÀÚ¤ì¤Ê¤«¤Ã¤¿ÉôÊ¬¤ò¥¼¥í¤Ë¤¹¤ë. Fill2 ¤ËÊİ´É
+    ! åŸ‹ã‚åˆ‡ã‚Œãªã‹ã£ãŸéƒ¨åˆ†ã‚’ã‚¼ãƒ­ã«ã™ã‚‹. Fill2 ã«ä¿ç®¡
     ! Negative values mixing ratios are corrected.
     !
     xyzf_QMixWork = xyzf_QMixAl
@@ -1388,7 +1421,7 @@ contains
       call HistoryAutoPut(TimeN, 'D'//trim(SpcWetSymbol(s))//'DtFill2', xyzf_DQMixDt1(1:nx,1:ny,1:nz,s))
     end do
     
-    ! ¶­³¦¾ò·ï Boundary condition
+    ! å¢ƒç•Œæ¡ä»¶ Boundary condition
     !
     call SetMargin_xyzf( xyzf_QMixAl )  ! (inout)   
          

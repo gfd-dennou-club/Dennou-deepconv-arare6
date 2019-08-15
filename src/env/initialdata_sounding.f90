@@ -1,4 +1,4 @@
-! ¥µ¥¦¥ó¥Ç¥£¥ó¥°¥Õ¥¡¥¤¥ë¤«¤é½é´ü¾ì¤ò·è¤á¤ë¤¿¤á¤Î¥µ¥Ö¥ë¡¼¥Á¥ó
+! ã‚µã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰åˆæœŸå ´ã‚’æ±ºã‚ã‚‹ãŸã‚ã®ã‚µãƒ–ãƒ«ãƒ¼ãƒãƒ³
 !
 ! Authors::   SUGIYAMA Koichiro, ODAKA Masatsugu
 ! Version::   $Id: initialdata_sounding.f90,v 1.8 2014/07/08 00:59:09 sugiyama Exp $
@@ -9,21 +9,21 @@
 
 module initialdata_sounding
   !
-  ! ¥µ¥¦¥ó¥Ç¥£¥ó¥°¥Õ¥¡¥¤¥ë¤«¤é½é´ü¾ì¤ò·è¤á¤ë¤¿¤á¤Î¥µ¥Ö¥ë¡¼¥Á¥ó
-  ! ¥µ¥¦¥ó¥Ç¥£¥ó¥°¥Õ¥¡¥¤¥ë¤Ï¥Æ¥­¥¹¥È¥Õ¥¡¥¤¥ë¤Ç½ñ¤«¤ì¤Æ¤¤¤ë. 
-  ! ¾­ÍèÅª¤Ë¤Ï netCDF ¤ËÊÑ¹¹¤¹¤ëÍ½Äê.
+  ! ã‚µã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰åˆæœŸå ´ã‚’æ±ºã‚ã‚‹ãŸã‚ã®ã‚µãƒ–ãƒ«ãƒ¼ãƒãƒ³
+  ! ã‚µã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã¯ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã§æ›¸ã‹ã‚Œã¦ã„ã‚‹. 
+  ! å°†æ¥çš„ã«ã¯ netCDF ã«å¤‰æ›´ã™ã‚‹äºˆå®š.
   !
 
-  !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
-  use dc_types, only: DP
+  !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
+  use dc_types, only: DP, STRING
+  use gtool_history, only : GT_HISTORY
   
-  !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+  !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
   implicit none
 
-  !¶¦ÄÌÊÑ¿ô
+  !å…±é€šå¤‰æ•°
   real(DP), save, private :: r_tmpAlt(10000)
   real(DP), save, private :: r_tmpTemp(10000)
-  real(DP), save, private :: r_tmpPress(10000)
   real(DP), save, private :: r_tmpPTemp(10000)
   real(DP), save, private :: r_tmpVelX(10000)
   real(DP), save, private :: r_tmpVelY(10000)
@@ -33,7 +33,20 @@ module initialdata_sounding
   real(DP), save, private :: DelAlt = 4.0d3
   integer,  save, private :: NumRec = 0
 
-  !¸ø³«ÊÑ¿ô
+  integer,  save, private :: AltCol   = 0
+  integer,  save, private :: TempCol  = 0
+  integer,  save, private :: PTempCol = 0
+  integer,  save, private :: VelXCol  = 0
+  integer,  save, private :: VelYCol  = 0
+
+  integer , save, private :: NumVIRA = 23
+  real(DP), save, private :: r_viraTemp(23)
+  real(DP), save, private :: r_viraAlt(23)
+
+  type(GT_HISTORY),  save, private :: rstat
+  character(STRING), save, private :: OutputFile  = "BasicZ.Sounding.nc"
+
+  !å…¬é–‹å¤‰æ•°
   public  initialdata_sounding_init
   public  initialdata_sounding_basic
   public  initialdata_sounding_wind
@@ -43,24 +56,19 @@ contains
 !!!------------------------------------------------------------------------------!!!
   subroutine initialdata_sounding_init
     !
-    !¥Õ¥¡¥¤¥ë¤«¤é¥µ¥¦¥ó¥Ç¥£¥ó¥°¥Ç¡¼¥¿¤òÆÉ¤ß¹ş¤à
+    !ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ã‚µã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã‚€
     !
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,      only: DP
     use dc_iounit,     only: FileOpen      
     use namelist_util, only: namelist_filename
     
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
     
-    !ÆâÉôÊÑ¿ô
-    integer             :: AltCol = 0
-    integer             :: TempCol = 0
-    integer             :: PressCol = 0
-    integer             :: VelXCol = 0
-    integer             :: VelYCol = 0
-    integer             :: unit         !ÀßÄê¥Õ¥¡¥¤¥ëÍÑÁõÃÖÈÖ¹æ  
+    !å†…éƒ¨å¤‰æ•°
+    integer             :: unit         !è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ç”¨è£…ç½®ç•ªå·  
     integer             :: io
     character(30)       :: SoundingFile    
     
@@ -68,51 +76,53 @@ contains
     character(len=100)  :: buf, eachcol(maxch)
     integer             :: num, MaxCol
     
-    !ÀßÄê¥Õ¥¡¥¤¥ë¤«¤éÆÉ¤ß¹ş¤à½ĞÎÏ¥Õ¥¡¥¤¥ë¾ğÊó
+    !è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰èª­ã¿è¾¼ã‚€å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«æƒ…å ±
     !
-    NAMELIST /initialdata_sounding_nml/ SoundingFile, AltCol, TempCol, PressCol, VelXCol, VelYCol, TempTr, AltTr, DelAlt    
+    NAMELIST /initialdata_sounding_nml/ SoundingFile, AltCol, TempCol, PTempCol, VelXCol, VelYCol, TempTr, AltTr, DelAlt    
 
-    !ÀßÄê¥Õ¥¡¥¤¥ë¤«¤éÆÉ¤ß¹ş¤ß
+    !è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰èª­ã¿è¾¼ã¿
     !
     call FileOpen(unit, file=namelist_filename, mode='r')
     read(unit, NML=initialdata_sounding_nml)
     close(unit)
 
-    ! ½é´ü²½
+    ! åˆæœŸåŒ–
     !
     io = 0
     NumRec = 0
-    MaxCol = max( AltCol, max( TempCol, PressCol ) )
-    r_tmpAlt  = 0.0d0; r_tmpTemp = 0.0d0; r_tmpPress = 0.0d0; 
-    r_tmpVelX = 0.0d0; r_tmpVelY = 0.0d0
+    MaxCol = max( AltCol, TempCol )
+    r_tmpAlt  = 0.0d0; r_tmpTemp = 0.0d0
+    r_tmpVelX = 0.0d0; r_tmpVelY = 0.0d0; r_tmpPTemp = 0.0d0; 
 
-    ! ¥Õ¥¡¥¤¥ë¤Î¥ª¡¼¥×¥ó
+    ! ãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚ªãƒ¼ãƒ—ãƒ³
     !
     open (17, file=SoundingFile, status='old')
     
-    ! ¥Õ¥¡¥¤¥ë¸Æ¤Ó½Ğ¤·
+    ! ãƒ•ã‚¡ã‚¤ãƒ«å‘¼ã³å‡ºã—
     !
     do while ( io == 0 ) 
-      ! 1 ¹ÔÊ¬ÆÉ¤ß½Ğ¤·
+      ! 1 è¡Œåˆ†èª­ã¿å‡ºã—
       !
       read (17, '(a)', IOSTAT=io) buf
       
-      ! ¹Ô¤ò¥«¥ó¥Ş¶èÀÚ¤ê¤ÇÊ¬³ä
+!!      write(*,*) buf
+
+      ! è¡Œã‚’ã‚«ãƒ³ãƒåŒºåˆ‡ã‚Šã§åˆ†å‰²
       !
       call devidecsv( buf, eachcol, maxch, num )
-      
-      ! num ¤ÎÃÍ¤¬¾®¤µ¤¤¤â¤Î¤Ï¥Ø¥Ã¥À¤È¤ß¤Ê¤¹. 
+
+      ! num ã®å€¤ãŒå°ã•ã„ã‚‚ã®ã¯ãƒ˜ãƒƒãƒ€ã¨ã¿ãªã™. 
       !
       if (num >= MaxCol) then 
-        ! ¹Ô¿ô¤Î·×»»
+        ! è¡Œæ•°ã®è¨ˆç®—
         !
-        NumRec = NumRec + 1        
+        NumRec = NumRec + 1
 
-        ! ÃÍ¤ÎÂåÆş
+        ! å€¤ã®ä»£å…¥
         !
-        if (AltCol > 0)   read( eachcol(AltCol)(1:len_trim(eachcol(AltCol))), *)    r_tmpAlt(NumRec) 
+        if (AltCol > 0)   read( eachcol(AltCol)(1:len_trim(eachcol(AltCol))), *)     r_tmpAlt(NumRec) 
         if (TempCol > 0)  read( eachcol(TempCol)(1:len_trim(eachcol(TempCol))), *)   r_tmpTemp(NumRec)   
-        if (PressCol > 0) read( eachcol(PressCol)(1:len_trim(eachcol(PressCol))), *) r_tmpPress(NumRec) 
+        if (PTempCol > 0) read( eachcol(PTempCol)(1:len_trim(eachcol(PTempCol))), *) r_tmpPTemp(NumRec)   
         if (VelXCol > 0)  read( eachcol(VelXCol)(1:len_trim(eachcol(VelXCol))), *)   r_tmpVelX(NumRec)   
         if (VelYCol > 0)  read( eachcol(VelYCol)(1:len_trim(eachcol(VelYCol))), *)   r_tmpVelY(NumRec) 
 
@@ -120,9 +130,27 @@ contains
 
     end do
 
-    ! ¥Õ¥¡¥¤¥ë¤Î¥¯¥í¡¼¥º
+!!    write(*,*) r_tmpAlt(1:100)
+!!    write(*,*) r_tmpTemp(1:100)
+
+    ! ãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚¯ãƒ­ãƒ¼ã‚º
     !
     close (17)    
+
+    ! VIRA ãƒ‡ãƒ¼ã‚¿
+    ! æœ¬æ¥ã¯ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ä¸ãˆã‚‹ã¹ãã ãŒãƒ†ã‚¹ãƒˆã¨ã—ã¦. 
+    !
+    r_viraTemp = (/241.0d0, 235.4d0, 229.8d0, 224.1d0, 218.6d0, &
+      &            212.1d0, 205.3d0, 197.1d0, 189.9d0, 183.8d0, &
+      &            178.2d0, 173.6d0, 169.4d0, 167.2d0, 167.2d0, &
+      &            169.2d0, 172.0d0, 175.4d0, 178.0d0, 189.0d0, &
+      &            206.0d0, 225.0d0, 246.5d0 /)
+    r_viraAlt = (/ 66000.0d0,  68000.0d0,  70000.0d0,  72000.0d0,  74000.0d0, &
+      &            76000.0d0,  78000.0d0,  80000.0d0,  82000.0d0,  84000.0d0, &
+      &            86000.0d0,  88000.0d0,  90000.0d0,  92000.0d0,  94000.0d0, &
+      &            96000.0d0,  98000.0d0, 100000.0d0, 110000.0d0, 120000.0d0, &
+      &           130000.0d0, 140000.0d0, 150000.0d0 /)
+
 
   end subroutine initialdata_sounding_init
 
@@ -130,105 +158,205 @@ contains
 !!!------------------------------------------------------------------------------!!!
   subroutine  initialdata_sounding_basic( z_Temp, z_Press )
     !
-    ! ¥µ¥¦¥ó¥Ç¥£¥ó¥°¥Ç¡¼¥¿¤«¤é´ğËÜ¾ì¤òºîÀ®¤¹¤ë
+    ! ã‚µã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰åŸºæœ¬å ´ã‚’ä½œæˆã™ã‚‹
     !
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types,  only: DP
-    use gridset,   only: kmin, kmax,       &!ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
-      &                  nz                 !ÊªÍıÎÎ°è¤ÎÂç¤­¤µ (Z Êı¸ş)
-    use axesset,   only: r_Z, z_Z,         &!¹âÅÙ
-      &                  dz                 !³Ê»Ò´Ö³Ö (Z Êı¸ş)
+    use gridset,   only: kmin, kmax,       &!é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
+      &                  nz                 !ç‰©ç†é ˜åŸŸã®å¤§ãã• (Z æ–¹å‘)
+    use axesset,   only: r_Z, z_Z,         &!é«˜åº¦
+      &                  dz                 !æ ¼å­é–“éš” (Z æ–¹å‘)
     use constants, only: Grav,             &
-      &                  GasRDry
+      &                  GasRDry,          &
+      &                  PressSfc, PressBasis, &
+      &                  CpDry
     
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
-    real(DP), intent(out):: z_Press(kmin:kmax)           !°µÎÏ
-    real(DP), intent(out):: z_Temp(kmin:kmax)            !²¹ÅÙ
-    real(DP)             :: r_Press(kmin:kmax)           !°µÎÏ
-    real(DP)             :: r_Temp(kmin:kmax)            !²¹ÅÙ
+    !å¤‰æ•°å®šç¾©
+    real(DP), intent(out):: z_Press(kmin:kmax)           !åœ§åŠ›
+    real(DP), intent(out):: z_Temp(kmin:kmax)            !æ¸©åº¦
+    real(DP)             :: r_Press(kmin:kmax)           !åœ§åŠ›
+    real(DP)             :: r_Temp(kmin:kmax)            !æ¸©åº¦
+    real(DP)             :: z_PTemp(kmin:kmax)           !æ¸©ä½
+    real(DP)             :: r_PTemp(kmin:kmax)           !æ¸©ä½
+    real(DP)             :: z_Stab(kmin:kmax)            !å®‰å®šåº¦
+    real(DP)             :: Dens                         !å¯†åº¦
     real(DP)             :: z_DTempDZ(kmin:kmax)
     real(DP)             :: DTempDZ
     real(DP)             :: ratio
-    integer              :: i, k, k1, k2
-    logical              :: flag
+    integer              :: i, k, k1, k2, kmax2
 
-    ! ½é´ü²½
+    ! åˆæœŸåŒ–
     !
+    z_PTemp = 0.0d0
+    r_PTemp = 0.0d0
     z_Temp  = 0.0d0
     r_Temp  = 0.0d0
     z_Press = 0.0d0
     r_Press = 0.0d0
+    z_Stab  = 0.0d0
 
-    flag = .false. 
-
-    ! Àş·ÁÊä´°
-    !
+    !!
+    !! ç·šå½¢è£œå®Œ
+    !!
     do k = kmin, kmax
-      do i = 1, NumRec
-        if ( r_tmpAlt(i) <= r_Z(k) .AND. r_Z(k) < r_tmpAlt(i+1) ) then 
+      do i = 1, NumRec - 1 
+        if ( r_tmpAlt(i) == r_Z(k) ) then 
+          if (PTempCol > 0) r_PTemp(k) = r_tmpPTemp(i)
+          if (TempCol  > 0) r_Temp(k)  = r_tmpTemp(i) 
+        elseif ( r_tmpAlt(i) < r_Z(k) .AND. r_Z(k) <= r_tmpAlt(i+1) ) then 
           ratio = ( r_Z(k) - r_tmpAlt(i) ) / ( r_tmpAlt(i+1) - r_tmpAlt(i) ) 
-          r_Temp(k)  = r_tmpTemp(i)  + ( r_tmpTemp(i+1) - r_tmpTemp(i) )   * ratio
-          r_Press(k) = r_tmpPress(i) + ( r_tmpPress(i+1) - r_tmpPress(i) ) * ratio
+          if (PTempCol > 0) r_PTemp(k) = r_tmpPTemp(i) + ( r_tmpPTemp(i+1) - r_tmpPTemp(i) ) * ratio
+          if (TempCol  > 0) r_Temp(k)  = r_tmpTemp(i)  + ( r_tmpTemp(i+1)  - r_tmpTemp(i)  ) * ratio
         end if
       end do
     end do
 
-    ! ¥Ç¡¼¥¿ÆÉ¤ß¹ş¤ß  
-    ! ¤¦¤Ş¤¯È¾³Ê»Ò¤Ë¹ç¤¦¾ì¹ç¤â¤¢¤ë¤Î¤Ç, ¤½¤Î¾ì¹ç¤Ï¥Ç¡¼¥¿¤òÍ¥Àè. 
-    !    
     do k = kmin, kmax
-      do i = 1, NumRec
-        if ( z_Z(k) == r_tmpAlt(i) ) then 
-          flag = .true. 
-          z_Temp(k) = r_tmpTemp(i)
-          z_Press(k) = r_tmpPress(i)
+      do i = 1, NumRec - 1 
+        if ( r_tmpAlt(i) == z_Z(k) ) then 
+          if (PTempCol > 0) z_PTemp(k) = r_tmpPTemp(i)
+          if (TempCol  > 0) z_Temp(k)  = r_tmpTemp(i) 
+        elseif ( r_tmpAlt(i) < z_Z(k) .AND. z_Z(k) <= r_tmpAlt(i+1) ) then 
+          ratio = ( z_Z(k) - r_tmpAlt(i) ) / ( r_tmpAlt(i+1) - r_tmpAlt(i) ) 
+          if (PTempCol > 0) z_PTemp(k) = r_tmpPTemp(i) + ( r_tmpPTemp(i+1) - r_tmpPTemp(i) ) * ratio
+          if (TempCol  > 0) z_Temp(k)  = r_tmpTemp(i)  + ( r_tmpTemp(i+1)  - r_tmpTemp(i)  ) * ratio
         end if
       end do
     end do
-    
-    ! r => z ¤ÎÊÑ´¹
-    ! 
-    if (.NOT. flag) then 
-      do k = kmin+1, kmax
-        z_Temp(k)  = ( r_Temp(k-1)  + r_Temp(k)  ) / 2.0d0
-        z_Press(k) = ( r_Press(k-1) + r_Press(k) ) / 2.0d0
+
+!!    do k = kmin+1, kmax
+!!      if (PTempCol > 0) z_PTemp(k) = ( r_PTemp(k-1) + r_PTemp(k) ) * 5.0d-1
+!!      if (TempCol  > 0) z_Temp(k)  = ( r_Temp(k-1)  + r_Temp(k)  ) * 5.0d-1
+!!    end do
+
+    !! ãƒ‡ãƒ¼ã‚¿ã®å…¥ã£ã¦ã„ã‚‹é…åˆ—ã‚µã‚¤ã‚ºã‚’å¾—ã‚‹
+    !!
+    kmax2 = nz
+    do k = 1, nz      
+      if ( max( r_Temp(k), r_PTemp(k) ) == 0.0d0 ) then 
+        kmax2 = k - 1
+        exit
+      end if
+    end do
+
+    !! é™æ°´åœ§å¹³è¡¡ã‹ã‚‰åŸºæœ¬å ´ã®åœ§åŠ›ã‚’ä½œã‚Šç›´ã™
+    !! é«˜åº¦ãƒ»æ¸©åº¦ => æ°—åœ§
+    !!
+    if ( TempCol > 0 ) then 
+      r_Press(0) = PressSfc
+      z_Press(1) = r_Press(0) * exp( - Grav * dz * 0.5d0 / GasRDry / r_Temp(0) )
+
+      do k = 1, kmax2
+        z_Press(k+1) = z_Press(k) * exp( - Grav * dz / GasRDry / r_Temp(k) )
+      end do
+
+      ! å¿µã®ç‚ºã«æ¸©ä½ã‚’è¨ˆç®—ã—ã¦ãŠã
+      !
+      do k = 1, kmax2
+        z_PTemp(k) = z_Temp(k) * (PressBasis / z_Press(k)) ** (GasRDry / CpDry) 
       end do
     end if
-  
+
+    
+    !! é™æ°´åœ§å¹³è¡¡ã‹ã‚‰åŸºæœ¬å ´ã®åœ§åŠ›ã¨æ¸©åº¦ã‚’ä½œã‚Šç›´ã™
+    !! é«˜åº¦ãƒ»æ¸©ä½ => æ¸©åº¦ãƒ»æ°—åœ§
+    !!
+    if ( PTempCol > 0 ) then 
+      r_Press(0) = PressSfc
+      r_Temp(0)  = ( PressBasis / r_Press(0) ) ** ( - GasRDry / CpDry ) * r_PTemp(0)
+      
+      do k = 1, kmax2
+        Dens = r_Press(k-1) * ( (r_Press(k-1) / PressBasis )**(- GasRDry / CpDry)) / GasRDry / r_PTemp(k-1)
+        z_Press(k) = r_Press(k-1) + ( - Dens * Grav ) * ( dz * 0.5d0 )
+        z_Temp(k)  = ( PressBasis / z_Press(k) ) ** ( - GasRDry / CpDry ) * z_PTemp(k)
+
+        Dens = z_Press(k) * ( (z_Press(k) / PressBasis )**(- GasRDry / CpDry)) / GasRDry / z_PTemp(k)
+        r_Press(k) = z_Press(k) + ( - Dens * Grav ) * ( dz * 0.5d0 )
+        r_Temp(k)  = ( PressBasis / r_Press(k) ) ** ( - GasRDry / CpDry ) * r_PTemp(k)       
+      end do
+    end if
+
+    !! ã‚µã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã§ä¸ãˆãŸé«˜åº¦ã‚ˆã‚Šä¸Šç©ºã®å‡¦ç†
+    !! VIRA ãƒ‡ãƒ¼ã‚¿ã‚’ä½¿ã†å ´åˆ
+    !!
+    if ( kmax2 < nz ) then 
+
+      do k = kmax2+1, kmax
+
+        if ( r_viraAlt(1) >= r_Z(k) ) then 
+          ratio = ( r_Z(k) - r_Z(kmax2) ) / ( r_viraAlt(1) - r_Z(kmax2) ) 
+          r_Temp(k)  = r_Temp(kmax2)  + ( r_viraTemp(1)  - r_Temp(kmax2)  ) * ratio
+        else
+          do i = 1, NumVIRA-1
+            if ( r_viraAlt(i) == r_Z(k) ) then 
+              r_Temp(k)  = r_viraTemp(i) 
+            elseif ( r_viraAlt(i) < r_Z(k) .AND. r_Z(k) <= r_viraAlt(i+1) ) then 
+              ratio = ( r_Z(k) - r_viraAlt(i) ) / ( r_viraAlt(i+1) - r_viraAlt(i) ) 
+              r_Temp(k)  = r_viraTemp(i)  + ( r_viraTemp(i+1)  - r_viraTemp(i)  ) * ratio
+            end if
+          end do
+        end if
+        
+        z_Temp(k)  = ( r_Temp(k-1) + r_Temp(k) ) * 5.0d-1    
+        z_Press(k) = z_Press(k-1) * exp( - Grav * dz / GasRDry / r_Temp(k-1) )
+      end do
+    end if
+
+!!    do k = 1, nz
+!!      write(*,*) k, z_Z(k), z_Temp(k)
+!!      write(*,*) k, r_Z(k), r_Temp(k)
+!!    end do
+
+
+    !! å®‰å®šåº¦ã®è¨ˆç®—
+    !!
+    do k = 1, nz
+      z_Stab(k) = Grav / z_Temp(k)                  &
+        &    * (                                    &
+        &       + (r_Temp(k) - r_Temp(k-1)) / dz    &
+        &       + Grav / CpDry                      &
+        &      )   
+    end do
+    
+    !! ã‚µã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒ‡ãƒ¼ã‚¿ã®ãƒ•ã‚¡ã‚¤ãƒ«å‡ºåŠ›
+    !!
+    call CheckOutput
+
+
 !!!
-!!! ·÷³¦ÌÌ¤¬Â¸ºß¤¹¤ë¾ì¹ç¤Ë¤Ï, ¤½¤³¤Ç¤Î²¹ÅÙ¸ûÇÛ¤ò´Ë¤ä¤«¤Ë¤¹¤ë.
+!!! åœç•Œé¢ãŒå­˜åœ¨ã™ã‚‹å ´åˆã«ã¯, ãã“ã§ã®æ¸©åº¦å‹¾é…ã‚’ç·©ã‚„ã‹ã«ã™ã‚‹.
 !!!
     if ( AltTr > z_Z(1) .AND. AltTr < z_Z(nz) ) then
 
-      ! ¸½ºß¤Î²¹ÅÙÊ¬ÉÛ¤Î¸ûÇÛ¤ò¼è¤ë
+      ! ç¾åœ¨ã®æ¸©åº¦åˆ†å¸ƒã®å‹¾é…ã‚’å–ã‚‹
       !
       do k = 1, kmax
         z_DTempDZ(k) = (z_Temp(k) - z_Temp(k-1)) / dz
       end do
       
-      ! ÂĞÎ®·÷³¦ÌÌ¤è¤ê¾å¤Î°·¤¤. »ØÄê¤µ¤ì¤¿¹âÅÙ¤Î²¹ÅÙ¸ºÎ¨¤ò»È¤¤Â³¤±¤ë. 
+      ! å¯¾æµåœç•Œé¢ã‚ˆã‚Šä¸Šã®æ‰±ã„. æŒ‡å®šã•ã‚ŒãŸé«˜åº¦ã®æ¸©åº¦æ¸›ç‡ã‚’ä½¿ã„ç¶šã‘ã‚‹. 
       !
       k1 = minloc( z_Z, 1, z_Z > AltTr ) 
       
-      ! ²¹ÅÙ¸ºÎ¨
+      ! æ¸©åº¦æ¸›ç‡
       !
       DTempDZ = z_DTempDZ(k1-1)
-      k2 = int( DelAlt / dz )    !À°¿ô·¿¤ØÊÑ´¹
+      k2 = int( DelAlt / dz )    !æ•´æ•°å‹ã¸å¤‰æ›
       
       do k = k1, kmax
         
-        ! ²¹ÅÙ¸»Î¨¤ò¥¼¥í¤Ë¶á¤Å¤±¤ë. 
+        ! æ¸©åº¦æºç‡ã‚’ã‚¼ãƒ­ã«è¿‘ã¥ã‘ã‚‹. 
         !
         DTempDZ = min( -1.0d-14, DTempDZ - DTempDZ / k2 * ( k - k1 ) )
         
-        !´ğËÜ¾ì¤Î²¹ÅÙ¤ò·è¤á¤ë
+        !åŸºæœ¬å ´ã®æ¸©åº¦ã‚’æ±ºã‚ã‚‹
         z_Temp(k) = z_Temp(k-1) + DTempDZ * dz
         
-        !°µÎÏ¤òÀÅ¿å°µÊ¿¹Õ¤«¤é·×»»
+        !åœ§åŠ›ã‚’é™æ°´åœ§å¹³è¡¡ã‹ã‚‰è¨ˆç®—
         z_Press(k) =                                      &
           &  z_Press(k-1) * ( ( z_Temp(k-1) / z_Temp(k) ) &
           &    ** (Grav / ( DTempDZ * GasRDry ) ) )
@@ -237,17 +365,116 @@ contains
 
     end if
 
+  contains    
+
+    function CalcCp(Temp)
+
+      real(DP) :: Temp
+      real(DP) :: CalcCp
+      
+      real(DP), parameter  :: CpA =  19.796d0
+      real(DP), parameter  :: CpB =  7.344d-2
+      real(DP), parameter  :: CpC = -5.602d-5
+      real(DP), parameter  :: CpD =  1.715d-8
+
+      CalcCp = ( CpA + CpB * Temp + CpC * Temp**2 + CpD * Temp**3 ) / 44.0d-3
+
+    end function CalcCp
+
+    
+    subroutine CheckOutput
+      
+      use gtool_history,  only : HistoryCreate, HistoryClose, &
+        &                        HistoryPut, HistoryAddVariable
+      use fileset,        only : filetitle,      &!ãƒ‡ãƒ¼ã‚¿ã®è¡¨é¡Œ
+        &                        filesource,     &!ãƒ‡ãƒ¼ã‚¿ã‚’ä½œæˆã™ã‚‹æ‰‹é †
+        &                        FileInstitution  !æœ€çµ‚å¤‰æ›´è€…ãƒ»çµ„ç¹”
+      use mpi_wrapper,    only : myrank
+
+      real(DP) :: z_Stab2(kmin:kmax)            !å®‰å®šåº¦
+      real(DP) :: Cp
+
+      ! CPU ã®ãƒ©ãƒ³ã‚¯ãŒ 0 ã®å ´åˆã«ã®ã¿ãƒ•ã‚¡ã‚¤ãƒ«å‡ºåŠ›
+      !
+      if (myrank /= 0) return
+      
+      ! åˆæœŸåŒ–
+      !
+      z_Stab2 = 0.0d0
+
+      !! ä¸»ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®è¨ˆç®—ã«ã‚ˆã£ã¦, z_PTemp, z_Temp, z_Press ã¯æ±‚ã¾ã£ã¦ã„ã‚‹. 
+      ! ã‚µã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã§æ¸©åº¦ãŒä¸ãˆã‚‰ã‚ŒãŸå ´åˆã«ã¯, æ¯”ç†±ã®æ¸©åº¦ä¾å­˜æ€§ã‚’
+      ! è€ƒæ…®ã—ã¦å®‰å®šåº¦ã‚’è¨ˆç®—ã™ã‚‹. 
+      !
+      if (TempCol > 0) then 
+        do k = 1, nz
+          Cp = CalcCp( z_Temp(k) )          
+
+          z_Stab2(k) = Grav / z_Temp(k)                 &
+            &    * (                                    &
+            &       + (r_Temp(k) - r_Temp(k-1)) / dz    &
+            &       + Grav / Cp                         &
+            &      )   
+        end do
+      end if
+
+      !-------------------------------------------------------------    
+      ! ãƒ’ã‚¹ãƒˆãƒªãƒ¼ä½œæˆ
+      !-------------------------------------------------------------  
+      call HistoryCreate(                              &
+        & file = Outputfile,                           &
+        & title = filetitle,                           &
+        & source = filesource,                         &
+        & institution = FileInstitution,               &
+        & dims=(/'z'/),                                &
+        & dimsizes=(/nz/),                             &
+        & longnames=(/'Z-coordinate'/),                &
+        & units=(/'m'/),                               &
+        & xtypes=(/'float'/),                          &
+        & history=rstat, quiet=.true. )
+      
+      call HistoryAddVariable(                         &
+        & varname='Stab', dims=(/'z'/),                &
+        & longname='Stability',                        &
+        & units='1', xtype='double', history=rstat ) 
+      
+      call HistoryAddVariable(                         &
+        & varname='Stab2', dims=(/'z'/),               &
+        & longname='Stability with Cp(z)',             &
+        & units='1', xtype='double', history=rstat ) 
+      
+      call HistoryAddVariable(                         &
+        & varname='Temp', dims=(/'z'/),                &
+        & longname='Temperature',                      &
+        & units='1', xtype='double', history=rstat ) 
+      
+      call HistoryAddVariable(                         &
+        & varname='PTemp', dims=(/'z'/),               &
+        & longname='Temperature',                      &
+        & units='1', xtype='double', history=rstat ) 
+      
+      call HistoryPut('z', z_Z(1:nz), rstat )
+
+      call HistoryPut( 'Stab',   z_Stab(1:nz),  rstat )
+      call HistoryPut( 'Stab2',  z_Stab2(1:nz), rstat )
+      call HistoryPut( 'Temp',   z_Temp(1:nz),  rstat )
+      call HistoryPut( 'PTemp' , z_PTemp(1:nz), rstat )
+
+      call HistoryClose( rstat )
+      
+    end subroutine CheckOutput
+    
   end subroutine Initialdata_sounding_basic
 
 
   subroutine initialdata_sounding_wind(pyz_VelX, xqz_VelY)
 
-    !¥â¥¸¥å¡¼¥ëÆÉ¤ß¹ş¤ß
+    !ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«èª­ã¿è¾¼ã¿
     use dc_types, only: DP
-    use gridset,  only: imin, imax,       &!ÇÛÎó¥µ¥¤¥º (X Êı¸ş)
-      &                 jmin, jmax,       &!ÇÛÎó¥µ¥¤¥º (Y Êı¸ş)
-      &                 kmin, kmax         !ÇÛÎó¥µ¥¤¥º (Z Êı¸ş)
-    use axesset,  only: r_Z, z_Z           !¹âÅÙ
+    use gridset,  only: imin, imax,       &!é…åˆ—ã‚µã‚¤ã‚º (X æ–¹å‘)
+      &                 jmin, jmax,       &!é…åˆ—ã‚µã‚¤ã‚º (Y æ–¹å‘)
+      &                 kmin, kmax         !é…åˆ—ã‚µã‚¤ã‚º (Z æ–¹å‘)
+    use axesset,  only: r_Z, z_Z           !é«˜åº¦
       
     implicit none
 
@@ -257,28 +484,14 @@ contains
     real(DP)              :: xqr_VelY(imin:imax,jmin:jmax,kmin:kmax)
     real(DP)              :: ratio
     integer               :: i, k
-    logical               :: flag
     
-    !½é´ü²½
+    !åˆæœŸåŒ–
     pyz_VelX = 0.0d0
     pyr_VelX = 0.0d0
     xqz_VelY = 0.0d0
     xqr_VelY = 0.0d0
 
-    flag = .false. 
-
-    ! ¥Ç¡¼¥¿ÆÉ¤ß¹ş¤ß  
-    !        
-!    do k = kmin, kmax
-!      do i = 1, NumRec
-!        if ( r_Z(k) == r_tmpAlt(i) ) then 
-!          pyr_VelX(:,:,k) = r_tmpVelX(i)
-!          xqr_VelY(:,:,k) = r_tmpVelY(i)
-!        end if
-!      end do
-!    end do
-
-    ! Àş·ÁÊä´°
+    ! ç·šå½¢è£œå®Œ
     !
     do k = kmin, kmax
       do i = 1, NumRec
@@ -290,49 +503,34 @@ contains
       end do
     end do
 
-
-    ! ¥Ç¡¼¥¿ÆÉ¤ß¹ş¤ß  
-    ! ¤¦¤Ş¤¯È¾³Ê»Ò¤Ë¹ç¤¦¾ì¹ç¤â¤¢¤ë¤Î¤Ç, ¤½¤Î¾ì¹ç¤Ï¥Ç¡¼¥¿¤òÍ¥Àè. 
-    !        
-    do k = kmin, kmax
-      do i = 1, NumRec
-        if ( z_Z(k) == r_tmpAlt(i) ) then 
-          flag = .true. 
-          pyz_VelX(:,:,k) = r_tmpVelX(i)
-          xqz_VelY(:,:,k) = r_tmpVelY(i)
-        end if
-      end do
-    end do
-
-    ! r => z ¤ÎÊÑ´¹
+    ! r => z ã®å¤‰æ›
     ! 
-    if (.NOT. flag) then 
-      do k = kmin+1, kmax
-        pyz_VelX(:,:,k) = ( pyr_VelX(:,:,k-1) + pyr_VelX(:,:,k) ) * 5.0d-1
-        xqz_VelY(:,:,k) = ( xqr_VelY(:,:,k-1) + xqr_VelY(:,:,k) ) * 5.0d-1
-      end do
-    end if
+    do k = kmin+1, kmax
+      pyz_VelX(:,:,k) = ( pyr_VelX(:,:,k-1) + pyr_VelX(:,:,k) ) * 5.0d-1
+      xqz_VelY(:,:,k) = ( xqr_VelY(:,:,k-1) + xqr_VelY(:,:,k) ) * 5.0d-1
+    end do
 
   end subroutine initialdata_sounding_wind
   
 
   subroutine devidecsv( buf, eachcol, maxch, num )
     !
-    ! csv ·Á¼°¤Î¥Õ¥¡¥¤¥ë¤«¤éÉ¬Í×¤Ê¾ğÊó¤òÆÉ¤ß½Ğ¤¹
+    ! csv å½¢å¼ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰å¿…è¦ãªæƒ…å ±ã‚’èª­ã¿å‡ºã™
     !
 
-    !°ÅÌÛ¤Î·¿Àë¸À¶Ø»ß
+    !æš—é»™ã®å‹å®£è¨€ç¦æ­¢
     implicit none
 
-    !ÊÑ¿ôÄêµÁ
+    !å¤‰æ•°å®šç¾©
     integer          :: maxch, num
     character(len=*) :: buf, eachcol(maxch)
     integer          :: i, j, prev, now, now1, ll
     logical          :: quote
     
     quote = .FALSE.
-    
+
     ll = len_trim(buf)
+
     prev=0; now=1; i=1
     do j=1, ll
       if( buf(j:j) == '"' ) then
@@ -365,5 +563,7 @@ contains
     end if
     
   end subroutine devidecsv
+
+
 
 end module initialdata_sounding

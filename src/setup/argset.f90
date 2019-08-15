@@ -1,6 +1,6 @@
 != コマンドライン引数の解釈を行うモジュール
 !
-! Authors::   ODAKA Masatsugu
+! Authors::   ODAKA Masatsugu, SUGIYAMA Ko-ichiro
 ! Version::   $Id: argset.f90,v 1.4 2014/01/20 08:12:41 sugiyama Exp $ 
 ! Tag Name::  $Name:  $
 ! Copyright:: Copyright (C) GFD Dennou Club, 2006. All rights reserved.

@@ -1,6 +1,6 @@
 != Module advection_center4_std
 !
-! Authors::   $B?y;39L0lO/(B(SUGIYAMA Ko-ichiro)
+! Authors::   杉山耕一朗(SUGIYAMA Ko-ichiro)
 ! Version::   $Id: advection_center4_std.f90,v 1.3 2014/07/08 00:55:26 sugiyama Exp $ 
 ! Tag Name::  $Name:  $
 ! Copyright:: Copyright (C) GFD Dennou Club, 2014. All rights reserved.
@@ -9,35 +9,35 @@
 
 module advection_center4_std
   !
-  ! $B0\N.7W;;%b%8%e!<%k(B. $BHyJ,J?6Q1i;;%b%8%e!<%k$rMxMQ(B. 
+  ! 移流計算モジュール. 微分平均演算モジュールを利用. 
   !
-  !   $B0\N.(B: 4 $B<!Cf1{:9J,(B
-  !   $B?tCM3H;6(B (4 $B3,(B): 2 $B<!Cf1{:9J,(B
+  !   移流: 4 次中央差分
+  !   数値拡散 (4 階): 2 次中央差分
   !
-  ! $B%j!<%W%U%m%C%0$G(B, $B0\N.$rCf1{:9J,$G7W;;$9$k$?$a$K(B, 
-  ! $B?tCM3H;69`$rDI2C$7$F$$$k(B. 
+  ! リープフロッグで, 移流を中央差分で計算するために, 
+  ! 数値拡散項を追加している. 
   !
-  ! $B%(%/%9%J!<4X?t$N4pK\>l$N0\N.$O05NOJ}Dx<0$G9MN8$7$F$$$k$N$G(B, $B$3$3$K$O4^$a$J$$(B.
+  ! エクスナー関数の基本場の移流は圧力方程式で考慮しているので, ここには含めない.
 
-  !$B%b%8%e!<%kFI$_9~$_(B
+  !モジュール読み込み
   !
   use dc_types,   only : DP
 
-  !$B0EL[$N7?@k8@6X;_(B
+  !暗黙の型宣言禁止
   !
   implicit none
 
-  ! $BJQ?t$N@_Dj(B
+  ! 変数の設定
   !
-  real(DP), save, private :: NuHh  = 0.0d0         !$BG.$KBP$9$k?tCMG4@-$N78?t(B ($B?eJ?J}8~(B)
-  real(DP), save, private :: NuVh  = 0.0d0         !$BG.$KBP$9$k?tCMG4@-$N78?t(B ($B1tD>J}8~(B)
-  real(DP), save, private :: NuHm  = 0.0d0         !$B1?F0NL$KBP$9$k?tCMG4@-$N78?t(B ($B?eJ?J}8~(B)
-  real(DP), save, private :: NuVm  = 0.0d0         !$B1?F0NL$KBP$9$k?tCMG4@-$N78?t(B ($B1tD>J}8~(B)
+  real(DP), save, private :: NuHh  = 0.0d0         !熱に対する数値粘性の係数 (水平方向)
+  real(DP), save, private :: NuVh  = 0.0d0         !熱に対する数値粘性の係数 (鉛直方向)
+  real(DP), save, private :: NuHm  = 0.0d0         !運動量に対する数値粘性の係数 (水平方向)
+  real(DP), save, private :: NuVm  = 0.0d0         !運動量に対する数値粘性の係数 (鉛直方向)
   character(*), parameter :: module_name = 'advection_center4_std'
-                                          ! $B%b%8%e!<%k$NL>>N(B.
+                                          ! モジュールの名称.
                                           ! Module name
-  real(DP), allocatable, save, private :: xyr_DPTempBZDz(:,:,:)   !$B4pK\>l$N1tD>HyJ,(B
-  real(DP), allocatable, save, private :: xyrf_DQMixBZDz(:,:,:,:) !$B4pK\>l$N1tD>HyJ,(B
+  real(DP), allocatable, save, private :: xyr_DPTempBZDz(:,:,:)   !基本場の鉛直微分
+  real(DP), allocatable, save, private :: xyrf_DQMixBZDz(:,:,:,:) !基本場の鉛直微分
 
   !public
   !
@@ -48,39 +48,39 @@ contains
 
   subroutine advection_center4_std_init( AlphaNDiff, NDiffRatio )
     !
-    ! $B=i4|2=%k!<%A%s(B
+    ! 初期化ルーチン
     !
 
-    ! $B%b%8%e!<%kFI$_9~$_(B
+    ! モジュール読み込み
     !
     use timeset,     only : DelTimeLong
-    use axesset,     only : dx, dy, dz       ! $B3J;R4V3V(B
+    use axesset,     only : dx, dy, dz       ! 格子間隔
     use dc_message,  only : MessageNotify
     use gridset,     only : imin, imax,      &
       &                     jmin, jmax,      &
       &                     kmin, kmax,      &
       &                     ncmax,           &
       &                     FlagCalc3D
-    use basicset,    only : xyz_PTempBZ,     &!$B4pK\>l$N290L(B
+    use basicset,    only : xyz_PTempBZ,     &!基本場の温位
       &                     xyzf_QMixBZ
     use differentiate_center4, &
       &              only : xyr_dz_xyz
 
-    !$B0EL[$N7?@k8@6X;_(B
+    !暗黙の型宣言禁止
     !
     implicit none
     
-    ! $BJQ?t$NDj5A(B
+    ! 変数の定義
     !
-    real(DP), intent(in) :: AlphaNDiff  !$B?tCM3H;6$N78?t(B. 
+    real(DP), intent(in) :: AlphaNDiff  !数値拡散の係数. 
     real(DP), intent(in) :: NDiffRatio
     integer              :: f
 
     !-------------------------------------------------------------------
-    ! $B?tCM3H;678?t$r7h$a$k(B
+    ! 数値拡散係数を決める
     !
-    ! CReSS $B%^%K%e%"%k$N5-=R$K=>$C$F(B NuH, NuV $B$r7h$a$k(B.
-    ! $B1?F0NL$HG.$KBP$9$k?tCM3H;6$NBg$-$5$rJQ$($i$l$k$h$&$K(B NDiffRatio $B$r>h$8$F$$$k(B.
+    ! CReSS マニュアルの記述に従って NuH, NuV を決める.
+    ! 運動量と熱に対する数値拡散の大きさを変えられるように NDiffRatio を乗じている.
     ! 
 !    NuHh = AlphaNDiff * ( SQRT( dx * dy ) ** 4.0d0 ) / (2.0d0 * DelTimeLong)
     if ( FlagCalc3D ) then 
@@ -94,7 +94,7 @@ contains
     NuVm = NuVh * NDiffRatio
 
     !-------------------------------------------------------------------
-    ! $B=PNO(B
+    ! 出力
     !
     call MessageNotify( "M", module_name, "NuHh = %f", d=(/NuHh/) )
     call MessageNotify( "M", module_name, "NuVh = %f", d=(/NuVh/) )
@@ -102,7 +102,7 @@ contains
     call MessageNotify( "M", module_name, "NuVm = %f", d=(/NuVm/) )
 
     !-------------------------------------------------------------------
-    ! $BG[Ns$NMQ0U(B
+    ! 配列の用意
     !
     allocate( xyr_DPTempBZDz(imin:imax, jmin:jmax, kmin:kmax) )
     allocate( xyrf_DQMixBZDz(imin:imax, jmin:jmax, kmin:kmax, ncmax) )
@@ -134,24 +134,24 @@ contains
     & xyz_DKmDtAdv,    xyz_KmNDiff         & !(out)
     & )
     ! 
-    ! $B0\N.7W;;(B
+    ! 移流計算
     !
-    !   $B0\N.(B: 4 $B<!Cf1{:9J,(B
-    !   $B?tCM3H;6(B (4 $B3,(B): 2 $B<!Cf1{:9J,(B
+    !   移流: 4 次中央差分
+    !   数値拡散 (4 階): 2 次中央差分
     !
-    ! $B%j!<%W%U%m%C%0$G(B, $B0\N.$rCf1{:9J,$G7W;;$9$k$?$a$K(B, 
-    ! $B?tCM3H;69`$rDI2C$7$F$$$k(B. 
+    ! リープフロッグで, 移流を中央差分で計算するために, 
+    ! 数値拡散項を追加している. 
     !
 
-    !$B%b%8%e!<%kFI$_9~$_(B
+    !モジュール読み込み
     !
     use dc_types, only : DP
-    use gridset,  only : imin,            &! x $BJ}8~$NG[Ns$N2<8B(B
-      &                  imax,            &! x $BJ}8~$NG[Ns$N>e8B(B
-      &                  jmin,            &! y $BJ}8~$NG[Ns$N2<8B(B
-      &                  jmax,            &! y $BJ}8~$NG[Ns$N>e8B(B
-      &                  kmin,            &! z $BJ}8~$NG[Ns$N2<8B(B
-      &                  kmax,            &! z $BJ}8~$NG[Ns$N>e8B(B
+    use gridset,  only : imin,            &! x 方向の配列の下限
+      &                  imax,            &! x 方向の配列の上限
+      &                  jmin,            &! y 方向の配列の下限
+      &                  jmax,            &! y 方向の配列の上限
+      &                  kmin,            &! z 方向の配列の下限
+      &                  kmax,            &! z 方向の配列の上限
       &                  ncmax
     use average,  only : pyz_xyz, pyz_pqz, pqz_xqz, pyz_pyr, pyr_xyr, &
       &                  xqz_pqz, pqz_pyz, xqz_xyz, xqz_xqr, xqr_xyr, &
@@ -167,11 +167,11 @@ contains
       &                 xyz_dy4_xyz, pyz_dy4_pyz, xqz_dy4_xqz, xyr_dy4_xyr, &
       &                 xyz_dz4_xyz, pyz_dz4_pyz, xqz_dz4_xqz, xyr_dz4_xyr
 
-    ! $B0EL[$N7?@k8@6X;_(B
+    ! 暗黙の型宣言禁止
     !
     implicit none
 
-    ! $BG[Ns$NDj5A(B
+    ! 配列の定義
     !
     real(DP), intent(in)    :: pyz_VelXB(imin:imax,jmin:jmax,kmin:kmax)
     real(DP), intent(in)    :: pyz_VelXN(imin:imax,jmin:jmax,kmin:kmax)
@@ -207,7 +207,7 @@ contains
 
 
     !------------------------------------------------------------------------
-    ! $BMpN.3H;678?t(B
+    ! 乱流拡散係数
     !
 
     ! Advection term
@@ -225,7 +225,7 @@ contains
       &  - NuVh * xyz_dz4_xyz( xyz_KmB )
         
     !------------------------------------------------------------------------
-    ! $B290L(B
+    ! 温位
     !
 
     ! Advection term
@@ -244,7 +244,7 @@ contains
       &  - NuVh * xyz_dz4_xyz( xyz_PTempB )
 
     !------------------------------------------------------------------------
-    ! $B%(%/%9%J!<4X?t(B
+    ! エクスナー関数
     !
 
     ! Advection term
@@ -263,7 +263,7 @@ contains
     
     
     !---------------------------------------------------------------------
-    ! $B:.9gHf(B
+    ! 混合比
     ! 
     
     do f = 1, ncmax
@@ -286,7 +286,7 @@ contains
     end do
 
     !------------------------------------------------------------------------
-    ! X $BJ}8~$NB.EY(B
+    ! X 方向の速度
     !
 
     ! advection
@@ -304,7 +304,7 @@ contains
       & - NuVm * pyz_dz4_pyz( pyz_VelXB )
 
     !------------------------------------------------------------------------
-    ! Y $BJ}8~$NB.EY(B
+    ! Y 方向の速度
     !
 
     ! advection
@@ -322,7 +322,7 @@ contains
       & - NuVm * xqz_dz4_xqz( xqz_VelYB )
 
     !------------------------------------------------------------------------
-    ! Z $BJ}8~$NB.EY(B
+    ! Z 方向の速度
     !
 
     ! Advection term

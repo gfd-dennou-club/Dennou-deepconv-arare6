@@ -87,10 +87,17 @@ contains
     !初期値生成の場合には, outputfile 名を変更
     if ( present( FlagInitData ) ) then 
       if ( FlagInitData ) then 
-        if ( .NOT. InitialFile == "" ) then  ! ファイル名が空ならば
-          InputFile  = ""
+
+        if ( .NOT. InitialFile == "" ) then  ! ファイル名が空でなければ
           OutputFile = InitialFile
+          InputFile  = ""
         end if
+
+        if ( InitialFile == "" .AND. (.NOT. InputFile == "") ) then  
+          OutputFile = InputFile
+          InputFile  = ""
+        end if
+
       end if
     end if
 
@@ -353,46 +360,59 @@ contains
     character(STRING)    :: TimeN = ""
     character(STRING)    :: TimeB = ""
 
-    real(DP)  :: RTimeN, RTimeB, RTimeRtnB, RTimeRtnN
-    logical   :: flag_time_exist
-    logical   :: flag_time_err
+    integer, parameter  :: rtrn = 1000
+    real(DP)            :: RTime(rtrn)
+    real(DP)            :: xyz_var(imin:imax,jmin:jmax,kmin:kmax)
+    integer             :: nt, nt2, rNum(1)
+    character(STRING)   :: ct
 
     !-------------------------------------------------------------
     ! Get a Value from netCDF File
     !-------------------------------------------------------------    
-    RTimeN = RestartTime
-    if (RestartTime /= 0.0d0) then
-     RTimeB = RestartTime - DelTimeLong 
-    else 
-     RTimeB = RestartTime 
-    end if
 
-    timeB = 't=' // toChar( RTimeB )
-    timeN = 't=' // toChar( RTimeN )
+    ! netCDF に保管されている時刻を取り出す. 変数として温位を利用. 
+    !
+    RTime = -999.0    ! 初期化 (欠損値)
+    name  = "PTemp"   ! 初期化
+    !
+    CHECK_RestartTime: do nt = 1, rtrn
+
+      ! 時刻の取り出し
+      !
+      ct = 't=^' // toChar( nt )
+      call HistoryGet( InputFile, name, xyz_var, range=ct, &
+        & flag_mpi_split = FLAG_LIB_MPI, returned_time = RTime(nt) )
+
+      ! 取り出した時刻が一致したらループ終了. nt2 にループ回数保管. 
+      !
+      if ( nt > 1 .AND. RTime(nt - 1) == RTime(nt) ) then 
+        nt2 = nt - 1
+        exit CHECK_RestartTime
+      end if
+    end do CHECK_RestartTime
+
+    ! RestartTime として指定されている時刻の配列添え字を決める. 
+    ! gtool に癖があるので, 絶対誤差が最小になる配列添字とする.
+    !
+    RTime(1:nt2) = abs( RTime(1:nt2) - RestartTime )
+    rNum = minloc( RTime(1:nt2) )
     
-!!!
-!!! 確認
-!!!
-    name = "PTemp"
-    call HistoryGet( InputFile, name, xyz_PTempB, range=TimeB, flag_mpi_split = FLAG_LIB_MPI, &
-      & returned_time = RTimeRtnB, flag_time_exist = flag_time_exist, err = flag_time_err )
-    call HistoryGet( InputFile, name, xyz_PTempN, range=TimeN, flag_mpi_split = FLAG_LIB_MPI, &
-      & returned_time = RTimeRtnN, flag_time_exist = flag_time_exist, err = flag_time_err )
-
-    if ( .NOT. flag_time_exist .OR. flag_time_err ) then 
-     call MessageNotify( "M", "restartfileio", "flag_time_exist = %b", L=(/flag_time_exist/) )
-     call MessageNotify( "M", "restartfileio", "flag_time_err   = %b", L=(/flag_time_err/)   )
-!     call MessageNotify( "E", "restartfileio", "restart error occure" )
+    ! リスタートで使う時刻の添字を決定する. 
+    ! 現在の時刻 (TimeN) と 1 ステップ前の時刻 (TimeB) の添字
+    !
+    if (rNum(1) == 1) then 
+      timeB = 't=^' // toChar( rNum(1)     )
+      timeN = 't=^' // toChar( rNum(1)     )
+    else
+      timeB = 't=^' // toChar( rNum(1)     )
+      timeN = 't=^' // toChar( rNum(1) + 1 )
     end if
 
-    if ( RTimeRtnB - RTimeB /= 0.0d0 .OR. RTimeRtnN - RTimeN /= 0.0d0 ) then 
-      call MessageNotify( "M", "restartfileio", "RTimeRtnB  = %f", d=(/RTimeRtnB/)  )
-      call MessageNotify( "M", "restartfileio", "RTimeRtnN  = %f", d=(/RTimeRtnN/)  )
-      call MessageNotify( "M", "restartfileio", "RTimeB     = %f", d=(/RTimeB/) )
-      call MessageNotify( "M", "restartfileio", "RTimeN     = %f", d=(/RTimeN/) )
-!      call MessageNotify( "E", "restartfileio", "restart time is incorrect " )
-    end if
-
+    ! 確認
+    !
+    call MessageNotify( "M", "restartfileio_var_get", "rNum  = %d", i=(/rNum/) )
+    call MessageNotify( "M", "restartfileio_var_get", "timeB = %c", c1=trim(timeB) )
+    call MessageNotify( "M", "restartfileio_var_get", "timeN = %c", c1=trim(timeN) )
 
 !!!
 !!! ファイルオープン & 値の取り出し
@@ -434,7 +454,6 @@ contains
     call HistoryGet( InputFile, name, xyzf_QMixN, range=TimeN, flag_mpi_split = FLAG_LIB_MPI )
 
   end subroutine ReStartFileio_Var_Get
-       
 
 
   subroutine ReStartFileio_BasicZ_Get()
