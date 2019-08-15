@@ -22,19 +22,6 @@ include ../../Config.mk
 
 .SUFFIXES: .f90 .o 
 
-3DOBJS = \
-	dynfunc_3d.o \
-	dynimpfunc_3d.o \
-	dynamics_hevi_v1.o \
-	dynamics_hevi_v2.o \
-	acousticmode_2d.o \
-	acousticmode_3d.o \
-	acousticmode_std.o \
-	advection_center4_2d.o \
-	advection_center4_3d.o \
-	advection_center4_std.o \
-	dynamics_hevi_v3.o 
-
 OBJS = \
 	acousticmode_2d.o \
 	acousticmode_3d.o \
@@ -51,14 +38,6 @@ all: $(OBJS)
 
 .f90.o: 
 	$(FC) $(SYSFFLAGS) -c $< 
-
-dynimpfunc.f90: dynimpfunc.f90.$(LINSOLV)
-	ln -s dynimpfunc.f90.$(LINSOLV) $@
-
-
-dynimpfunc_3d.f90: dynimpfunc_3d.f90.$(LINSOLV)
-	ln -s dynimpfunc_3d.f90.$(LINSOLV) $@
-
 
 clean: 
 	-$(RM) *.o *.mod dynimpfunc.f90 dynimpfunc_3d.f90
