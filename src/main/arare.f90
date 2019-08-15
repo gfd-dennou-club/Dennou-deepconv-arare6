@@ -1138,7 +1138,9 @@ contains
     FlagRestartMethod    = "Arare6"
 !!$    FlagRestartMethod = "Arare4"
 
-    FlagDampingMethod    = "SpongeLayer"
+!!$    FlagDampingMethod    = "Nothing"
+    !整合性のためにデフォルト値を "SpongeLayer" に設定. 
+    FlagDampingMethod    = "SpongeLayer"  
 !!$    FlagDampingMethod    = "SpongeLayerMeanFlow"
 
     
