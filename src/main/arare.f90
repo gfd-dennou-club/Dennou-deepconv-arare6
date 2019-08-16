@@ -279,7 +279,7 @@ program deepconv_arare
   real(DP), allocatable :: xyz_H2SO4gas(:,:,:)
   real(DP), allocatable :: xyz_H2SO4liq(:,:,:)
   
-  integer :: s, t, tau  ! do ループ変数 ; do loop variable 
+  integer :: s, tau  ! do ループ変数 ; do loop variable 
 
   integer            :: IDTurbMethod          = 0
   integer, parameter :: IDTurbKW1978          = 2
@@ -753,8 +753,6 @@ program deepconv_arare
     xyz_H2Ob   = xyz_H2On;   xyz_H2On   = xyz_H2Oa
     xyz_H2SO4b = xyz_H2SO4n; xyz_H2SO4n = xyz_H2SO4a
 
-!    t = t + 1
-
     ! 時刻の進行
     ! Progress time
     !
@@ -890,11 +888,8 @@ contains
     xyz_DCDensDtNl = 0.0d0
     xyzf_DQMixDtNl = 0.0d0
 
-    ! 時間ループの初期化
+    ! IH1998 用
     !
-    t = 1
-
-
     allocate( xyz_H2SO4a(imin:imax,jmin:jmax,kmin:kmax) )
     allocate( xyz_H2SO4n(imin:imax,jmin:jmax,kmin:kmax) )
     allocate( xyz_H2SO4b(imin:imax,jmin:jmax,kmin:kmax) )    
@@ -1507,6 +1502,9 @@ contains
     !Imamura and Hashimoto (1998) 
     !
 
+    ! モジュール呼び出し
+    !
+    use setmargin,    only : SetMargin_xyz
     use gtool_historyauto, only: HistoryAutoAddVariable
 
     !暗黙の型宣言禁止
@@ -1603,6 +1601,10 @@ contains
     ! 数密度の時間発展方程式を解く
     !
 
+    ! モジュール呼び出し
+    !
+    use timeset,      only : DelTimeLong
+    use setmargin,    only : SetMargin_xyz
     use constants,only: FactorJ,           &!
       &                 PressBasis,        &!温位の基準圧力
       &                 CpDry,             &!乾燥成分の比熱
