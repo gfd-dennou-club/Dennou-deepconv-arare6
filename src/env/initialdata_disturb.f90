@@ -45,7 +45,7 @@ contains
     !
 
     !モジュール読み込み
-    use mpi_wrapper,only: myrank, nprocs
+    use mpi_wrapper,only: myrank
     use dc_types,   only: DP
     use axesset,    only: z_Z                   ! Z 座標軸(スカラー格子点)
     use gridset,    only: nx, imin, imax,      &! 配列サイズ (X 方向)
