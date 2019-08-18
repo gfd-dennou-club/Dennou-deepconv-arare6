@@ -120,6 +120,8 @@ program deepconv_arare
     &                               Cloudphys_K1969_forcing 
   use Cloudphys_marscond,    only : cloudphys_marscond_Init,         &
     &                               cloudphys_marscond_forcing
+  use Cloudphys_IH1998,      only : Cloudphys_IH1998_Init,           &
+    &                               Cloudphys_IH1998_Forcing  
 
   ! 下請けモジュール
   ! Utility modules
@@ -149,8 +151,11 @@ program deepconv_arare
   use HistoryFileIO,         only : HistoryFileio_init,              &
     &                               HistoryFileio_Finalize
   use BasicFileIO,           only : BasicFileio_Output
-
-
+  use ReStartFileIO_IH1998,  only : ReStartFileio_IH1998_init,       &
+    &                               ReStartFileio_IH1998_Finalize,   &
+    &                               ReStartFileio_IH1998_Var_Get,    &
+    &                               rstat2
+  
   ! 暗黙の型宣言禁止
   !
   implicit none
@@ -267,17 +272,13 @@ program deepconv_arare
   real(DP), allocatable :: xyz_DCDensDtNl(:,:,:)
 
   !金星 IH1998
-  real(DP), allocatable :: xyz_H2Oa(:,:,:)
-  real(DP), allocatable :: xyz_H2On(:,:,:)
-  real(DP), allocatable :: xyz_H2Ob(:,:,:)
-  real(DP), allocatable :: xyz_H2Ogas(:,:,:)
-  real(DP), allocatable :: xyz_H2Oliq(:,:,:)
-  
-  real(DP), allocatable :: xyz_H2SO4a(:,:,:)
-  real(DP), allocatable :: xyz_H2SO4n(:,:,:)  
-  real(DP), allocatable :: xyz_H2SO4b(:,:,:)
-  real(DP), allocatable :: xyz_H2SO4gas(:,:,:)
-  real(DP), allocatable :: xyz_H2SO4liq(:,:,:)
+  real(DP), allocatable :: xyzf_NDens1A(:,:,:,:)
+  real(DP), allocatable :: xyzf_NDens1N(:,:,:,:)
+  real(DP), allocatable :: xyzf_NDens1B(:,:,:,:)
+  real(DP), allocatable :: xyzf_NDens2A(:,:,:,:)
+  real(DP), allocatable :: xyzf_NDens2N(:,:,:,:)
+  real(DP), allocatable :: xyzf_NDens2B(:,:,:,:)
+  logical               :: SwitchVenus = .false.
   
   integer :: s, tau  ! do ループ変数 ; do loop variable 
 
@@ -298,7 +299,7 @@ program deepconv_arare
   integer            :: IDCloudMethod         = 0
   integer, parameter :: IDCloudK1969          = 1
   integer, parameter :: IDCloudMarsCond       = 2 
-  integer, parameter :: IDCloudVenusIH1998    = 3 !金星雲微物理 IH1998
+  integer, parameter :: IDCloudIH1998         = 3 !金星雲微物理 IH1998
   integer            :: IDDebugMethod         = 0
   integer, parameter :: IDDebugNoTendencyLong = 1
   integer, parameter :: IDDebugWindConst      = 2
@@ -512,10 +513,18 @@ program deepconv_arare
         &   xyz_PTempAl,              &!(inout)
         &   xyzf_QMixAl               &!(inout)
         & )
-
-    case (IDCloudVenusIH1998)
-      !IH1998
-      call Cloudphys_VenusIH1998_forcing
+      
+    case (IDCloudIH1998)
+      !IH1998      
+      call Cloudphys_IH1998_forcing(               &
+        &   xyz_PtempAl,  xyz_PtempBZ,             & !(in)
+        &   xyz_ExnerNl,  xyz_ExnerBZ,             & !(in)
+        &   pyz_VelXNl,   xqz_VelYNl,  xyr_VelZNl, & !(in)
+        &   xyz_KhBl,                              & !(in)        
+        &   xyzf_NDens1B, xyzf_NDens2B,            & !(in)
+        &   xyzf_NDens1N, xyzf_NDens2N,            & !(in)
+        &   xyzf_NDens1A, xyzf_NDens2A             & !(inout)
+        & )
 
     end select
     
@@ -655,12 +664,14 @@ program deepconv_arare
     end do
 
     !IH1998
-    call HistoryAutoPut(TimeN, 'H2O',      xyz_H2On(   1:nx, 1:ny, 1:nz))
-    call HistoryAutoPut(TimeN, 'H2Ogas',   xyz_H2Ogas( 1:nx, 1:ny, 1:nz))
-    call HistoryAutoPut(TimeN, 'H2Oliq',   xyz_H2Oliq( 1:nx, 1:ny, 1:nz))
-    call HistoryAutoPut(TimeN, 'H2SO4',    xyz_H2SO4n( 1:nx, 1:ny, 1:nz))
-    call HistoryAutoPut(TimeN, 'H2SO4gas', xyz_H2SO4gas(1:nx, 1:ny, 1:nz))
-    call HistoryAutoPut(TimeN, 'H2SO4liq', xyz_H2SO4liq(1:nx, 1:ny, 1:nz))
+    if ( SwitchVenus ) then 
+      call HistoryAutoPut(TimeN, 'H2SO4',    xyzf_NDens1N( 1:nx, 1:ny, 1:nz, 1))
+      call HistoryAutoPut(TimeN, 'H2SO4gas', xyzf_NDens1N( 1:nx, 1:ny, 1:nz, 2))
+      call HistoryAutoPut(TimeN, 'H2SO4liq', xyzf_NDens1N( 1:nx, 1:ny, 1:nz, 3))
+      call HistoryAutoPut(TimeN, 'H2O',      xyzf_NDens2N( 1:nx, 1:ny, 1:nz, 1))
+      call HistoryAutoPut(TimeN, 'H2Ogas',   xyzf_NDens2N( 1:nx, 1:ny, 1:nz, 2))
+      call HistoryAutoPut(TimeN, 'H2Oliq',   xyzf_NDens2N( 1:nx, 1:ny, 1:nz, 3))
+    end if
 
     !------------------------------------------
     ! 保存量の出力
@@ -697,10 +708,6 @@ program deepconv_arare
       call HistoryPut( 'CDens', xyz_CDensNl, rstat)
       call HistoryPut( 'QMix',  xyzf_QMixNl, rstat)    
       
-!      !IH1998
-!      call HistoryPut( 'H2O',   xyz_H2On,    rstat)
-!      call HistoryPut( 'H2SO4', xyz_H2SO4n,  rstat)
-      
       call HistoryPut( 't',     TimeA,       rstat)
       call HistoryPut( 'VelX',  pyz_VelXAl,  rstat)
       call HistoryPut( 'VelY',  xqz_VelYAl,  rstat)
@@ -712,11 +719,6 @@ program deepconv_arare
       call HistoryPut( 'CDens', xyz_CDensAl, rstat)
       call HistoryPut( 'QMix',  xyzf_QMixAl, rstat) 
 
-!      !IH1998
-!      call HistoryPut( 'H2O',   xyz_H2Oa,    rstat)
-!      call HistoryPut( 'H2SO',  xyz_H2SO4a,  rstat)
-      
-      
       ! 基本場のファイル出力
       !
       call HistoryPut( 'DensBZ',     xyz_DensBZ    , rstat)
@@ -729,7 +731,17 @@ program deepconv_arare
       call HistoryPut( 'QMixBZ',     xyzf_QMixBZ   , rstat)
       call HistoryPut( 'EffMolWtBZ', xyz_EffMolWtBZ, rstat)
 !      call HistoryPut( 'HumBZ',      xyzf_HumBZ    , rstat)
-     
+
+      !IH1998
+      if ( SwitchVenus ) then 
+        call HistoryPut( 't'     , TimeN       , rstat2)
+        call HistoryPut( 'NDens1', xyzf_NDens1N, rstat2)
+        call HistoryPut( 'NDens2', xyzf_NDens2N, rstat2)
+        call HistoryPut( 't'     , TimeA       , rstat2)
+        call HistoryPut( 'NDens1', xyzf_NDens1A, rstat2)
+        call HistoryPut( 'NDens2', xyzf_NDens2A, rstat2)
+      end if
+
       ! Show CPU time 
       ! 
       call ClocksetPredict
@@ -750,8 +762,10 @@ program deepconv_arare
     xyzf_QMixBl = xyzf_QMixNl; xyzf_QMixNl = xyzf_QMixAl
 
     !IH1998
-    xyz_H2Ob   = xyz_H2On;   xyz_H2On   = xyz_H2Oa
-    xyz_H2SO4b = xyz_H2SO4n; xyz_H2SO4n = xyz_H2SO4a
+    if ( SwitchVenus ) then 
+      xyzf_NDens1B = xyzf_NDens1N; xyzf_NDens1N = xyzf_NDens1A
+      xyzf_NDens2B = xyzf_NDens2N; xyzf_NDens2N = xyzf_NDens2A      
+    end if
 
     ! 時刻の進行
     ! Progress time
@@ -766,7 +780,10 @@ program deepconv_arare
   !
   call HistoryFileio_finalize
   call ReStartFileio_finalize
-
+  if ( SwitchVenus ) then
+    call RestartFileio_IH1998_finalize !IH1998
+  end if
+  
   !----------------------------------------------------
   ! CPU 時間の計測終了
   ! 
@@ -889,27 +906,19 @@ contains
     xyzf_DQMixDtNl = 0.0d0
 
     ! IH1998 用
-    !
-    allocate( xyz_H2SO4a(imin:imax,jmin:jmax,kmin:kmax) )
-    allocate( xyz_H2SO4n(imin:imax,jmin:jmax,kmin:kmax) )
-    allocate( xyz_H2SO4b(imin:imax,jmin:jmax,kmin:kmax) )    
+    if ( SwitchVenus ) then 
+      allocate( xyzf_NDens1B(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+      allocate( xyzf_NDens1N(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+      allocate( xyzf_NDens1A(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
 
-    allocate( xyz_H2SO4gas(imin:imax,jmin:jmax,kmin:kmax) )
-    allocate( xyz_H2SO4liq(imin:imax,jmin:jmax,kmin:kmax) )    
+      allocate( xyzf_NDens1B(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+      allocate( xyzf_NDens1N(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+      allocate( xyzf_NDens1A(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+
+      xyzf_NDens1B = 0.0d0; xyzf_NDens1N = 0.0d0; xyzf_NDens1A = 0.0d0
+      xyzf_NDens2B = 0.0d0; xyzf_NDens2N = 0.0d0; xyzf_NDens2A = 0.0d0
+    end if
     
-    allocate( xyz_H2Oa(imin:imax,jmin:jmax,kmin:kmax) )
-    allocate( xyz_H2On(imin:imax,jmin:jmax,kmin:kmax) )
-    allocate( xyz_H2Ob(imin:imax,jmin:jmax,kmin:kmax) )
-    
-    allocate( xyz_H2Ogas(imin:imax,jmin:jmax,kmin:kmax) )
-    allocate( xyz_H2Oliq(imin:imax,jmin:jmax,kmin:kmax) )    
-
-    xyz_H2SO4a = 0.0d0;  xyz_H2SO4n = 0.0d0;  xyz_H2SO4b = 0.0d0;
-    xyz_H2Oa   = 0.0d0;  xyz_H2On   = 0.0d0;  xyz_H2Ob   = 0.0d0
-
-    xyz_H2SO4gas = 0.0d0;  xyz_H2SO4liq = 0.0d0
-    xyz_H2Ogas   = 0.0d0;  xyz_H2Oliq   = 0.0d0
-   
   end subroutine VariableAllocate
 
   !-----------------------------------------------------------------------
@@ -942,9 +951,11 @@ contains
     xyzf_QMixNl = tfil * ( xyzf_QMixBl + xyzf_QMixAl ) + tfil2 * xyzf_QMixNl
 
     !IH1998
-    xyz_H2On    = tfil * ( xyz_H2Ob    + xyz_H2Oa    ) + tfil2 * xyz_H2On
-    xyz_H2SO4n  = tfil * ( xyz_H2SO4b  + xyz_H2SO4a  ) + tfil2 * xyz_H2SO4n
-    
+    if ( SwitchVenus ) then 
+      xyzf_NDens1N = tfil * ( xyzf_NDens1B + xyzf_NDens1A ) + tfil2 * xyzf_NDens1N
+      xyzf_NDens2N = tfil * ( xyzf_NDens2B + xyzf_NDens2A ) + tfil2 * xyzf_NDens2N
+    end if
+
   end subroutine AsselinTimeFilter
   
 
@@ -1024,7 +1035,10 @@ contains
     !
     call HistoryFileio_init
     call ReStartFileio_init
-
+    if ( SwitchVenus )  then
+      call RestartFileio_IH1998_init  !IH1998
+    end if
+    
     ! マージンの設定の初期化
     ! Initialization of margin
     !
@@ -1083,6 +1097,13 @@ contains
 
     end select
 
+    if ( SwitchVenus ) then
+      call ReStartFileio_IH1998_Var_Get(   &
+        &   xyzf_NDens1B, xyzf_NDens1N,   & ! (out)
+        &   xyzf_NDens2B, xyzf_NDens2N    & ! (out)
+        & )
+    end if
+    
     ! 化学計算ルーチンの初期化
     ! Initialization of chemical routines.
     !
@@ -1189,7 +1210,7 @@ contains
     FlagCloudMethod      = "Nothing"
 !!$    FlagCloudMethod   = "K1969"
 !!$    FlagCloudMethod   = "MarsCond"
-!!$    FlagCloudMethod   = "VenusIH1998"    
+!!$    FlagCloudMethod   = "IH1998"    
 
     FlagWindMethod       = "Nothing"
 !!$    FlagWindMethod    = "Const"
@@ -1262,8 +1283,9 @@ contains
       IDCloudMethod = IDCloudK1969
     case ( "MarsCond" )
       IDCloudMethod = IDCloudMarsCond
-    case ( "VenusIH1998" )
-      IDCloudMethod = IDCloudVenusIH1998
+    case ( "IH1998" )
+      IDCloudMethod = IDCloudIH1998
+      SwitchVenus   = .true.              !IH1998
     case default
       call MessageNotify( 'E', prog_name, &
         & 'FlagCloudMethod=<%c> is not supported.', &
@@ -1367,8 +1389,8 @@ contains
       call cloudphys_K1969_init
     case ( IDCloudMarsCond )
       call cloudphys_marscond_init
-    case ( IDCloudVenusIH1998 )
-      call cloudphys_VenusIH1998_init
+    case ( IDCloudIH1998 )
+      call cloudphys_IH1998_init
     end select
 
   end subroutine PhysicalProcess_init
@@ -1492,300 +1514,5 @@ contains
     call SetMargin_xyzf( xyzf_QMixAl )  ! (inout)   
          
   end subroutine QMix_integrate
-
-
-
-  !-----------------------------------------------------------------------
-  subroutine Cloudphys_VenusIH1998_init
-    !
-    !金星雲微物理
-    !Imamura and Hashimoto (1998) 
-    !
-
-    ! モジュール呼び出し
-    !
-    use setmargin,    only : SetMargin_xyz
-    use gtool_historyauto, only: HistoryAutoAddVariable
-
-    !暗黙の型宣言禁止
-    implicit none
-
-    !変数宣言
-    real(DP) :: r_alt(1:nz)
-    real(DP) :: r_H2SO4(1:nz)
-    real(DP) :: r_H2SO4gas(1:nz)
-    real(DP) :: r_H2O(1:nz)
-    real(DP) :: r_H2Ogas(1:nz)
-    integer  :: i, j, k
-    
-    !ヒストリの定義
-    !IH1998
-    call HistoryAutoAddVariable(                     &
-      & varname='H2O', dims=(/'x','y','z','t'/),     &
-      & longname='Number Density of H2O (all)',      &
-      & units='m-3',                                 &
-      & xtype='float')
-    call HistoryAutoAddVariable(                     &
-      & varname='H2Ogas', dims=(/'x','y','z','t'/),  &
-      & longname='Number Density of H2O (gas)',      &
-      & units='m-3',                                 &
-      & xtype='float')
-    call HistoryAutoAddVariable(                     &
-      & varname='H2Oliq', dims=(/'x','y','z','t'/),  &
-      & longname='Number Density of H2O (liq)',      &
-      & units='m-3',                                 &
-      & xtype='float')
-
-    !IH1998    
-    call HistoryAutoAddVariable(                     &
-      & varname='H2SO4', dims=(/'x','y','z','t'/),   &
-      & longname='Number Density of H2SO4 (all)',    &
-      & units='m-3',                                 &
-      & xtype='float')
-    call HistoryAutoAddVariable(                     &
-      & varname='H2SO4gas', dims=(/'x','y','z','t'/),&
-      & longname='Number Density of H2SO4 (gas)',    &
-      & units='m-3',                                 &
-      & xtype='float')
-    call HistoryAutoAddVariable(                     &
-      & varname='H2SO4liq', dims=(/'x','y','z','t'/),&
-      & longname='Number Density of H2SO4 (liq)',    &
-      & units='m-3',                                 &
-      & xtype='float')
-   
-
-    !リスタートの定義 => io/restartfileio.f90
-    !現時点では, リスタートはできなくても良いので無視. 
-
-
-    !初期値ファイル読み込み
-    !別途作っておいた初期値ファイルをここで読み込むのが簡単. 
-    !そうすると arare_init-data.f90 を編集しないで済む. 
-
-    open (17, file='H2SO4-H2O_initial.dat', status='old')
-    read (17, '()')       ! ヘッダ行の読み飛ばし
-
-    ! ループは k = 2 から k = nz まで回す. dz = 125m を仮定. 
-    do k = 2, nz
-      read (17, *) r_alt(k), r_H2SO4(k), r_H2SO4gas(k), r_H2O(k), r_H2Ogas(k)
-      write(*,*) "**", r_alt(k), r_H2SO4(k), r_H2O(k)
-    end do
-
-    if ( r_alt(2) - r_alt(1) /= 125.0d0 ) then
-      write(*,*) "XXXXXXXXXX  NG, dz = ", r_alt(2) - r_alt(1)
-    end if
-
-    !ガス成分だけ利用する. 位置合わせのために平均する (z -> r). 
-    do k = 1, nz
-      do j = 1, ny
-        do i = 1, nx
-          xyz_H2SO4b(i,j,k) = ( r_H2SO4gas(k) + r_H2SO4gas(k-1) ) * 0.5d0
-          xyz_H2Ob(i,j,k)   = ( r_H2Ogas(k)   + r_H2Ogas(k-1)   ) * 0.5d0
-        end do
-      end do
-    end do
-
-    !境界条件
-    call SetMargin_xyz( xyz_H2SO4b )
-    call SetMargin_xyz( xyz_H2Ob   )
-
-    !代入
-    xyz_H2SO4n = xyz_H2SO4b 
-    xyz_H2On   = xyz_H2Ob
-    
-  end subroutine Cloudphys_VenusIH1998_init
-
-
-  subroutine Cloudphys_VenusIH1998_forcing
-    !
-    ! 数密度の時間発展方程式を解く
-    !
-
-    ! モジュール呼び出し
-    !
-    use timeset,      only : DelTimeLong
-    use setmargin,    only : SetMargin_xyz
-    use constants,only: FactorJ,           &!
-      &                 PressBasis,        &!温位の基準圧力
-      &                 CpDry,             &!乾燥成分の比熱
-      &                 MolWtDry,          &!
-      &                 GasRDry             !乾燥成分の気体定数
-    use axesset, only:  xyz_Z, z_Z,        &!Z 座標
-      &                 dx, dy, dz          !格子間隔
-    use gridset, only:  FlagCalc3D
-    use imamura1998
-    use differentiate_center2,  &
-      &           only: xyz_dx_pyz, xyz_dy_xqz, xyz_dz_xyr, &
-      &                 pyz_dx_xyz, xqz_dy_xyz, xyr_dz_xyz, &
-      &                 pqz_dx_xqz, pqz_dy_pyz, pyz_dy_pqz, &
-      &                 pyr_dx_xyr, pyz_dz_pyr, pyr_dz_pyz, &
-      &                 pyr_dz_pyz, pyr_dx_xyr, xyr_dx_pyr, &
-      &                 xqr_dz_xqz, xqr_dy_xyr, xyr_dy_xqr, &
-      &                 pqz_dy_pyz, pqz_dx_xqz, xqz_dx_pqz, &
-      &                 xqr_dy_xyr, xqr_dz_xqz, xqz_dz_xqr      
-    use average,  only: xyz_pyz, xyr_pyr, xqz_pqz, &
-      &                 pyz_xyz, pyr_xyr, pqz_xqz, &
-      &                 xyz_xqz, pyz_pqz, xyr_xqr, &
-      &                 xqz_xyz, pqz_pyz, xqr_xyr, &
-      &                 xyz_xyr, pyz_pyr, xqz_xqr, &
-      &                 xyr_xyz, pyr_pyz, xqr_xqz, &
-      &                 pqz_xyz, pyr_xyz, xqr_xyz, &
-      &                 xyz_pqz, xyz_pyr, xyz_xqr
-    
-    !暗黙の型宣言禁止
-    implicit none
-      
-
-    real(DP) :: xyz_Dn1Dt(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP) :: xyz_Dn1Dt_prdt(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP) :: xyz_Dn1Dt_loss(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP) :: xyz_Dn1Dt_fall(imin:imax,jmin:jmax,kmin:kmax)
-
-    real(DP) :: xyz_Dn1DtAdv(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP) :: xyz_Dn1DtDif(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP) :: xyz_Dn1DtTrb(imin:imax,jmin:jmax,kmin:kmax)
-    
-    real(DP) :: xyz_Dn2Dt(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP) :: xyz_Dn2Dt_prdt(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP) :: xyz_Dn2Dt_loss(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP) :: xyz_Dn2Dt_fall(imin:imax,jmin:jmax,kmin:kmax)
-
-    real(DP) :: xyz_Dn2DtAdv(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP) :: xyz_Dn2DtDif(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP) :: xyz_Dn2DtTrb(imin:imax,jmin:jmax,kmin:kmax)
-
-    real(DP) :: xyz_Temp(imin:imax,jmin:jmax,kmin:kmax)
-    real(DP) :: xyz_Press(imin:imax,jmin:jmax,kmin:kmax)
-
-    real(DP) :: xyz_Wsed(imin:imax,jmin:jmax,kmin:kmax)
-    
-    integer  :: i, j, k
-    integer, parameter :: sw = 2  !ニュートン法
-    logical            :: flag
-    real(DP) :: x1
-    real(DP) :: NuHh, NuVh
-    real(DP), parameter :: AlphaNDiff = 1.0d-3  !数値拡散の係数
-
-    
-    !初期化
-    xyz_Dn1Dt_prdt = 0.0d0
-    xyz_Dn1Dt_loss = 0.0d0
-    xyz_Dn1Dt_fall = 0.0d0
-    xyz_Dn1Dt      = 0.0d0
-    xyz_Dn2Dt_prdt = 0.0d0
-    xyz_Dn2Dt_loss = 0.0d0
-    xyz_Dn2Dt_fall = 0.0d0
-    xyz_Dn2Dt      = 0.0d0
-
-    xyz_Dn1DtAdv = 0.0d0
-    xyz_Dn1DtDif = 0.0d0
-    xyz_Dn1DtTrb = 0.0d0
-
-    xyz_Dn2DtAdv = 0.0d0
-    xyz_Dn2DtDif = 0.0d0
-    xyz_Dn2DtTrb = 0.0d0
-
-    if ( FlagCalc3D ) then 
-      NuHh = AlphaNDiff * ( SQRT( dx * dy ) ** 4.0d0 ) / (2.0d0 * DelTimeLong)
-    else
-      NuHh = AlphaNDiff * ( dx ** 4.0d0 ) / (2.0d0 * DelTimeLong)
-    end if
-    NuVh = AlphaNDiff * ( dz ** 4.0d0 ) / (2.0d0 * DelTimeLong)
-    
-    
-    !温度・圧力に換算
-    xyz_Temp  = ( xyz_PTempAl + xyz_PTempBZ ) * ( xyz_ExnerNl + xyz_ExnerBZ )
-    xyz_Press = PressBasis * (( xyz_ExnerNl + xyz_ExnerBZ ) ** (CpDry / GasRDry))
-    
-    !移流
-    xyz_Dn1DtAdv =                                         &
-      & - xyz_pyz( pyz_VelXNl * pyz_dx_xyz( xyz_H2SO4n ) )  &
-      & - xyz_xqz( xqz_VelYNl * xqz_dy_xyz( xyz_H2SO4n ) )  &
-      & - xyz_xyr( xyr_VelZNl * xyr_dz_xyz( xyz_H2SO4n ) )    
-    xyz_Dn2DtAdv =                                       &
-      & - xyz_pyz( pyz_VelXNl * pyz_dx_xyz( xyz_H2On ) )  &
-      & - xyz_xqz( xqz_VelYNl * xqz_dy_xyz( xyz_H2On ) )  &
-      & - xyz_xyr( xyr_VelZNl * xyr_dz_xyz( xyz_H2On ) )
-    
-    !数値拡散
-    xyz_Dn1DtDif = &
-      &  - NuHh * (xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz( xyz_H2SO4b ))))) &
-      &  - NuHh * (xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz( xyz_H2SO4b ))))) &
-      &  - NuVh * (xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz( xyz_H2SO4b )))))
-    xyz_Dn2DtDif = &
-      &  - NuHh * (xyz_dx_pyz(pyz_dx_xyz(xyz_dx_pyz(pyz_dx_xyz( xyz_H2Ob ))))) &
-      &  - NuHh * (xyz_dy_xqz(xqz_dy_xyz(xyz_dy_xqz(xqz_dy_xyz( xyz_H2Ob ))))) &
-      &  - NuVh * (xyz_dz_xyr(xyr_dz_xyz(xyz_dz_xyr(xyr_dz_xyz( xyz_H2Ob )))))
-    
-    !乱流拡散
-    xyz_Dn1DtTrb =                                                      &
-      &   xyz_dx_pyz( pyz_xyz( xyz_KhBl ) * pyz_dx_xyz( xyz_H2SO4b ) )  &
-      & + xyz_dy_xqz( xqz_xyz( xyz_KhBl ) * xqz_dy_xyz( xyz_H2SO4b ) )  &
-      & + xyz_dz_xyr( xyr_xyz( xyz_KhBl ) * xyr_dz_xyz( xyz_H2SO4b ) )
-    xyz_Dn2DtTrb =                                                      &
-      &   xyz_dx_pyz( pyz_xyz( xyz_KhBl ) * pyz_dx_xyz( xyz_H2Ob ) )    &
-      & + xyz_dy_xqz( xqz_xyz( xyz_KhBl ) * xqz_dy_xyz( xyz_H2Ob ) )    &
-      & + xyz_dz_xyr( xyr_xyz( xyz_KhBl ) * xyr_dz_xyz( xyz_H2Ob ) )      
-
-    do k = 1, nz
-      do j = 1, ny
-        do i = 1, nz
-          !落下速度
-          call imamura1998_Sediment( z_Z(k), xyz_Wsed(i,j,k) )          
-        end do
-      end do
-    end do
-    
-    
-    do k = 1, nz
-      do j = 1, ny
-        do i = 1, nz
-          
-          !落下項. 風上差分
-          xyz_Dn1Dt_fall(i,j,k) = - (   xyz_Wsed(i,j,k+1) * xyz_H2SO4liq(i,j,k+1) &
-            &                         - xyz_Wsed(i,j,k)   * xyz_H2SO4liq(i,j,k) ) / dz
-          xyz_Dn2Dt_fall(i,j,k) = - (   xyz_Wsed(i,j,k+1) * xyz_H2Oliq(i,j,k+1)   &
-            &                         - xyz_Wsed(i,j,k)   * xyz_H2Oliq(i,j,k)   ) / dz
-          
-          !H2SO4 生成・H2O 消滅
-          call imamura1998_H2SO4Prdt( z_Z(k), dz, xyz_Dn1Dt_prdt(i,j,k), xyz_Dn2Dt_loss(i,j,k) )
-
-          !H2SO4 消滅・H2O 生成
-          call imamura1998_H2SO4Loss( xyz_Temp(i,j,k),       xyz_Press(i,j,k),      &
-            &                         xyz_H2SO4gas(i,j,k),   xyz_H2Ogas(i,j,k),     &
-            &                         xyz_Dn1Dt_loss(i,j,k), xyz_Dn2Dt_prdt(i,j,k) )
-        end do
-      end do
-    end do
-
-    xyz_Dn1Dt =   xyz_Dn1DtAdv   + xyz_Dn1DtDif   + xyz_Dn1DtTrb    &
-      &         + xyz_Dn1Dt_fall + xyz_Dn1Dt_prdt + xyz_Dn1Dt_loss
-    xyz_Dn2Dt =   xyz_Dn2DtAdv   + xyz_Dn2DtDif   + xyz_Dn2DtTrb    &
-      &         + xyz_Dn2Dt_fall + xyz_Dn2Dt_prdt + xyz_Dn2Dt_loss    
-              
-    !時間積分
-    xyz_H2SO4a = max( xyz_H2SO4b + 2.0d0 * DelTimeLong * xyz_Dn1Dt, 0.0d0 )
-    xyz_H2Oa   = max( xyz_H2Ob   + 2.0d0 * DelTimeLong * xyz_Dn2Dt, 0.0d0 )
-          
-
-    do k = 1, nz
-      do j = 1, ny
-        do i = 1, nz
-          
-          !凝結判定
-          call Imamura1998_EquivState( xyz_Temp(i,j,k), xyz_H2SO4a(i,j,k), xyz_H2Oa(i,j,k), xyz_H2SO4gas(i,j,k), xyz_H2Ogas(i,j,k), xyz_H2SO4liq(i,j,k), xyz_H2Oliq(i,j,k), x1, sw, flag )
-          
-!          molfr1(i) = n1_gas(i) * Boltz * temp(i) / press(i)
-!          molfr2(i) = n2_gas(i) * Boltz * temp(i) / press(i)
-
-        end do
-      end do
-   end do
-   
-   !境界条件
-   call SetMargin_xyz( xyz_H2Oa )
-   call SetMargin_xyz( xyz_H2SO4a )
-   
-  end subroutine Cloudphys_VenusIH1998_forcing
 
 end program deepconv_arare
