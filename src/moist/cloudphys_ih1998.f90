@@ -37,16 +37,16 @@ module Cloudphys_IH1998
   real(8), private, parameter :: TempCr= 647.26d0
 
   !公開
-  public imamura1998_GibbsRDivRT
-  public imamura1998_DelChemPotRDivRT
-  public imamura1998_SatPress
-  public imamura1998_SatPressRef
-  public imamura1998_Newton
-  public imamura1998_Bisection
-  public imamura1998_EquivState
-  public Imamura1998_Sediment
-  public Imamura1998_H2SO4Prdt
-  public Imamura1998_H2SO4Loss
+  public IH1998_GibbsRDivRT
+  public IH1998_DelChemPotRDivRT
+  public IH1998_SatPress
+  public IH1998_SatPressRef
+  public IH1998_Newton
+  public IH1998_Bisection
+  public IH1998_EquivState
+  public IH1998_Sediment
+  public IH1998_H2SO4Prdt
+  public IH1998_H2SO4Loss
 
   !関数を public に
   public Cloudphys_IH1998_Init
@@ -58,7 +58,7 @@ contains
 !!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   
-  subroutine imamura1998_coefficient( temp )
+  subroutine IH1998_coefficient( temp )
     !
     !計算に利用する係数 \mu_{ijk}, \varepsilon_{ijk} を計算.
     !Zeleznik (1991), J. Phys. Chem. Data の Table 6 に基づく.  
@@ -179,10 +179,10 @@ contains
       &      + eps212_d / temp       &
       &      + eps212_e * dlog(temp)
     
-  end subroutine imamura1998_coefficient
+  end subroutine IH1998_coefficient
   
   
-  subroutine imamura1998_SatPressRef( TempIN, SatPress1, SatPress2 )
+  subroutine IH1998_SatPressRef( TempIN, SatPress1, SatPress2 )
     !
     !飽和蒸気圧(単成分)の計算.     
     !
@@ -245,10 +245,10 @@ contains
     ! H2O (溶液) の飽和蒸気圧
     SatPress2 = exp( Log_SatPressRef2 )
     
-  end subroutine Imamura1998_SatPressRef
+  end subroutine IH1998_SatPressRef
   
 
-  subroutine imamura1998_SatPress( Temp, con, SatPress1, SatPress2 )
+  subroutine IH1998_SatPress( Temp, con, SatPress1, SatPress2 )
     !
     ! H2SO4 水溶液の飽和蒸気圧
     !
@@ -269,10 +269,10 @@ contains
     real(8)                :: DelChemPotRDivRT2 
 
     !純物質の飽和蒸気圧
-    call imamura1998_SatPressRef( Temp, SatPressRef1, SatPressRef2 )
+    call IH1998_SatPressRef( Temp, SatPressRef1, SatPressRef2 )
     
     !混合の化学ポテンシャル変化を計算
-    call imamura1998_DelChemPotRDivRT( &
+    call IH1998_DelChemPotRDivRT( &
       & Temp, con, DelChemPotRDivRT1, DelChemPotRDivRT2 )
 
     ! H2SO4 (溶液) の飽和蒸気圧
@@ -281,10 +281,10 @@ contains
     ! H2O (溶液) の飽和蒸気圧
     SatPress2 = SatPressRef2 * exp( DelChemPotRDivRT2 )
     
-  end subroutine Imamura1998_SatPress
+  end subroutine IH1998_SatPress
   
 
-  subroutine imamura1998_GibbsRDivRT( temp, con, GibbsRDivRT ) 
+  subroutine IH1998_GibbsRDivRT( temp, con, GibbsRDivRT ) 
     !
     ! - G^{(r)} / RT の計算.
     ! G^{(r)} = G - G^{\circ}(T,p,x)
@@ -314,7 +314,7 @@ contains
     x2 = 1.0d0 - x1
 
     !係数を決める
-    call imamura1998_coefficient(temp)   
+    call IH1998_coefficient(temp)   
 
     !-\frac{G^{(r)}}{RT}
     !  = \sum^2_{i=1} \Phi_{i} \sum^2_{j=1}\sum^2_{k=1}
@@ -338,10 +338,10 @@ contains
       &    )                                                      &
       & )
     
-  end subroutine imamura1998_GibbsRDivRT
+  end subroutine IH1998_GibbsRDivRT
   
 
-  subroutine imamura1998_DelChemPotRDivRT( &
+  subroutine IH1998_DelChemPotRDivRT( &
     & temp, con, DelChemPotRDivRT1, DelChemPotRDivRT2 ) 
     !
     ! \frac{\Del\mu_{i}}{RT} = \frac{\mu_i(T,x_i) - \mu^{\circ}(T)}{RT}
@@ -374,10 +374,10 @@ contains
     x2 = 1.0d0 - x1
 
     !係数を決める
-    call imamura1998_coefficient(temp)
+    call IH1998_coefficient(temp)
 
     ! 関数の呼び出し
-    call imamura1998_GibbsRDivRT(temp, con, GibbsRDivRT)
+    call IH1998_GibbsRDivRT(temp, con, GibbsRDivRT)
    
     ! \DP{G^{(r)}/RT}{x_1} 
     DGibbsRDivRT_Dx1 =                                               &
@@ -429,11 +429,11 @@ contains
          &       - x2 * DGibbsRDivRT_Dx2  &
          &       + DGibbsRDivRT_Dx2 )
     
-  end subroutine imamura1998_DelChemPotRDivRT
+  end subroutine IH1998_DelChemPotRDivRT
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!    
 
-  subroutine imamura1998_DDelChemPotRDivRTDx( &
+  subroutine IH1998_DDelChemPotRDivRTDx( &
        & temp, con, DDelChemPotRDivRT1_Dx1, DDelChemPotRDivRT2_Dx1 )
     !
     ! \frac{\Del\mu_{i}}{RT} = \frac{\mu_i(T,x_i) - \mu^{\circ}(T)}{RT}
@@ -467,7 +467,7 @@ contains
     x2 = 1.0d0 - x1
 
     !係数を決める
-    call imamura1998_coefficient(temp)
+    call IH1998_coefficient(temp)
 
     ! DP{\DP{G^{(r)}/RT}{x_1}}{x_1}
     DGibbsRDivRT_Dx1Dx1 =                                                         &
@@ -501,11 +501,11 @@ contains
     DDelChemPotRDivRT2_Dx1 = - x1 * DGibbsRDivRT_Dx1Dx1  &
          &                   + x1 * DGibbsRDivRT_Dx1Dx2
     
-  end subroutine imamura1998_DDelChemPotRDivRTDx
+  end subroutine IH1998_DDelChemPotRDivRTDx
   
   
 
-  subroutine imamura1998_newton( NumDens1, NumDens2, Temp, con, SatPress1, SatPress2, Flag )
+  subroutine IH1998_newton( NumDens1, NumDens2, Temp, con, SatPress1, SatPress2, Flag )
 
     !暗黙の型宣言
     implicit none
@@ -542,10 +542,10 @@ contains
       CalNum = CalNum + 1
       
       !水溶液の飽和蒸気圧
-      call imamura1998_SatPress( Temp, x1, SatPress1, SatPress2 )
+      call IH1998_SatPress( Temp, x1, SatPress1, SatPress2 )
       
       !混合の化学ポテンシャルの x1 微分を計算
-      call imamura1998_DDelChemPotRDivRTDx( &
+      call IH1998_DDelChemPotRDivRTDx( &
         & Temp, x1, DDelChemPotRDivRT1_Dx1, DDelChemPotRDivRT2_Dx1 )
       
       !H2SO4 (溶液) の飽和蒸気圧の x1 (H2SO4 モル比) 微分
@@ -574,7 +574,7 @@ contains
         !          write(*,*) "CALL Bisection (1)"
         x1L = x1
         x1R = 1.0d0
-        call imamura1998_bisection  &
+        call IH1998_bisection  &
           & (NumDens1, NumDens2, Temp, x1L, x1R, con, SatPress1, SatPress2, Flag)
         exit Loop
       end if
@@ -582,7 +582,7 @@ contains
 !          write(*,*) "CALL Bisection (2)"
 !          x1L = 0.0d0
 !          x1R = x1
-!          call imamura1998_bisection(NumDens1, NumDens2, Temp, x1L, x1R, con, Flag)
+!          call IH1998_bisection(NumDens1, NumDens2, Temp, x1L, x1R, con, Flag)
 !          exit Loop
 !       end if
 
@@ -607,7 +607,7 @@ contains
           !             write(*,*) "CALL Bisection (3)"
           x1L = max(0.0d0, x1save - 1.0d-1)
           x1R = min(1.0d0, x1save + 1.0d-1)
-          call imamura1998_bisection &
+          call IH1998_bisection &
             & (NumDens1, NumDens2, Temp, x1L, x1R, con, SatPress1, SatPress2, Flag)
           
         else
@@ -626,10 +626,10 @@ contains
       
     end do Loop
     
-  end subroutine Imamura1998_Newton
+  end subroutine IH1998_Newton
   
   
-  subroutine imamura1998_bisection &
+  subroutine IH1998_bisection &
     & ( NumDens1, NumDens2, Temp, x1L, x1R, x1C, SatPress1, SatPress2, Flag )
 
     !暗黙の型宣言禁止
@@ -667,17 +667,17 @@ contains
 !       write(*,*) CalNum, real(x1C), real(abs((x1R - x1L) / x1R))
 
       !関数
-      call imamura1998_SatPress( Temp, x1L, SatPress1, SatPress2 )
+      call IH1998_SatPress( Temp, x1L, SatPress1, SatPress2 )
       FuncL = &
         &  ( 1.0d0 - x1L ) * max( (NumDens1 - SatPress1 / BoltzTemp ), 0.0d0) &
         & - x1L            * max( (NumDens2 - SatPress2 / BoltzTemp ), 0.0d0)
       
-      call imamura1998_SatPress( Temp, x1R, SatPress1, SatPress2 )
+      call IH1998_SatPress( Temp, x1R, SatPress1, SatPress2 )
       FuncR = &
         &  ( 1.0d0 - x1R ) * max( (NumDens1 - SatPress1 / BoltzTemp ), 0.0d0 ) &
         & - x1R            * max( (NumDens2 - SatPress2 / BoltzTemp ), 0.0d0 )
       
-      call imamura1998_SatPress( Temp, x1C, SatPress1, SatPress2 )
+      call IH1998_SatPress( Temp, x1C, SatPress1, SatPress2 )
       FuncC = &
         &  ( 1.0d0 - x1C ) * max( (NumDens1 - SatPress1 / BoltzTemp ), 0.0d0 ) &
         & - x1C            * max( (NumDens2 - SatPress2 / BoltzTemp ), 0.0d0 )
@@ -707,10 +707,10 @@ contains
        
     end do Loop
     
-  end subroutine Imamura1998_Bisection
+  end subroutine IH1998_Bisection
   
 
-  subroutine Imamura1998_EquivState &
+  subroutine IH1998_EquivState &
     & ( Temp, n1, n2, n1_gas, n2_gas, n1_liq, n2_liq, con, sw, flag )
     !
     ! 平衡状態を得るためのプログラム.
@@ -745,7 +745,7 @@ contains
     !データのあたりを付ける.      
     do j = 1, NumTest
       con = real(j-1) * del
-      call imamura1998_SatPress( Temp, con, SatPress1, SatPress2)
+      call IH1998_SatPress( Temp, con, SatPress1, SatPress2)
       
       FuncTest2 = &
         &   ( 1.0d0 - con ) * max( (n1 - SatPress1 / ( boltz * Temp ) ), 0.0d0 ) &
@@ -771,7 +771,7 @@ contains
       !水溶液が凝結しない場合.
       !
       
-      call imamura1998_SatPressRef( Temp, SatPressRef1, SatPressRef2)
+      call IH1998_SatPressRef( Temp, SatPressRef1, SatPressRef2)
       
       con = -1.0d0
       
@@ -804,11 +804,11 @@ contains
       
       if ( sw == 1 ) then 
         !二分法で計算
-        call imamura1998_bisection(n1, n2, Temp, x1L, x1R, con, SatPress1, SatPress2, flag)
+        call IH1998_bisection(n1, n2, Temp, x1L, x1R, con, SatPress1, SatPress2, flag)
       else
         ! ニュートン法の初期値
         con = (real(idx(1)-2) + real(idx(1)-1))* del * 5.0d-1
-        call imamura1998_newton(n1, n2, Temp, con, SatPress1, SatPress2, flag)
+        call IH1998_newton(n1, n2, Temp, con, SatPress1, SatPress2, flag)
       end if
       
       ! 凝結量の計算
@@ -825,10 +825,10 @@ contains
       end if
     end if
     
-  end subroutine Imamura1998_EquivState
+  end subroutine IH1998_EquivState
   
 
-  subroutine Imamura1998_Sediment(Height, VelZ)
+  subroutine IH1998_Sediment(Height, VelZ)
     !    
     ! 落下項の計算. 高度のみの関数. 
     !
@@ -860,10 +860,10 @@ contains
     !平均速度
     VelZ = Molfr_2 * VelZ_2 + Molfr_3 * VelZ_3
     
-  end subroutine Imamura1998_Sediment
+  end subroutine IH1998_Sediment
   
   
-  subroutine Imamura1998_H2SO4Prdt( Height, DelZ, H2SO4_Prdt, H2O_Loss )
+  subroutine IH1998_H2SO4Prdt( Height, DelZ, H2SO4_Prdt, H2O_Loss )
     !
     ! H2SO4 の生成項 & H2O の消滅項
     !
@@ -894,10 +894,10 @@ contains
     
     H2O_Loss = -1.0d0 * H2SO4_Prdt
     
-  end subroutine Imamura1998_H2SO4Prdt
+  end subroutine IH1998_H2SO4Prdt
   
   
-  subroutine Imamura1998_H2SO4Loss( Temp, Press, n1, n2, H2SO4_Loss, H2O_Prdt )
+  subroutine IH1998_H2SO4Loss( Temp, Press, n1, n2, H2SO4_Loss, H2O_Prdt )
     !
     ! H2SO4 の消滅項 & H2O の生成項
     !
@@ -929,7 +929,7 @@ contains
     !H2O の生成項
     H2O_Prdt = -1.0d0 * H2SO4_Loss
     
-  end subroutine Imamura1998_H2SO4Loss
+  end subroutine IH1998_H2SO4Loss
   
 !!!-----------------------------------------------------------------------
 
@@ -1216,7 +1216,7 @@ contains
       do j = 1, ny
         do i = 1, nx
           !落下速度
-          call imamura1998_Sediment( z_Z(k), xyz_Wsed(i,j,k) )
+          call IH1998_Sediment( z_Z(k), xyz_Wsed(i,j,k) )
         end do
       end do
     end do
@@ -1233,10 +1233,10 @@ contains
             &                         - xyz_Wsed(i,j,k)   * xyzf_NDens2N(i,j,k  ,3) ) / dz
           
           !H2SO4 生成・H2O 消滅
-          call Imamura1998_H2SO4Prdt( z_Z(k), dz, xyz_Dn1Dt_prdt(i,j,k), xyz_Dn2Dt_loss(i,j,k) )
+          call IH1998_H2SO4Prdt( z_Z(k), dz, xyz_Dn1Dt_prdt(i,j,k), xyz_Dn2Dt_loss(i,j,k) )
           
           !H2SO4 消滅・H2O 生成
-          call Imamura1998_H2SO4Loss( xyz_Temp(i,j,k),       xyz_Press(i,j,k),       &
+          call IH1998_H2SO4Loss( xyz_Temp(i,j,k),       xyz_Press(i,j,k),       &
             &                         xyzf_NDens1N(i,j,k,2), xyzf_NDens2N(i,j,k,2),  &
             &                         xyz_Dn1Dt_loss(i,j,k), xyz_Dn2Dt_prdt(i,j,k) )
         end do
@@ -1259,7 +1259,7 @@ contains
         do i = 1, nx
           
           !凝結判定
-          call Imamura1998_EquivState( xyz_Temp(i,j,k),            & !(IN)
+          call IH1998_EquivState( xyz_Temp(i,j,k),            & !(IN)
             &   xyzf_NDens1A(i,j,k,1), xyzf_NDens2A(i,j,k,1), & !(IN)
             &   xyzf_NDens1A(i,j,k,2), xyzf_NDens2A(i,j,k,2), & !(OUT)
             &   xyzf_NDens1A(i,j,k,3), xyzf_NDens2A(i,j,k,3), & !(OUT)
