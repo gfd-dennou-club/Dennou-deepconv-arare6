@@ -20,7 +20,7 @@ include ../../Config.mk
 .SUFFIXES : .f90 .o
 
 OBJS = \
-	chemdata.o \
+	chemdata.o  \
 	imamura1998.o
 
 MAIN = \

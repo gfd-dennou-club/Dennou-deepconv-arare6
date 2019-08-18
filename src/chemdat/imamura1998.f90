@@ -5,7 +5,8 @@ module Imamura1998
   !
   ! Authors::   SUGIYAMA Ko-ichiro, FUKUHARA Nozomu 
   !
-
+  ! 注意: 現在は使っていない. src/moist/cloudpyhs_ih1998.f90 に統合. 
+  
   !暗黙の型宣言禁止
   implicit none
 
@@ -14,25 +15,25 @@ module Imamura1998
 
   !H2SO4 水溶液のギブス自由エネルギーを求めるための係数.
   !Zeleznik (1991), J. Phys. Chem. Data の Table 6 に基づく.  
-  real(8)            :: mu111
-  real(8)            :: mu211
-  real(8)            :: mu121
-  real(8)            :: mu221
-  real(8)            :: mu122
-  real(8)            :: mu212
+  real(8), private, save :: mu111
+  real(8), private, save :: mu211
+  real(8), private, save :: mu121
+  real(8), private, save :: mu221
+  real(8), private, save :: mu122
+  real(8), private, save :: mu212
 
-  real(8)            :: eps111
-  real(8)            :: eps211
-  real(8)            :: eps121
-  real(8)            :: eps221
-  real(8)            :: eps122
-  real(8)            :: eps212
+  real(8), private, save :: eps111
+  real(8), private, save :: eps211
+  real(8), private, save :: eps121
+  real(8), private, save :: eps221
+  real(8), private, save :: eps122
+  real(8), private, save :: eps212
 
 
   !共通変数
-  real(8), parameter :: Boltz = 1.38064852d-23  !!Boltzmann constant  
-  real(8), parameter :: TempRef = 385.0d0
-  real(8), parameter :: TempCr= 647.26d0
+  real(8), private, parameter :: Boltz = 1.38064852d-23  !!Boltzmann constant  
+  real(8), private, parameter :: TempRef = 385.0d0
+  real(8), private, parameter :: TempCr= 647.26d0
 
   !公開
   public imamura1998_GibbsRDivRT
