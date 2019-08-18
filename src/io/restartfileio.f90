@@ -1,11 +1,3 @@
-!= Module ReStartFileIO
-!
-! Authors::   SUGIYAMA Ko-ichiro, ODAKA Masatsugu
-! Version::   $Id: restartfileio.f90,v 1.18 2015/02/19 02:17:23 sugiyama Exp $ 
-! Tag Name::  $Name:  $
-! Copyright:: Copyright (C) GFD Dennou Club, 2007. All rights reserved.
-! License::   See COPYRIGHT[link:../../COPYRIGHT]
-
 
 module ReStartFileIO
   !
@@ -25,16 +17,19 @@ module ReStartFileIO
   public ReStartFileio_BasicZ_Get
   public ReStartFileio_Var_Get
 
-  type(GT_HISTORY), save, public   :: rstat
+  type(GT_HISTORY),  save, public  :: rstat
   character(STRING), save, private :: InitialFile = ""
-  character(STRING), save, private :: InputFile   = ""
-  character(STRING), save, private :: OutputFile  = "output.nc"
+  character(STRING), save, public  :: InputFile   = ""
+  character(STRING), save, public  :: OutputFile  = "output.nc"
+
+  character(STRING), save, public  :: TimeN = ""
+  character(STRING), save, public  :: TimeB = ""
   
 contains
 
   subroutine ReStartFileio_Init ( FlagInitData )
     !
-    !リスタートファイルの書き出し
+    !リスタートファイルの初期化
     !
 
     !モジュール読み込み
@@ -107,14 +102,14 @@ contains
     call MessageNotify( "M", &
       & "restartfileioIO_init", "OUTPUT = %c", c1=trim(OutputFile) )
 
+    !パラメタ
+    N = size(x_X, 1)
+    L = size(y_Y, 1)
+    M = size(z_Z, 1)
     SpcID = 0.0d0
     do s = 1, ncmax
       SpcID(s) = real( s, 4 )
     end do
-    
-    N = size(x_X, 1)
-    L = size(y_Y, 1)
-    M = size(z_Z, 1)
     
     !-------------------------------------------------------------    
     ! ヒストリー作成
@@ -356,10 +351,7 @@ contains
     real(DP), intent(out) :: xyzf_QMixB &
       &                     (imin:imax,jmin:jmax,kmin:kmax,ncmax)
 
-    character(STRING)    :: name               !変数名
-    character(STRING)    :: TimeN = ""
-    character(STRING)    :: TimeB = ""
-
+    character(STRING)   :: name               !変数名
     integer, parameter  :: rtrn = 1000
     real(DP)            :: RTime(rtrn)
     real(DP)            :: xyz_var(imin:imax,jmin:jmax,kmin:kmax)
