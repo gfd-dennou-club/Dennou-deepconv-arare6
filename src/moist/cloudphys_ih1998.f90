@@ -453,7 +453,6 @@ contains
     real(8), intent(out)   :: DDelChemPotRDivRT2_Dx1
 
     !変数の宣言
-    real(8)                :: GibbsRDivRT
     real(8)                :: DGibbsRDivRT_Dx1Dx1
     real(8)                :: DGibbsRDivRT_Dx1Dx2
 !    real(8)                :: DGibbsRDivRT_Dx2Dx2
@@ -522,13 +521,11 @@ contains
     real(8)                :: SatPress1, SatPress2
     real(8)                :: DSatPress1Dx1, DSatPress2Dx1
     real(8)                :: DDelChemPotRDivRT1_Dx1, DDelChemPotRDivRT2_Dx1
-    real(8)                :: DelChemPotRDivRT1, DelChemPotRDivRT2
     real(8)                :: BoltzTemp
     real(8)                :: x1, x1A, x1P, x1L, x1R
     integer                :: CalNum
     integer, parameter     :: MaxNum = 10
     real(8)                :: x1save
-    real(8)                :: gosa(10)
     
     !初期化
     CalNum = 0
@@ -599,7 +596,11 @@ contains
           con = x1A
           Flag = .true.
           
-        elseif( abs(NumDens1 - SatPress1 / BoltzTemp) / NumDens1 < 1.0d-7 .OR. abs(NumDens2 - SatPress2 / BoltzTemp)/NumDens2 < 1.0d-7 .OR. CalNum > MaxNum .OR. x1A > 1.0d0 .OR. x1A < 0.0d0) then
+        elseif(      abs(NumDens1 - SatPress1 / BoltzTemp) / NumDens1 < 1.0d-7 &
+          &     .OR. abs(NumDens2 - SatPress2 / BoltzTemp)/NumDens2 < 1.0d-7   &
+          &     .OR. CalNum > MaxNum                                           &
+          &     .OR. x1A > 1.0d0                                               &
+          &     .OR. x1A < 0.0d0                                               ) then
           !
           ! 精度を確保するために, 二分法でもダメか念押しする.
           !
@@ -644,9 +645,7 @@ contains
     logical, intent(out)   :: Flag
     real(8)                :: FuncL, FuncC, FuncR
     real(8)                :: BoltzTemp
-    real(8)                :: Func
     integer                :: CalNum
-    integer                :: i
 
     !初期化
     CalNum = 0
@@ -732,7 +731,7 @@ contains
     integer              :: idx(1), cnt(1)
     real(8)              :: FuncSign(NumTest)
     real(8)              :: FuncTest1, FuncTest2
-    real(8)              :: del = 1.0d0 / real(NumTest - 1)
+    real(8)              :: del 
     real(8), parameter   :: TempCr= 647.26d0
     real(8)              :: x1N   
     real(8)              :: SatPressRef1, SatPressRef2
@@ -740,7 +739,8 @@ contains
     real(8)              :: x1R, x1L
 
     !初期化
-    flag = .true. 
+    flag = .true.
+    del = 1.0d0 / real(NumTest - 1)
     
     !データのあたりを付ける.      
     do j = 1, NumTest
