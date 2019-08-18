@@ -38,7 +38,7 @@ contains
       &                        HistoryPut, HistoryAddVariable
     use mpi_wrapper,    only : myrank
     use axesset,        only : z_Z              !Z 座標軸(スカラー格子点)
-    use gridset,        only : nx, ny, nz,     &!物理領域の大きさ
+    use gridset,        only : nz,             &!物理領域の大きさ
       &                        ncmax            !凝縮成分の数
     use fileset,        only : filetitle,      &!データの表題
       &                        filesource,     &!データを作成する手順

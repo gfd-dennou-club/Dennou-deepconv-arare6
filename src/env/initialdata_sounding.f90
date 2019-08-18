@@ -27,7 +27,6 @@ module initialdata_sounding
   real(DP), save, private :: r_tmpPTemp(10000)
   real(DP), save, private :: r_tmpVelX(10000)
   real(DP), save, private :: r_tmpVelY(10000)
-  real(DP), save, private :: r_tmpQrad(10000)
   real(DP), save, private :: TempTr = 0.0d0
   real(DP), save, private :: AltTr  = 0.0d0
   real(DP), save, private :: DelAlt = 4.0d3
@@ -474,7 +473,7 @@ contains
     use gridset,  only: imin, imax,       &!配列サイズ (X 方向)
       &                 jmin, jmax,       &!配列サイズ (Y 方向)
       &                 kmin, kmax         !配列サイズ (Z 方向)
-    use axesset,  only: r_Z, z_Z           !高度
+    use axesset,  only: r_Z                !高度
       
     implicit none
 
