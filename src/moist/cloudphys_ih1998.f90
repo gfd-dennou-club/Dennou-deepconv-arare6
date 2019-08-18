@@ -997,6 +997,7 @@ contains
     use gtool_historyauto, only : HistoryAutoAddVariable
     use gridset,           only : imin, imax, jmin, jmax, kmin, kmax, &
       &                           nx, ny, nz
+    use axesset,           only : r_Z, z_Z
   
     !暗黙の型宣言禁止
     implicit none
@@ -1006,11 +1007,11 @@ contains
     real(DP), intent(out) :: xyzf_NDens2(imin:imax, jmin:jmax, kmin:kmax, 1:3)
     
     !変数宣言
-    real(DP) :: r_alt(1:nz)
-    real(DP) :: r_H2SO4(1:nz)
-    real(DP) :: r_H2SO4gas(1:nz)
-    real(DP) :: r_H2O(1:nz)
-    real(DP) :: r_H2Ogas(1:nz)
+    real(DP) :: r_alt(0:nz)
+    real(DP) :: r_H2SO4(0:nz)
+    real(DP) :: r_H2SO4gas(0:nz)
+    real(DP) :: r_H2O(0:nz)
+    real(DP) :: r_H2Ogas(0:nz)
     integer  :: i, j, k
 
     !初期化
@@ -1019,17 +1020,20 @@ contains
     
     !初期値ファイル読み込み. 
     open (17, file='H2SO4-H2O_initial.dat', status='old')
-    read (17, '()')       ! ヘッダ行の読み飛ばし
+!    read (17, '()')       ! ヘッダ行の読み飛ばし
 
-    ! ループは k = 2 から k = nz まで回す. dz = 125m を仮定. 
-    do k = 2, nz
+    ! データ読み込み
+    do k = 1, nz
       read (17, *) r_alt(k), r_H2SO4(k), r_H2SO4gas(k), r_H2O(k), r_H2Ogas(k)
-      write(*,*) "**", r_alt(k), r_H2SO4(k), r_H2O(k)
+!      write(*,*) "**", r_alt(k), r_H2SO4(k), r_H2O(k)
     end do
 
-    if ( r_alt(2) - r_alt(1) /= 125.0d0 ) then
-      write(*,*) "XXXXXXXXXX  NG, dz = ", r_alt(2) - r_alt(1)
-    end if
+    ! 添字 0 での値を決める
+    r_alt(0)      = r_alt(1) - 125.0d0
+    r_H2SO4(0)    = r_H2SO4(1)
+    r_H2SO4gas(0) = r_H2SO4gas(1)
+    r_H2O(0)      = r_H2O(1)
+    r_H2Ogas(0)   = r_H2Ogas(1)
 
     !ガス成分だけ利用する. 位置合わせのために平均する (z -> r). 
     do k = 1, nz
@@ -1041,6 +1045,17 @@ contains
       end do
     end do
 
+    !現在は格子間隔を決め打ち
+    if ( r_alt(2) - r_alt(1) /= 125.0d0 .OR. r_alt(1) /= r_Z(1) .OR. r_alt(2) /= r_Z(2) ) then
+      write(*,*) "XXXXXXXXXX  NG, dz = ", r_alt(2) - r_alt(1)
+      write(*,*)  r_alt(1), r_alt(2), r_alt(3), r_alt(4), r_alt(5)
+
+      write(*,*) "READ:        ", r_alt(1), r_alt(2)
+      write(*,*) "READ:        ", r_alt(1) - 62.5d0, r_alt(1) + 62.5d0
+      write(*,*) "MODEL (r_Z): ", r_z(1), r_z(2)
+      write(*,*) "MODEL (z_Z): ", z_z(1), z_z(2)      
+    end if
+    
     !境界条件
     call SetMargin_xyz( xyzf_NDens1(:,:,:,1) )
     call SetMargin_xyz( xyzf_NDens2(:,:,:,1) )

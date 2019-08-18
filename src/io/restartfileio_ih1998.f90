@@ -56,16 +56,20 @@ contains
     integer            :: num
 
     !入力ファイル名の設定
-    num = len_trim( Inputfile ) - 3
-    Inputfile2 = Inputfile(1:num) // '_IH1998.nc'
-    call MessageNotify( "M", &
-      & "restartfileioIO_IH1998_init", "INPUT = %c", c1=trim(InputFile2) )
-    
+    if (Inputfile /= "") then 
+      num = len_trim( Inputfile ) - 3
+      Inputfile2 = Inputfile(1:num) // '_IH1998.nc'
+      call MessageNotify( "M", &
+        & "restartfileioIO_IH1998_init", "INPUT = %c", c1=trim(InputFile2) )
+    end if
+
     !出力ファイル名の設定
-    num = len_trim( Outputfile ) - 3
-    Outputfile2 = Outputfile(1:num) // '_IH1998.nc'
-    call MessageNotify( "M", &
-      & "restartfileioIO_IH1998_init", "OUTPUT = %c", c1=trim(OutputFile2) )
+    if (Outputfile /= "") then 
+      num = len_trim( Outputfile ) - 3
+      Outputfile2 = Outputfile(1:num) // '_IH1998.nc'
+      call MessageNotify( "M", &
+        & "restartfileioIO_IH1998_init", "OUTPUT = %c", c1=trim(OutputFile2) )
+    end if
 
     !パラメタ
     N = size(x_X, 1)
@@ -105,17 +109,17 @@ contains
     call HistoryPut('z', z_Z, rstat2 )
     call HistoryPut('s', real(SpcID, 4), rstat2 )
 
-    !H2O 数密度
+    !H2SO4 数密度
     call HistoryAddVariable(                            &
       & varname='NDens1', dims=(/'x','y','z','s','t'/), &
-      & longname='Number Density of H2O (all)',         &
+      & longname='Number Density of H2SO4 (all)',       &
       & units='m-3',                                    &
       & xtype='float', history=rstat2 )
 
-    !H2SO4 数密度
+    !H2O 数密度
     call HistoryAddVariable(                            &
       & varname='NDens2', dims=(/'x','y','z','s','t'/), &
-      & longname='Number Density of H2SO4 (all)',       &
+      & longname='Number Density of H2O (all)',         &
       & units='m-3',                                    &
       & xtype='float', history=rstat2 )
 
@@ -169,7 +173,7 @@ contains
     real(DP), intent(out) :: xyzf_NDens2B(imin:imax,jmin:jmax,kmin:kmax,1:ncmax)
     real(DP), intent(out) :: xyzf_NDens2N(imin:imax,jmin:jmax,kmin:kmax,1:ncmax)
     character(STRING)     :: name
-    
+
     ! ファイルオープン & 値の取り出し
     name = "NDens1"
     call HistoryGet( InputFile2, name, xyzf_NDens1B, range=TimeB, flag_mpi_split = FLAG_LIB_MPI )

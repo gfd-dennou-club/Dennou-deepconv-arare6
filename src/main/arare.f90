@@ -911,9 +911,9 @@ contains
       allocate( xyzf_NDens1N(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
       allocate( xyzf_NDens1A(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
 
-      allocate( xyzf_NDens1B(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
-      allocate( xyzf_NDens1N(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
-      allocate( xyzf_NDens1A(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+      allocate( xyzf_NDens2B(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+      allocate( xyzf_NDens2N(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+      allocate( xyzf_NDens2A(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
 
       xyzf_NDens1B = 0.0d0; xyzf_NDens1N = 0.0d0; xyzf_NDens1A = 0.0d0
       xyzf_NDens2B = 0.0d0; xyzf_NDens2N = 0.0d0; xyzf_NDens2A = 0.0d0
@@ -994,6 +994,10 @@ contains
     ! Loading NAMELIST file.
     !
     call NmlutilInit( cfgfile ) !(in)
+
+    ! NAMELIST のフラグ処理
+    !
+    call CheckFlag
     
     ! 時間積分の初期化
     ! Initialization of time integration.
@@ -1048,10 +1052,6 @@ contains
     ! Initialization of internal variables.
     !
     call VariableAllocate
-
-    ! フラグ処理
-    !
-    call CheckFlag
 
     ! 初期値の代入 
     ! * ReStartFile が設定されている場合にはファイルを読み込む. 
