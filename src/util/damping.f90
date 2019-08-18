@@ -300,7 +300,7 @@ contains
     call MessageNotify( "M", "Damping_init", "DepthV = %f", d=(/DepthV/) )  
     call MessageNotify( "M", "Damping_init", "DepthVb= %f", d=(/DepthVb/) )  
 
-    write(*,*) minval( xyz_Gamma ), maxval( xyz_Gamma )
+!    write(*,*) minval( xyz_Gamma ), maxval( xyz_Gamma )
     
     !-----------------------------------------------------------------    
     ! 平均風のダンピング
