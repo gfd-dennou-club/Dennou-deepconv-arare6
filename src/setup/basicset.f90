@@ -93,7 +93,7 @@ contains
     real(DP), intent(in), optional :: xyz_EffMolWt(imin:imax,jmin:jmax,kmin:kmax)
 
     real(DP)             :: xyzf_QMixBZPerMolWt(imin:imax,jmin:jmax,kmin:kmax,GasNum)
-    integer              :: s, k
+    integer              :: s
 
     ! 配列の初期化
     call basicset_array_init
