@@ -29,6 +29,7 @@ include ../../Config.mk
 OBJS = \
 	historyfileio.o \
 	restartfileio.o \
+	restartfileio_ih1998.o \
 	basicfileio.o \
 	arare4restartfileio.o \
 	arare4initfileio.o 
