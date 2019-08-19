@@ -448,7 +448,7 @@ contains
 !    write(*,*) "XXXXXXXXXXXX ", minval( xyr_VelZBl), maxval( xyr_VelZBl)
 !    write(*,*) "XXXXXXXXXXXX ", minval( xyr_SpngVelZ ), maxval( xyr_SpngVelZ )
     
-    call HistoryAutoPut(TimeN, 'DVelXDtSpng',  pyz_SpngVelX(1:nx,1:ny,1:nz)
+    call HistoryAutoPut(TimeN, 'DVelXDtSpng',  pyz_SpngVelX(1:nx,1:ny,1:nz))
     call HistoryAutoPut(TimeN, 'DVelYDtSpng',  xqz_SpngVelY(1:nx,1:ny,1:nz))
     call HistoryAutoPut(TimeN, 'DVelZDtSpng',  xyr_SpngVelZ(1:nx,1:ny,1:nz))
     call HistoryAutoPut(TimeN, 'DPTempDtSpng', xyz_SpngPTemp(1:nx,1:ny,1:nz))
@@ -594,8 +594,7 @@ contains
     real(DP)              :: aaa_tmp2(imin:imax,jmin:jmax,kmin:kmax)
     character(STRING)     :: name               !変数名
     character(STRING)     :: time = "t=^1"
-    integer               :: k
-    
+    integer               :: k    
 
     ! ファイルオープン & 値の取り出し
     ! 指定したファイルの先頭時刻の値を取り出す.
