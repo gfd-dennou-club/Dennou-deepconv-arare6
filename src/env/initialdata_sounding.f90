@@ -13,7 +13,10 @@ module initialdata_sounding
   ! サウンディングファイルはテキストファイルで書かれている. 
   ! 将来的には netCDF に変更する予定.
   !
-
+  ! 高度方向の計算領域が与えられたファイルの上端よりも高い場合は, 
+  ! VIRA データを用いて補完する. 
+  !
+  
   !モジュール読み込み
   use dc_types, only: DP, STRING
   use gtool_history, only : GT_HISTORY
@@ -149,7 +152,6 @@ contains
       &            86000.0d0,  88000.0d0,  90000.0d0,  92000.0d0,  94000.0d0, &
       &            96000.0d0,  98000.0d0, 100000.0d0, 110000.0d0, 120000.0d0, &
       &           130000.0d0, 140000.0d0, 150000.0d0 /)
-
 
   end subroutine initialdata_sounding_init
 
