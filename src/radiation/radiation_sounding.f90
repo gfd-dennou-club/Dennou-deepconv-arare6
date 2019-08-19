@@ -55,7 +55,7 @@ contains
       &                           kmin,     & !z 方向の配列の下限
       &                           kmax,     & !z 方向の配列の上限
       &                           nx, ny, nz
-    use axesset,           only : r_Z, z_Z    !Z 座標軸
+    use axesset,           only : r_Z         !Z 座標軸
     use constants,         only : DayTime,  & ! 1 日の長さ [s]
       &                           CpDry
     use basicset,          only : xyz_ExnerBZ, & !エクスナー関数の基本場

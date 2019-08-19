@@ -48,17 +48,6 @@ deepconv/arare5 のビルドを行ってください.
 ビルドが完了すると, "src/main" ディレクトリ以下に, arare, arare_initdata といった実行ファイルが作成されます. 
 また, いくつかのサンプル NAMELIST ファイル (拡張子が .conf のファイル) が "exp_setup_files" に用意されています.
 
-#$ ls exp_setup_files
-#
-#dcpam_ape_T21L16.conf
-#dcpam_ape_T42L16.conf
-#dcpam_hs94_T21L20.conf
-#dcpam_hs94_T42L20.conf
-#init_data_T21L16.conf
-#init_data_T42L16.conf
-#sst_data_T21.conf
-#sst_data_T42.conf
-#       :
 
 == 実験の実行
 

@@ -19,27 +19,15 @@ include ../../Config.mk
 
 .SUFFIXES : .f90 .o
 
-OBJS = \
-	chemdata.o  \
-	imamura1998.o
-
 MAIN = \
-	test-chemdata.o
+	main.o
 
-all: $(OBJS) 
-	$(AR) $(ARFLAGS) $(LIBDIR)/lib$(LIBNAME).a ./*.o ; \
-	$(CP) ./*.mod  $(MODDIR)
-
-test: $(OBJS) $(MAIN)
-	$(LINKF) $(OBJS) $(MAIN) -o test \
-	-L$(LIBDIR) -l$(LIBNAME) -I$(MODDIR) 
+all:   $(MAIN)
+	$(LINKF) $(OBJS) $(MAIN) -o main \
+	-L$(LIBDIR) -l$(LIBNAME) -I$(MODDIR)
 
 clean: 
-	-$(RM) *.o *.mod 
-
-
-clean.test: clean 
-	-$(RM) test *~
+	-$(RM) *.o main
 
 .f90.o: 
 	$(FC) $(SYSFFLAGS) -c $< 

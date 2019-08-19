@@ -35,7 +35,8 @@ OBJS = \
 	eccm.o  \
 	moistadjust.o \
 	cloudphys_k1969.o \
-	cloudphys_marscond.o
+	cloudphys_marscond.o \
+	cloudphys_ih1998.o
 
 all: $(OBJS) 
 	$(AR) $(ARFLAGS) $(LIBDIR)/lib$(LIBNAME).a ./*.o ; \

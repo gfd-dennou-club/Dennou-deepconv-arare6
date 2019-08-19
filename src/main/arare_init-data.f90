@@ -95,6 +95,13 @@ program ArareInitData
   use Arare4InitFileIO, only : Arare4InitFileIO_Init, Arare4InitFileIO_Var_Get, Arare4InitFileIO_BZ_Get, &
     &                          Arare4InitFileIO_MMC_Var_Get, Arare4InitFileIO_MMC_BZ_Get
 
+  !------   金星計算用 (IH1998)  -----
+  use ReStartFileIO_IH1998,  only : ReStartFileio_IH1998_init,       &
+    &                               ReStartFileio_IH1998_Finalize,   &
+    &                               rstat2
+  use cloudphys_IH1998, only : Cloudphys_IH1998_Sounding 
+
+  
   !暗黙の型宣言禁止
   implicit none
 
@@ -126,6 +133,11 @@ program ArareInitData
   real(DP)              :: Time
   integer               :: i, j, k, s
   logical, parameter    :: FlagInitData = .true.
+
+  !IH1998
+  real(DP), allocatable :: xyzf_NDens1(:,:,:,:) !H2SO4
+  real(DP), allocatable :: xyzf_NDens2(:,:,:,:) !H2O
+  logical               :: SwitchVenus = .false.
   
   !変数定義
   ! Moist 用
@@ -764,10 +776,10 @@ program ArareInitData
   !
   call MessageNotify( "M", "main", "Output variables into netCDF file..." )
 
-  ! リスタートファイル作成. 基本場と擾乱場を出力. 
-  !
+  ! リスタートファイルの初期化
   call ReStartFileIO_Init( FlagInitData )
 
+  ! 擾乱場を出力. 
   call HistoryPut( 't',     Time,      rstat)
   call HistoryPut( 'VelX',  pyz_VelX,  rstat)
   call HistoryPut( 'VelY',  xqz_VelY,  rstat)
@@ -779,10 +791,8 @@ program ArareInitData
   call HistoryPut( 'QMix',  xyzf_QMix, rstat)    
   call HistoryPut( 'CDens', xyz_CDens, rstat)    
 
-  ! 基本場のファイル出力
-  !
+  ! 基本場を出力
   xyz_VPTempBZ = xyz_PTempBZ / xyz_EffMolWtBZ  ! ファイル入力のため
-
   call HistoryPut( 'DensBZ',     xyz_DensBZ    , rstat)
   call HistoryPut( 'ExnerBZ',    xyz_ExnerBZ   , rstat)
   call HistoryPut( 'PTempBZ',    xyz_PTempBZ   , rstat)
@@ -793,8 +803,37 @@ program ArareInitData
   call HistoryPut( 'QMixBZ',     xyzf_QMixBZ   , rstat)
   call HistoryPut( 'EffMolWtBZ', xyz_EffMolWtBZ, rstat)
   call HistoryPut( 'HumBZ',      xyzf_HumBZ    , rstat)
-  
+
+  ! リスタートファイルクローズ
   call ReStartFileIO_Finalize
+
+  !IH1998
+  if ( SwitchVenus ) then 
+    !メッセージ
+    call MessageNotify( "M", "main", "Making Initial data about Venus (Imamura and Hashimoto, 1998) ..." )
+    
+    !配列の allocate
+    allocate( xyzf_NDens1(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+    allocate( xyzf_NDens2(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+    xyzf_NDens1 = 0.0d0
+    xyzf_NDens2 = 0.0d0
+
+    !擾乱場の設定
+    call Cloudphys_IH1998_Sounding(    &
+      &    xyzf_NDens1, xyzf_NDens2    & !(out)
+      & ) 
+    
+    !リスタートファイルの初期化
+    call ReStartFileIO_IH1998_Init( FlagInitData )
+
+    !擾乱場を出力. 
+    call HistoryPut( 't'     , Time       , rstat2)
+    call HistoryPut( 'NDens1', xyzf_NDens1, rstat2)
+    call HistoryPut( 'NDens2', xyzf_NDens2, rstat2)
+
+    !リスタートファイルクローズ
+    call ReStartFileIO_IH1998_Finalize
+  end if
 
   !----------------------------------------------------
   ! MPI END
@@ -863,7 +902,7 @@ contains
     zf_MolFr = 0.0d0 
     xyzf_QMixDivMolWt = 0.0d0
     xyzf_HumBZ = 0.0d0
-
+    
   end subroutine ArareAlloc
     
 
@@ -1020,8 +1059,9 @@ contains
       & FlagDisturb,      &
       & FlagDisturbPTemp, &    
       & FlagDisturbExner, &    
-      & FlagDisturbQMix,  &    
-      & FlagDisturbWind  
+      & FlagDisturbQMix,  &
+      & FlagDisturbWind,  &    
+      & SwitchVenus
 
     NAMELIST /initialdata_basic_nml/ &
 !      & Humidity, TempTr, DHeight, HeightTr

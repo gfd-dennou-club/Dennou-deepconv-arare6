@@ -120,6 +120,8 @@ program deepconv_arare
     &                               Cloudphys_K1969_forcing 
   use Cloudphys_marscond,    only : cloudphys_marscond_Init,         &
     &                               cloudphys_marscond_forcing
+  use Cloudphys_IH1998,      only : Cloudphys_IH1998_Init,           &
+    &                               Cloudphys_IH1998_Forcing  
 
   ! 下請けモジュール
   ! Utility modules
@@ -149,8 +151,11 @@ program deepconv_arare
   use HistoryFileIO,         only : HistoryFileio_init,              &
     &                               HistoryFileio_Finalize
   use BasicFileIO,           only : BasicFileio_Output
-
-
+  use ReStartFileIO_IH1998,  only : ReStartFileio_IH1998_init,       &
+    &                               ReStartFileio_IH1998_Finalize,   &
+    &                               ReStartFileio_IH1998_Var_Get,    &
+    &                               rstat2
+  
   ! 暗黙の型宣言禁止
   !
   implicit none
@@ -266,7 +271,16 @@ program deepconv_arare
   real(DP), allocatable :: xyz_DKmDtNl(:,:,:)
   real(DP), allocatable :: xyz_DCDensDtNl(:,:,:)
 
-  integer :: s, t, tau  ! do ループ変数 ; do loop variable 
+  !金星 IH1998
+  real(DP), allocatable :: xyzf_NDens1A(:,:,:,:)
+  real(DP), allocatable :: xyzf_NDens1N(:,:,:,:)
+  real(DP), allocatable :: xyzf_NDens1B(:,:,:,:)
+  real(DP), allocatable :: xyzf_NDens2A(:,:,:,:)
+  real(DP), allocatable :: xyzf_NDens2N(:,:,:,:)
+  real(DP), allocatable :: xyzf_NDens2B(:,:,:,:)
+  logical               :: SwitchVenus = .false.
+  
+  integer :: s, tau  ! do ループ変数 ; do loop variable 
 
   integer            :: IDTurbMethod          = 0
   integer, parameter :: IDTurbKW1978          = 2
@@ -284,7 +298,8 @@ program deepconv_arare
   integer, parameter :: IDSurfaceBaker1998    = 4
   integer            :: IDCloudMethod         = 0
   integer, parameter :: IDCloudK1969          = 1
-  integer, parameter :: IDCloudMarsCond       = 2
+  integer, parameter :: IDCloudMarsCond       = 2 
+  integer, parameter :: IDCloudIH1998         = 3 !金星雲微物理 IH1998
   integer            :: IDDebugMethod         = 0
   integer, parameter :: IDDebugNoTendencyLong = 1
   integer, parameter :: IDDebugWindConst      = 2
@@ -486,7 +501,7 @@ program deepconv_arare
     !
     call PTemp_integrate
     call QMix_integrate
-    
+
     !------------------------------------------
     ! 凝結過程. Al な値を入れ替え.
     ! 
@@ -498,6 +513,19 @@ program deepconv_arare
         &   xyz_PTempAl,              &!(inout)
         &   xyzf_QMixAl               &!(inout)
         & )
+      
+    case (IDCloudIH1998)
+      !IH1998      
+      call Cloudphys_IH1998_forcing(               &
+        &   xyz_PtempAl,  xyz_PtempBZ,             & !(in)
+        &   xyz_ExnerNl,  xyz_ExnerBZ,             & !(in)
+        &   pyz_VelXNl,   xqz_VelYNl,  xyr_VelZNl, & !(in)
+        &   xyz_KhBl,                              & !(in)        
+        &   xyzf_NDens1B, xyzf_NDens2B,            & !(in)
+        &   xyzf_NDens1N, xyzf_NDens2N,            & !(in)
+        &   xyzf_NDens1A, xyzf_NDens2A             & !(inout)
+        & )
+
     end select
     
     ! 短い時間ステップの初期値作成.
@@ -635,6 +663,16 @@ program deepconv_arare
       call HistoryAutoPut(TimeN, trim(SpcWetSymbol(s)), xyzf_QMixNl(1:nx, 1:ny, 1:nz, s))
     end do
 
+    !IH1998
+    if ( SwitchVenus ) then 
+      call HistoryAutoPut(TimeN, 'H2SO4',    xyzf_NDens1N( 1:nx, 1:ny, 1:nz, 1))
+      call HistoryAutoPut(TimeN, 'H2SO4gas', xyzf_NDens1N( 1:nx, 1:ny, 1:nz, 2))
+      call HistoryAutoPut(TimeN, 'H2SO4liq', xyzf_NDens1N( 1:nx, 1:ny, 1:nz, 3))
+      call HistoryAutoPut(TimeN, 'H2O',      xyzf_NDens2N( 1:nx, 1:ny, 1:nz, 1))
+      call HistoryAutoPut(TimeN, 'H2Ogas',   xyzf_NDens2N( 1:nx, 1:ny, 1:nz, 2))
+      call HistoryAutoPut(TimeN, 'H2Oliq',   xyzf_NDens2N( 1:nx, 1:ny, 1:nz, 3))
+    end if
+
     !------------------------------------------
     ! 保存量の出力
     ! Out put conservation variables
@@ -669,7 +707,7 @@ program deepconv_arare
       call HistoryPut( 'Kh',    xyz_KhNl,    rstat)
       call HistoryPut( 'CDens', xyz_CDensNl, rstat)
       call HistoryPut( 'QMix',  xyzf_QMixNl, rstat)    
-
+      
       call HistoryPut( 't',     TimeA,       rstat)
       call HistoryPut( 'VelX',  pyz_VelXAl,  rstat)
       call HistoryPut( 'VelY',  xqz_VelYAl,  rstat)
@@ -680,7 +718,7 @@ program deepconv_arare
       call HistoryPut( 'Kh',    xyz_KhAl,    rstat)
       call HistoryPut( 'CDens', xyz_CDensAl, rstat)
       call HistoryPut( 'QMix',  xyzf_QMixAl, rstat) 
-      
+
       ! 基本場のファイル出力
       !
       call HistoryPut( 'DensBZ',     xyz_DensBZ    , rstat)
@@ -693,7 +731,17 @@ program deepconv_arare
       call HistoryPut( 'QMixBZ',     xyzf_QMixBZ   , rstat)
       call HistoryPut( 'EffMolWtBZ', xyz_EffMolWtBZ, rstat)
 !      call HistoryPut( 'HumBZ',      xyzf_HumBZ    , rstat)
-     
+
+      !IH1998
+      if ( SwitchVenus ) then 
+        call HistoryPut( 't'     , TimeN       , rstat2)
+        call HistoryPut( 'NDens1', xyzf_NDens1N, rstat2)
+        call HistoryPut( 'NDens2', xyzf_NDens2N, rstat2)
+        call HistoryPut( 't'     , TimeA       , rstat2)
+        call HistoryPut( 'NDens1', xyzf_NDens1A, rstat2)
+        call HistoryPut( 'NDens2', xyzf_NDens2A, rstat2)
+      end if
+
       ! Show CPU time 
       ! 
       call ClocksetPredict
@@ -713,6 +761,12 @@ program deepconv_arare
     xyz_CDensBl = xyz_CDensNl; xyz_CDensNl = xyz_CDensAl
     xyzf_QMixBl = xyzf_QMixNl; xyzf_QMixNl = xyzf_QMixAl
 
+    !IH1998
+    if ( SwitchVenus ) then 
+      xyzf_NDens1B = xyzf_NDens1N; xyzf_NDens1N = xyzf_NDens1A
+      xyzf_NDens2B = xyzf_NDens2N; xyzf_NDens2N = xyzf_NDens2A      
+    end if
+
     ! 時刻の進行
     ! Progress time
     !
@@ -726,7 +780,10 @@ program deepconv_arare
   !
   call HistoryFileio_finalize
   call ReStartFileio_finalize
-
+  if ( SwitchVenus ) then
+    call RestartFileio_IH1998_finalize !IH1998
+  end if
+  
   !----------------------------------------------------
   ! CPU 時間の計測終了
   ! 
@@ -848,17 +905,26 @@ contains
     xyz_DCDensDtNl = 0.0d0
     xyzf_DQMixDtNl = 0.0d0
 
-    ! 時間ループの初期化
-    !
-    t = 1
+    ! IH1998 用
+    if ( SwitchVenus ) then 
+      allocate( xyzf_NDens1B(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+      allocate( xyzf_NDens1N(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+      allocate( xyzf_NDens1A(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
 
+      allocate( xyzf_NDens2B(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+      allocate( xyzf_NDens2N(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+      allocate( xyzf_NDens2A(imin:imax, jmin:jmax, kmin:kmax, 1:3) )
+
+      xyzf_NDens1B = 0.0d0; xyzf_NDens1N = 0.0d0; xyzf_NDens1A = 0.0d0
+      xyzf_NDens2B = 0.0d0; xyzf_NDens2N = 0.0d0; xyzf_NDens2A = 0.0d0
+    end if
+    
   end subroutine VariableAllocate
-
 
   !-----------------------------------------------------------------------
   subroutine AsselinTimeFilter
     !
-    ! 時間フィルター; Asselin のタイムフィルターを利用
+    ! 時間フィルター; Asselin のタイムフィルターを利用    
     !   t = 0.0 の場合には tfil = 0.0d0, それ以外は tfil = 1.0d-1
     !   (t = 0 の時はオイラー法で, それ以外はリープフロッグ法で積分するため)
     !
@@ -883,7 +949,13 @@ contains
     xyz_KhNl    = tfil * ( xyz_KhBl    + xyz_KhAl    ) + tfil2 * xyz_KhNl
     xyz_CDensNl = tfil * ( xyz_CDensBl + xyz_CDensAl ) + tfil2 * xyz_CDensNl
     xyzf_QMixNl = tfil * ( xyzf_QMixBl + xyzf_QMixAl ) + tfil2 * xyzf_QMixNl
-    
+
+    !IH1998
+    if ( SwitchVenus ) then 
+      xyzf_NDens1N = tfil * ( xyzf_NDens1B + xyzf_NDens1A ) + tfil2 * xyzf_NDens1N
+      xyzf_NDens2N = tfil * ( xyzf_NDens2B + xyzf_NDens2A ) + tfil2 * xyzf_NDens2N
+    end if
+
   end subroutine AsselinTimeFilter
   
 
@@ -922,6 +994,10 @@ contains
     ! Loading NAMELIST file.
     !
     call NmlutilInit( cfgfile ) !(in)
+
+    ! NAMELIST のフラグ処理
+    !
+    call CheckFlag
     
     ! 時間積分の初期化
     ! Initialization of time integration.
@@ -963,7 +1039,10 @@ contains
     !
     call HistoryFileio_init
     call ReStartFileio_init
-
+    if ( SwitchVenus )  then
+      call RestartFileio_IH1998_init  !IH1998
+    end if
+    
     ! マージンの設定の初期化
     ! Initialization of margin
     !
@@ -973,10 +1052,6 @@ contains
     ! Initialization of internal variables.
     !
     call VariableAllocate
-
-    ! フラグ処理
-    !
-    call CheckFlag
 
     ! 初期値の代入 
     ! * ReStartFile が設定されている場合にはファイルを読み込む. 
@@ -1022,6 +1097,13 @@ contains
 
     end select
 
+    if ( SwitchVenus ) then
+      call ReStartFileio_IH1998_Var_Get(   &
+        &   xyzf_NDens1B, xyzf_NDens1N,   & ! (out)
+        &   xyzf_NDens2B, xyzf_NDens2N    & ! (out)
+        & )
+    end if
+    
     ! 化学計算ルーチンの初期化
     ! Initialization of chemical routines.
     !
@@ -1128,6 +1210,7 @@ contains
     FlagCloudMethod      = "Nothing"
 !!$    FlagCloudMethod   = "K1969"
 !!$    FlagCloudMethod   = "MarsCond"
+!!$    FlagCloudMethod   = "IH1998"    
 
     FlagWindMethod       = "Nothing"
 !!$    FlagWindMethod    = "Const"
@@ -1200,6 +1283,9 @@ contains
       IDCloudMethod = IDCloudK1969
     case ( "MarsCond" )
       IDCloudMethod = IDCloudMarsCond
+    case ( "IH1998" )
+      IDCloudMethod = IDCloudIH1998
+      SwitchVenus   = .true.              !IH1998
     case default
       call MessageNotify( 'E', prog_name, &
         & 'FlagCloudMethod=<%c> is not supported.', &
@@ -1303,6 +1389,8 @@ contains
       call cloudphys_K1969_init
     case ( IDCloudMarsCond )
       call cloudphys_marscond_init
+    case ( IDCloudIH1998 )
+      call cloudphys_IH1998_init
     end select
 
   end subroutine PhysicalProcess_init
@@ -1427,5 +1515,4 @@ contains
          
   end subroutine QMix_integrate
 
-      
 end program deepconv_arare
