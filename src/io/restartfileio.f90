@@ -377,9 +377,11 @@ contains
 
       ! 取り出した時刻が一致したらループ終了. nt2 にループ回数保管. 
       !
-      if ( nt > 1 .AND. RTime(nt - 1) == RTime(nt) ) then 
-        nt2 = nt - 1
-        exit CHECK_RestartTime
+      if ( nt > 1 ) then 
+        if ( RTime(nt - 1) == RTime(nt) ) then 
+          nt2 = nt - 1
+          exit CHECK_RestartTime
+        end if
       end if
     end do CHECK_RestartTime
 
