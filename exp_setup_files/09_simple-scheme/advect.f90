@@ -55,8 +55,9 @@ program advect
   ! 物理パラメタ
   ! 設定ファイル (.conf) では指定できない項目を陽に指定.  
   !
-  real(DP), parameter :: nu    = 1.0d-1  ! 移流速度
-  real(DP), parameter :: VelX0 = 1.0d0   ! 移流速度
+!  real(DP), parameter :: nu    = 1.0d-1  ! 拡散係数
+  real(DP), parameter :: VelX0 = 1.0d0   ! 移流速度 X 方向
+  real(DP), parameter :: VelZ0 = 0.0d0   ! 移流速度 Z 方向
   real(DP), parameter :: sigma = 0.1     ! 初期分布の大きさ
   real(DP), parameter :: DelMax = 1.0d0  ! 山の高さ
   real(DP), parameter :: Xc = 5.0d2      ! 山の中心位置 (割合) (0 < Xc < 1)
@@ -96,7 +97,7 @@ program advect
     end do
   end do
 
-  write(*,*) xyz_ZetaNl(95:105,1,100)
+!  write(*,*) xyz_ZetaNl(95:105,1,100)
 
   ! 境界条件
   !
@@ -116,12 +117,11 @@ program advect
      ! tendency (傾き) の計算.
      ! 計算の安定性のためには数値拡散項が必要だが今は無視.
      ! 長時間計算できないが今はよしとする.
-     !
+     ! デフォルトでは VelZ0 = 0 としている.
+     ! 
      xyz_DZetaDtNl =                                     &
-          &  - VelX0 * (                                 &
-          &           xyz_pyz(pyz_dx_xyz(xyz_ZetaNl))    &
-          &         + xyz_xyr(xyr_dz_xyz(xyz_ZetaNl))    &
-          &          )                                   
+          &  - VelX0 * xyz_pyz(pyz_dx_xyz(xyz_ZetaNl))   &
+          &  - VelZ0 * xyz_xyr(xyr_dz_xyz(xyz_ZetaNl))   
 
 
      ! 温位の積分 (leap-frog)
