@@ -41,3 +41,9 @@ $ ./advect -N=advect.conf
 * z=500 の断面. 異なる時間の値の重ね合わせ.
   $ gpview --overplot 10 advect.nc@zeta,y=0,t=0:1e4:10,z=500 --anim t
 
+= 音波
+
+== コンパイル
+
+$ gt5frt soundwave.f90 -o soundwave  -I ../../include -L ../../lib -larare
+
