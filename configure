@@ -1659,7 +1659,7 @@ if test -n "$ac_cv_lib_gtool5"; then
     INCLUDE_GT="-I$gtool5_moddir"
 fi
 if test -n "$ac_cv_mpi"; then
-    CPPFLAGS="LIB_MPI"
+    CPPFLAGS="-LIB_MPI"
 fi
 
 ############################################################
