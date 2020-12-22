@@ -77,7 +77,7 @@ contains
 
     !内部変数
     !
-    real(DP), parameter :: order = 1.0d2
+    real(DP), parameter :: order = 1.0
     integer             :: unit
 
     !---------------------------------------------------------------    
