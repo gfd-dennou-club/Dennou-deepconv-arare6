@@ -77,7 +77,7 @@ contains
 
     !内部変数
     !
-    real(DP), parameter :: order = 1.0
+    integer             :: order
     integer             :: unit
 
     !---------------------------------------------------------------    
@@ -94,7 +94,10 @@ contains
     !
     DelTimeLongSave  = DelTimeLong
     DelTimeShortSave = DelTimeShort
-   
+    
+    !order                                                                                             
+    order = 10 ** nint( dlog10( 1.0 / DelTimeShort ) + 1 )
+
     !---------------------------------------------------------------
     ! 時間刻みなどを実数で与えているので, 整数に変換した上で, 
     ! ループを回す回数を決定することにした. 
